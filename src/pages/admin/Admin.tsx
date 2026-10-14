@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { markOwnerDevice } from '../../firebase';
-import { signIn, signOutUser, watchUser } from './auth';
-import { isOwner, signInErrorMessage, type SessionUser } from './owner';
+import { isAdmin, signIn, signOutUser, watchUser } from './auth';
+import { signInErrorMessage, type SessionUser } from './owner';
 import { listVersions, loadLibrary, loadProfile } from './store';
 import type { Library, Profile, Version } from '../../model/types';
 import { LibraryPage } from './LibraryPage';
@@ -36,7 +36,12 @@ export default function Admin() {
   const [user, setUser] = useState<SessionUser | null | undefined>(undefined);
   const [signInError, setSignInError] = useState<string | null>(null);
   const [signingIn, setSigningIn] = useState(false);
+  const [admin, setAdmin] = useState<boolean | undefined>(undefined);
   useEffect(() => watchUser(setUser), []);
+  useEffect(() => {
+    setAdmin(undefined);
+    if (user) void isAdmin(user.uid).then(setAdmin);
+  }, [user]);
   useEffect(() => {
     document.title = 'Resume Studio';
   }, []);
@@ -66,12 +71,17 @@ export default function Admin() {
       </div>
     );
   }
-  if (!isOwner(user)) {
+  if (admin === undefined) return <div className="admin" />;
+  if (!admin) {
     return (
       <div className="admin center">
         <div className="card narrow">
           <h1>Not authorized</h1>
-          <p className="muted">{user.email ?? 'This account'} can't edit this resume. Sign in with the owner's Google account.</p>
+          <p className="muted">{user.email ?? 'This account'} can't edit this resume.</p>
+          <p className="muted small">
+            If this is your account, add it as the owner: in the Firebase console → Firestore, create collection{' '}
+            <code>admins</code> with a document whose ID is <code>{user.uid}</code> (no fields needed).
+          </p>
           <button onClick={() => void signOutUser()}>Sign out</button>
         </div>
       </div>

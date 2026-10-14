@@ -1,14 +1,10 @@
-// Who may use the editor. Mirrors isOwner() in firestore.rules, which is the real lock:
-// this check only decides what the page shows.
-
-import { OWNER_EMAIL } from '../../firebase';
+// Sign-in helpers for the editor. Who counts as the owner is decided by firestore.rules
+// (a doc at admins/{uid}); the page only asks.
 
 export interface SessionUser {
+  uid: string;
   email: string | null;
-  emailVerified: boolean;
 }
-
-export const isOwner = (u: SessionUser): boolean => u.emailVerified && u.email?.toLowerCase() === OWNER_EMAIL;
 
 /** Turns Firebase Auth error codes into something actionable; null = nothing worth showing. */
 export function signInErrorMessage(e: unknown): string | null {
