@@ -137,9 +137,34 @@ export interface Version {
   layout: Layout;
   snapshot: Snapshot;
   exports: ExportRecord[];
+  /** Legacy single link per version; moved to links/{slug} on load. */
   slug?: string;
   linkEnabled?: boolean;
   expiresAt?: number | null;
+}
+
+/**
+ * A shareable page for one company: links/{slug} (owner-only) plus its published copy
+ * public/{slug}. Several links can show the same version; a link follows its version's edits.
+ */
+export interface ShareLink {
+  slug: string;
+  /** Who it was sent to, e.g. "Amazon". */
+  company: string;
+  note?: string;
+  versionId: string;
+  createdAt: number;
+  enabled: boolean;
+  expiresAt: number | null;
+}
+
+/** One logged visit: public/{slug}/views/{auto}. */
+export interface ViewRecord {
+  at: number; // epoch ms
+  /** Random id kept in the visitor's browser, to count distinct visitors. */
+  visitor?: string;
+  /** Looked automated (link scanner, crawler, headless browser). */
+  bot?: boolean;
 }
 
 /** What visitors can read: public/{slug} and public/main. */

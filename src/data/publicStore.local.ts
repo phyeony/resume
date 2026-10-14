@@ -2,6 +2,7 @@
 
 import type { PublicDoc } from '../model/types';
 import { clone, readDb, writeDb } from './localDb';
+import { looksAutomated, visitorId } from './visit';
 
 export const MAIN_SLUG = 'main';
 
@@ -13,5 +14,6 @@ export async function getPublic(slug: string): Promise<PublicDoc | null> {
 }
 
 export async function logView(slug: string): Promise<void> {
-  writeDb((db) => void (db.views[slug] ??= []).push(Date.now()));
+  const view = { at: Date.now(), visitor: visitorId(), bot: looksAutomated(navigator.userAgent, navigator.webdriver) };
+  writeDb((db) => void (db.views[slug] ??= []).push(view));
 }

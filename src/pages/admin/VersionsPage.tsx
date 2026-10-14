@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { deleteVersion, publishLink, setLinkState, setMain, viewStats, type ViewStats } from './store';
-import type { Version } from '../../model/types';
+import { deleteVersion, setMain } from './store';
+import type { ShareLink, Version } from '../../model/types';
 import { useOwnerData } from './Admin';
 import { exportVersion } from './exporting';
-import { fmtDate, fmtDateTime, fromDateInput, toDateInput } from './format';
+import { fmtDate } from './format';
 
 export function VersionsPage() {
-  const { versions, reloadVersions } = useOwnerData();
+  const { versions, links, reloadVersions } = useOwnerData();
   const navigate = useNavigate();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -47,7 +47,7 @@ export function VersionsPage() {
 
       <div className="version-list">
         {sorted.map((v) => (
-          <VersionCard key={v.id} v={v} all={versions} busy={busy} act={act} />
+          <VersionCard key={v.id} v={v} all={versions} links={links.filter((l) => l.versionId === v.id)} busy={busy} act={act} />
         ))}
       </div>
     </div>
@@ -57,11 +57,13 @@ export function VersionsPage() {
 interface CardProps {
   v: Version;
   all: Version[];
+  /** Company links showing this version. */
+  links: ShareLink[];
   busy: string | null;
   act(key: string, fn: () => Promise<unknown>): Promise<void>;
 }
 
-function VersionCard({ v, all, busy, act }: CardProps) {
+function VersionCard({ v, all, links, busy, act }: CardProps) {
   const navigate = useNavigate();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const lastExport = v.exports.length ? Math.max(...v.exports.map((e) => e.at)) : null;
@@ -115,14 +117,25 @@ function VersionCard({ v, all, busy, act }: CardProps) {
       </dl>
       {v.notes && <p className="small notes">{v.notes}</p>}
 
-      <LinkPanel v={v} busy={busy} act={act} />
+      <div className="link-panel">
+        <span className="muted small">Links:</span>
+        {links.length === 0 && <span className="muted small">none</span>}
+        {links.map((l) => (
+          <Link key={l.slug} to="/admin/links" className={`chip-link ${l.enabled ? '' : 'strike'}`}>
+            {l.company}
+          </Link>
+        ))}
+        <button className="small-btn" onClick={() => navigate(`/admin/links?new=${v.id}`)}>
+          + Company link
+        </button>
+      </div>
 
       {!v.isMain && (
         <div className="danger-row">
           {confirmDelete ? (
             <>
-              <span className="small">Delete “{v.name}”{v.slug ? ' and turn off its link' : ''}?</span>
-              <button className="danger" onClick={() => void act(`${v.id}:del`, () => deleteVersion(v))}>
+              <span className="small">Delete “{v.name}”?</span>
+              <button className="danger" onClick={() => void act(`${v.id}:del`, () => deleteVersion(v, links))}>
                 Delete
               </button>
               <button className="link" onClick={() => setConfirmDelete(false)}>
@@ -137,76 +150,5 @@ function VersionCard({ v, all, busy, act }: CardProps) {
         </div>
       )}
     </article>
-  );
-}
-
-function LinkPanel({ v, busy, act }: Omit<CardProps, 'all'>) {
-  const [stats, setStats] = useState<ViewStats | null>(null);
-  const [copied, setCopied] = useState(false);
-  const url = v.slug ? `${location.origin}/${v.slug}` : '';
-  const expired = !!v.expiresAt && v.expiresAt < Date.now();
-
-  useEffect(() => {
-    if (v.slug) viewStats(v.slug).then(setStats, () => setStats(null));
-  }, [v.slug]);
-
-  if (!v.slug) {
-    return (
-      <div className="link-panel">
-        <button
-          disabled={busy === `${v.id}:publish`}
-          onClick={() => void act(`${v.id}:publish`, () => publishLink(v))}
-        >
-          Create company link
-        </button>
-        <span className="muted small">A private page like /{v.company ? v.company.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'company'}-x7k2 with view tracking</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="link-panel on">
-      <div className="link-row">
-        <a href={url} target="_blank" rel="noopener" className={v.linkEnabled && !expired ? '' : 'strike'}>
-          {url.replace(/^https?:\/\//, '')}
-        </a>
-        <button
-          className="small-btn"
-          onClick={() => {
-            void navigator.clipboard.writeText(url);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
-          }}
-        >
-          {copied ? 'Copied' : 'Copy'}
-        </button>
-        <label className="toggle">
-          <input
-            type="checkbox"
-            checked={!!v.linkEnabled}
-            onChange={(e) => void act(`${v.id}:link`, () => setLinkState(v, e.target.checked, v.expiresAt ?? null))}
-          />
-          {v.linkEnabled ? 'On' : 'Off'}
-        </label>
-        <label className="small">
-          Expires{' '}
-          <input
-            type="date"
-            value={toDateInput(v.expiresAt)}
-            onChange={(e) =>
-              void act(`${v.id}:link`, () => setLinkState(v, !!v.linkEnabled, fromDateInput(e.target.value)))
-            }
-          />
-        </label>
-        {expired && <span className="badge warn">Expired</span>}
-      </div>
-      <div className="muted small">
-        {stats
-          ? stats.count
-            ? `${stats.count} view${stats.count === 1 ? '' : 's'} · last ${fmtDateTime(stats.lastAt)}`
-            : 'Not opened yet'
-          : 'Views: …'}
-      </div>
-    </div>
   );
 }

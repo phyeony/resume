@@ -29,7 +29,7 @@ export function VersionBuilder() {
   const { id = 'new' } = useParams();
   const [search] = useSearchParams();
   const navigate = useNavigate();
-  const { profile, library, versions, reloadVersions } = useOwnerData();
+  const { profile, library, versions, links, reloadVersions } = useOwnerData();
 
   const existing = id === 'new' ? null : versions.find((v) => v.id === id) ?? null;
   const source = existing ?? (search.get('from') ? versions.find((v) => v.id === search.get('from')) : null);
@@ -66,6 +66,10 @@ export function VersionBuilder() {
   // Opening an old version after editing the library: show that saving will pick up the edits.
   const drifted = !!existing && !dirty && stableJson(existing.snapshot) !== stableJson(snapshot);
   const pages = usePageCount(snapshot);
+  const liveAt = [
+    ...(existing?.isMain ? ['your main site'] : []),
+    ...links.filter((l) => existing && l.versionId === existing.id).map((l) => l.company),
+  ];
 
   if (id !== 'new' && !existing) {
     return <p className="pad error">Version not found.</p>;
@@ -136,6 +140,10 @@ export function VersionBuilder() {
             Your experience library changed since this version was saved{existing ? ` (${fmtDate(existing.updatedAt)})` : ''}. The
             preview shows the current text; saving updates the frozen copy.
           </p>
+        )}
+
+        {liveAt.length > 0 && (
+          <p className="muted small">Live on {liveAt.join(', ')}. Saving updates {liveAt.length > 1 ? 'those pages' : 'that page'} too.</p>
         )}
 
         <fieldset>

@@ -4,6 +4,7 @@
 import { addDoc, collection, doc, getDoc, getFirestore, serverTimestamp } from 'firebase/firestore/lite';
 import { app } from '../firebase';
 import type { PublicDoc } from '../model/types';
+import { looksAutomated, visitorId } from './visit';
 
 export const MAIN_SLUG = 'main';
 
@@ -25,6 +26,8 @@ export async function logView(slug: string): Promise<void> {
       at: serverTimestamp(),
       referrer: document.referrer.slice(0, 500),
       userAgent: navigator.userAgent.slice(0, 500),
+      visitor: visitorId(),
+      bot: looksAutomated(navigator.userAgent, navigator.webdriver),
     });
   } catch {
     // Visit logging must never break the page.

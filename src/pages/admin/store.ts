@@ -1,6 +1,7 @@
 // All Firestore access lives here. Layout:
 //   owner/profile, owner/library        owner-only master data
 //   versions/{id}                       owner-only tailored versions (frozen snapshots)
+//   links/{slug}                        owner-only company links, each pointing at a version
 //   public/main, public/{slug}          published copies visitors may `get`
 //   public/{slug}/views/{auto}          visit log, create-only for visitors
 // Editor-only; visitors go through src/data/publicStore.ts.
@@ -8,24 +9,23 @@
 import {
   arrayUnion,
   collection,
+  deleteField,
   doc,
-  getCountFromServer,
   getDoc,
   getDocs,
-  limit,
-  orderBy,
   query,
   setDoc,
   updateDoc,
+  where,
   writeBatch,
   type Timestamp,
 } from 'firebase/firestore';
 import { MAIN_SLUG } from '../../data/publicStore';
-import type { ExportRecord, Library, Profile, Version } from '../../model/types';
+import type { ExportRecord, Library, Profile, ShareLink, Version } from '../../model/types';
 import { db } from './auth';
-import { RESERVED, makeSlug, publicDoc, type ViewStats } from './storeShared';
+import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
-export { newId, makeSlug, type ViewStats } from './storeShared';
+export { newId, makeSlug, slugProblem, type ViewStats } from './storeShared';
 
 // ---- master data -----------------------------------------------------------
 
@@ -55,22 +55,24 @@ export async function getVersion(id: string): Promise<Version | null> {
   return snap.exists() ? (snap.data() as Version) : null;
 }
 
-/** Saves the version and refreshes any public copies it backs (main and/or its link). */
+/** Saves the version and refreshes every public copy it backs: main and its company links. */
 export async function saveVersion(v: Version): Promise<void> {
+  const links = await getDocs(query(collection(db, 'links'), where('versionId', '==', v.id)));
   const batch = writeBatch(db);
   batch.set(doc(db, 'versions', v.id), v);
   if (v.isMain) batch.set(doc(db, 'public', MAIN_SLUG), publicDoc(v, true, null));
-  if (v.slug) batch.set(doc(db, 'public', v.slug), publicDoc(v, !!v.linkEnabled, v.expiresAt ?? null));
+  for (const d of links.docs) batch.set(doc(db, 'public', d.id), linkPublicDoc(d.data() as ShareLink, v));
   await batch.commit();
 }
 
-export async function deleteVersion(v: Version): Promise<void> {
+/** Refuses while links still show this version, so a link you sent never breaks silently. */
+export async function deleteVersion(v: Version, links: ShareLink[]): Promise<void> {
   if (v.isMain) throw new Error('Set another version as main before deleting this one.');
-  const batch = writeBatch(db);
-  batch.delete(doc(db, 'versions', v.id));
-  // The link stops working; its view log stays readable to me under public/{slug}/views.
-  if (v.slug) batch.delete(doc(db, 'public', v.slug));
-  await batch.commit();
+  const used = links.filter((l) => l.versionId === v.id);
+  if (used.length) {
+    throw new Error(`Still used by ${used.map((l) => l.company).join(', ')}. Move or delete those links first.`);
+  }
+  await writeBatch(db).delete(doc(db, 'versions', v.id)).commit();
 }
 
 export async function setMain(target: Version, all: Version[]): Promise<void> {
@@ -88,29 +90,77 @@ export const recordExport = (id: string, format: ExportRecord['format']) =>
 
 // ---- company links ---------------------------------------------------------
 
-export async function publishLink(v: Version): Promise<Version> {
-  let slug = makeSlug(v.company || v.name);
-  while (RESERVED.has(slug) || (await getDoc(doc(db, 'public', slug))).exists()) slug = makeSlug(v.company || v.name);
-  const next: Version = { ...v, slug, linkEnabled: true, expiresAt: v.expiresAt ?? null, updatedAt: Date.now() };
-  await saveVersion(next);
-  return next;
+export async function listLinks(): Promise<ShareLink[]> {
+  const snap = await getDocs(collection(db, 'links'));
+  return snap.docs.map((d) => d.data() as ShareLink);
 }
 
-export async function setLinkState(v: Version, enabled: boolean, expiresAt: number | null): Promise<Version> {
-  const next: Version = { ...v, linkEnabled: enabled, expiresAt };
+export async function slugAvailable(slug: string): Promise<boolean> {
+  if (RESERVED.has(slug)) return false;
+  const [pub, link] = await Promise.all([getDoc(doc(db, 'public', slug)), getDoc(doc(db, 'links', slug))]);
+  return !pub.exists() && !link.exists();
+}
+
+export async function createLink(link: ShareLink, v: Version): Promise<void> {
+  if (!(await slugAvailable(link.slug))) throw new Error(`/${link.slug} is already taken.`);
   const batch = writeBatch(db);
-  batch.update(doc(db, 'versions', v.id), { linkEnabled: enabled, expiresAt });
-  if (v.slug) batch.update(doc(db, 'public', v.slug), { enabled, expiresAt });
+  batch.set(doc(db, 'links', link.slug), link);
+  batch.set(doc(db, 'public', link.slug), linkPublicDoc(link, v));
   await batch.commit();
-  return next;
+}
+
+/** Applies edits (on/off, expiry, company, or which version it shows) to the link and its public copy. */
+export async function updateLink(link: ShareLink, v: Version): Promise<void> {
+  const batch = writeBatch(db);
+  batch.set(doc(db, 'links', link.slug), link);
+  batch.set(doc(db, 'public', link.slug), linkPublicDoc(link, v));
+  await batch.commit();
+}
+
+/** Removes the link, its public page and its view history. */
+export async function deleteLink(slug: string): Promise<void> {
+  const views = await getDocs(collection(db, 'public', slug, 'views'));
+  // batches hold 500 writes
+  for (let i = 0; i < views.docs.length; i += 450) {
+    const batch = writeBatch(db);
+    for (const d of views.docs.slice(i, i + 450)) batch.delete(d.ref);
+    await batch.commit();
+  }
+  const batch = writeBatch(db);
+  batch.delete(doc(db, 'links', slug));
+  batch.delete(doc(db, 'public', slug));
+  await batch.commit();
 }
 
 export async function viewStats(slug: string): Promise<ViewStats> {
-  const views = collection(db, 'public', slug, 'views');
-  const [count, last] = await Promise.all([
-    getCountFromServer(views),
-    getDocs(query(views, orderBy('at', 'desc'), limit(1))),
-  ]);
-  const at = last.docs[0]?.data().at as Timestamp | undefined;
-  return { count: count.data().count, lastAt: at ? at.toMillis() : null };
+  const snap = await getDocs(collection(db, 'public', slug, 'views'));
+  return summarizeViews(
+    snap.docs.map((d) => {
+      const v = d.data() as { at?: Timestamp; visitor?: string; bot?: boolean };
+      return { at: v.at?.toMillis() ?? 0, visitor: v.visitor || undefined, bot: v.bot };
+    }),
+  );
+}
+
+/** Earlier builds kept one link on the version itself; give each its own links/{slug}. */
+export async function migrateLegacyLinks(versions: Version[]): Promise<boolean> {
+  const legacy = versions.filter((v) => v.slug);
+  for (const v of legacy) {
+    const slug = v.slug!;
+    const batch = writeBatch(db);
+    if (!(await getDoc(doc(db, 'links', slug))).exists()) {
+      const link: ShareLink = {
+        slug,
+        company: v.company || v.name,
+        versionId: v.id,
+        createdAt: v.updatedAt,
+        enabled: !!v.linkEnabled,
+        expiresAt: v.expiresAt ?? null,
+      };
+      batch.set(doc(db, 'links', slug), link);
+    }
+    batch.update(doc(db, 'versions', v.id), { slug: deleteField(), linkEnabled: deleteField(), expiresAt: deleteField() });
+    await batch.commit();
+  }
+  return legacy.length > 0;
 }

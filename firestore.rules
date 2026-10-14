@@ -29,6 +29,10 @@ service cloud.firestore {
       allow read, write: if isOwner();
     }
 
+    match /links/{slug} {
+      allow read, write: if isOwner();
+    }
+
     match /public/{slug} {
       // get only: no listing, so company links can't be enumerated
       allow get: if isOwner() || isLive(resource.data);
@@ -37,10 +41,12 @@ service cloud.firestore {
       match /views/{viewId} {
         allow read, delete: if isOwner();
         allow create: if isLive(get(/databases/$(database)/documents/public/$(slug)).data)
-          && request.resource.data.keys().hasOnly(['at', 'referrer', 'userAgent'])
+          && request.resource.data.keys().hasOnly(['at', 'referrer', 'userAgent', 'visitor', 'bot'])
           && request.resource.data.at == request.time
           && request.resource.data.referrer is string && request.resource.data.referrer.size() <= 500
-          && request.resource.data.userAgent is string && request.resource.data.userAgent.size() <= 500;
+          && request.resource.data.userAgent is string && request.resource.data.userAgent.size() <= 500
+          && request.resource.data.get('visitor', '') is string && request.resource.data.get('visitor', '').size() <= 40
+          && request.resource.data.get('bot', false) is bool;
       }
     }
   }

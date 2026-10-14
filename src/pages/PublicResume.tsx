@@ -21,6 +21,16 @@ export function PublicResume({ slug: fixed }: { slug?: string }) {
   const slug = fixed ?? params.slug ?? MAIN_SLUG;
   const [state, setState] = useState<State>({ status: 'loading' });
 
+  // Company links are for the people they were sent to, not search results.
+  useEffect(() => {
+    if (slug === MAIN_SLUG) return;
+    const meta = document.createElement('meta');
+    meta.name = 'robots';
+    meta.content = 'noindex, nofollow';
+    document.head.appendChild(meta);
+    return () => meta.remove();
+  }, [slug]);
+
   useEffect(() => {
     let cancelled = false;
     getPublic(slug).then((doc) => {

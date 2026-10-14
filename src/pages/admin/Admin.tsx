@@ -3,8 +3,9 @@ import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { markOwnerDevice } from '../../firebase';
 import { isAdmin, signIn, signOutUser, watchUser } from './auth';
 import { signInErrorMessage, type SessionUser } from './owner';
-import { listVersions, loadLibrary, loadProfile } from './store';
-import type { Library, Profile, Version } from '../../model/types';
+import { listLinks, listVersions, loadLibrary, loadProfile, migrateLegacyLinks } from './store';
+import type { Library, Profile, ShareLink, Version } from '../../model/types';
+import { LinksPage } from './LinksPage';
 import { LibraryPage } from './LibraryPage';
 import { ProfilePage } from './ProfilePage';
 import { Setup } from './Setup';
@@ -16,8 +17,10 @@ interface OwnerData {
   profile: Profile;
   library: Library;
   versions: Version[];
+  links: ShareLink[];
   setProfile(p: Profile): void;
   setLibrary(l: Library): void;
+  /** Reloads versions and links together, since links show versions. */
   reloadVersions(): Promise<void>;
 }
 
@@ -96,17 +99,24 @@ function OwnerArea({ user }: { user: SessionUser }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [library, setLibrary] = useState<Library | null>(null);
   const [versions, setVersions] = useState<Version[]>([]);
+  const [links, setLinks] = useState<ShareLink[]>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading');
   const [error, setError] = useState('');
 
-  const reloadVersions = useCallback(async () => setVersions(await listVersions()), []);
+  const reloadVersions = useCallback(async () => {
+    const [v, k] = await Promise.all([listVersions(), listLinks()]);
+    setVersions(v);
+    setLinks(k);
+  }, []);
 
   const load = useCallback(async () => {
     try {
-      const [p, l, v] = await Promise.all([loadProfile(), loadLibrary(), listVersions()]);
+      const [p, l, v0] = await Promise.all([loadProfile(), loadLibrary(), listVersions()]);
+      const v = (await migrateLegacyLinks(v0)) ? await listVersions() : v0;
       setProfile(p);
       setLibrary(l);
       setVersions(v);
+      setLinks(await listLinks());
       setStatus(p && l ? 'ready' : 'empty');
     } catch (e) {
       setError(String(e));
@@ -125,6 +135,7 @@ function OwnerArea({ user }: { user: SessionUser }) {
         {status === 'ready' && (
           <nav>
             <NavLink to="/admin/versions">Versions</NavLink>
+            <NavLink to="/admin/links">Links</NavLink>
             <NavLink to="/admin/library">Experience &amp; skills</NavLink>
             <NavLink to="/admin/profile">Profile</NavLink>
           </nav>
@@ -149,11 +160,12 @@ function OwnerArea({ user }: { user: SessionUser }) {
       )}
       {status === 'empty' && <Setup onDone={load} />}
       {status === 'ready' && profile && library && (
-        <Ctx.Provider value={{ profile, library, versions, setProfile, setLibrary, reloadVersions }}>
+        <Ctx.Provider value={{ profile, library, versions, links, setProfile, setLibrary, reloadVersions }}>
           <Routes>
             <Route index element={<Navigate to="versions" replace />} />
             <Route path="versions" element={<VersionsPage />} />
             <Route path="versions/:id" element={<KeyedBuilder />} />
+            <Route path="links" element={<LinksPage />} />
             <Route path="library" element={<LibraryPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="*" element={<Navigate to="versions" replace />} />
