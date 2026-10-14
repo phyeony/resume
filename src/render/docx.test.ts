@@ -28,4 +28,14 @@ describe('buildDocx', () => {
     // contact icons only reference images that exist in the template
     for (const [, id] of doc.matchAll(/r:embed="([^"]+)"/g)) expect(rels).toContain(`Id="${id}"`);
   });
+
+  it('links a project to its address', async () => {
+    const lib = { ...seedLibrary, entries: seedLibrary.entries.map((e) => (e.id === 'e-byo' ? { ...e, url: 'goshiwonseoul.com' } : e)) };
+    const snap = buildSnapshot(seedProfile, lib, defaultSelection(seedLibrary), {}, defaultLayout(seedProfile));
+    const zip = await JSZip.loadAsync(await buildDocx(snap, template));
+    const doc = await zip.file('word/document.xml')!.async('string');
+    const rels = await zip.file('word/_rels/document.xml.rels')!.async('string');
+    expect(doc).toContain('>goshiwonseoul.com</w:t>');
+    expect(rels).toContain('Target="https://goshiwonseoul.com"');
+  });
 });

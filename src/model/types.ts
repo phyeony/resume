@@ -61,6 +61,8 @@ export interface Entry {
   title: string;
   /** Tech stack shown after the title as "Title | stack" (projects). */
   stack?: string;
+  /** Project address as typed, e.g. "goshiwonseoul.com"; shown after the stack as a link. */
+  url?: string;
   /** Italic line under the title: company, school. */
   org?: string;
   /** Shown right-aligned on the org line, e.g. "GPA: 3.40 / 4.33". */
@@ -95,6 +97,8 @@ export interface Selection {
 export interface SnapshotEntry {
   title: string;
   stack?: string;
+  /** Full https: address; renderers show it via linkLabel(). */
+  url?: string;
   org?: string;
   orgRight?: string;
   dates: string;

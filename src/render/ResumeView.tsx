@@ -1,3 +1,4 @@
+import { linkLabel } from '../model/snapshot';
 import type { Snapshot, SnapshotEntry } from '../model/types';
 import { ContactIcon } from './ContactIcon';
 import { Rich } from './Rich';
@@ -57,6 +58,15 @@ function EntryView({ entry: e }: { entry: SnapshotEntry }) {
             <>
               {' '}
               <span className="sep">|</span> <em className="stack">{e.stack}</em>
+            </>
+          )}
+          {e.url && (
+            <>
+              {' '}
+              <span className="sep">|</span>{' '}
+              <a className="entry-link" href={e.url} target="_blank" rel="noopener">
+                {linkLabel(e.url)}
+              </a>
             </>
           )}
         </span>

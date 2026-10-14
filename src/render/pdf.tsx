@@ -12,6 +12,7 @@ import bold from '@fontsource/caladea/files/caladea-latin-700-normal.woff?url';
 import boldItalic from '@fontsource/caladea/files/caladea-latin-700-italic.woff?url';
 import math from '@fontsource/noto-sans-math/files/noto-sans-math-math-400-normal.woff?url';
 import { parseRich } from '../model/richtext';
+import { linkLabel } from '../model/snapshot';
 import type { ContactKind, Snapshot, SnapshotEntry } from '../model/types';
 import { ICON_PATHS } from './ContactIcon';
 
@@ -131,6 +132,14 @@ function EntryBlock({ e, headGap }: { e: SnapshotEntry; headGap: number }) {
             <>
               {' | '}
               <Text style={[s.italic, { fontWeight: 'normal' }]}>{e.stack}</Text>
+            </>
+          )}
+          {e.url && (
+            <>
+              {' | '}
+              <Link src={e.url} style={[s.link, { fontWeight: 'normal' }]}>
+                {linkLabel(e.url)}
+              </Link>
             </>
           )}
         </Text>

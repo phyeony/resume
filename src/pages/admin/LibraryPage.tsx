@@ -177,6 +177,17 @@ function EntryEditor({ entry: e, update }: { entry: Entry; update: Update }) {
                 <input value={e.org ?? ''} onChange={(ev) => edit((x) => void (x.org = ev.target.value || undefined))} />
               </label>
             )}
+            {e.section === 'projects' && (
+              <label>
+                Link <span className="muted small">(optional, after the stack)</span>
+                <input
+                  value={e.url ?? ''}
+                  placeholder="goshiwonseoul.com"
+                  inputMode="url"
+                  onChange={(ev) => edit((x) => void (x.url = ev.target.value || undefined))}
+                />
+              </label>
+            )}
             {e.section === 'education' && (
               <label>
                 Right side <span className="muted small">(e.g. GPA)</span>

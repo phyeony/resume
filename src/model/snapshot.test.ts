@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { seedLibrary, seedProfile } from '../data/seed';
-import { buildSnapshot, defaultLayout, defaultSelection } from './snapshot';
+import { buildSnapshot, defaultLayout, defaultSelection, linkHref, linkLabel } from './snapshot';
 
 describe('buildSnapshot', () => {
   it('uses only default items for a fresh selection', () => {
@@ -33,5 +33,27 @@ describe('buildSnapshot', () => {
     const snap = buildSnapshot(seedProfile, lib, defaultSelection(seedLibrary), {}, defaultLayout(seedProfile));
     const titles = snap.sections.flatMap((s) => s.entries ?? []).map((e) => e.title);
     expect(titles).not.toContain('BYO (Bring Your Own Cup)');
+  });
+
+  it('turns a typed project link into a full address', () => {
+    const lib = { ...seedLibrary, entries: seedLibrary.entries.map((e) => (e.id === 'e-byo' ? { ...e, url: ' goshiwonseoul.com ' } : e)) };
+    const snap = buildSnapshot(seedProfile, lib, defaultSelection(seedLibrary), {}, defaultLayout(seedProfile));
+    const byo = snap.sections.flatMap((s) => s.entries ?? []).find((e) => e.title.startsWith('BYO'))!;
+    expect(byo.url).toBe('https://goshiwonseoul.com');
+    const others = snap.sections.flatMap((s) => s.entries ?? []).filter((e) => e !== byo);
+    expect(others.every((e) => !('url' in e))).toBe(true);
+  });
+});
+
+describe('project links', () => {
+  it('keeps http(s) addresses and adds https:// otherwise', () => {
+    expect(linkHref('goshiwonseoul.com')).toBe('https://goshiwonseoul.com');
+    expect(linkHref('http://example.com/a')).toBe('http://example.com/a');
+    expect(linkHref('example.com:8080')).toBe('https://example.com:8080');
+  });
+
+  it('shows a short label', () => {
+    expect(linkLabel('https://www.goshiwonseoul.com/')).toBe('goshiwonseoul.com');
+    expect(linkLabel('https://example.com/app')).toBe('example.com/app');
   });
 });

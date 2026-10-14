@@ -9,6 +9,17 @@ import {
   type SnapshotSection,
 } from './types';
 
+/** "goshiwonseoul.com" -> "https://goshiwonseoul.com"; http(s) addresses are kept. */
+export function linkHref(url: string): string {
+  const u = url.trim();
+  return /^https?:\/\//i.test(u) ? u : `https://${u}`;
+}
+
+/** What a link reads as on the page: no scheme, "www." or trailing slash. */
+export function linkLabel(href: string): string {
+  return href.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '');
+}
+
 /** Everything flagged isDefault: the starting point for a new version. */
 export function defaultSelection(library: Library): Selection {
   const live = library.entries.filter((e) => !e.archived);
@@ -61,6 +72,7 @@ export function buildSnapshot(
       .map((e) => ({
         title: e.title,
         ...(e.stack ? { stack: e.stack } : {}),
+        ...(e.url?.trim() ? { url: linkHref(e.url) } : {}),
         ...(e.org ? { org: e.org } : {}),
         ...(e.orgRight ? { orgRight: e.orgRight } : {}),
         dates: e.dates,

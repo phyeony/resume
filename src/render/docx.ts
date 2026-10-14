@@ -7,6 +7,7 @@
 
 import JSZip from 'jszip';
 import { parseRich } from '../model/richtext';
+import { linkLabel } from '../model/snapshot';
 import type { ContactKind, Snapshot, SnapshotEntry, SnapshotSection } from '../model/types';
 
 const RFONTS =
@@ -142,7 +143,7 @@ class Builder {
     }
     (section.entries ?? []).forEach((e, i) => {
       if (i > 0) out.push(spacer(10));
-      out.push(...entry(e, section.key === 'work' ? 6 : 4));
+      out.push(...entry(e, section.key === 'work' ? 6 : 4, this));
     });
     return out;
   }
@@ -158,10 +159,11 @@ function bullet(text: string, numId = BULLET_NUM_ID): string {
   );
 }
 
-function entry(e: SnapshotEntry, gapAfterHead: number): string[] {
+function entry(e: SnapshotEntry, gapAfterHead: number, b: Builder): string[] {
   const head =
     run(e.title, { bold: true }) +
     (e.stack ? run(' | ', { bold: true }) + run(e.stack, { italic: true }) : '') +
+    (e.url ? run(' | ', { bold: true }) + b.hyperlink(e.url, run(linkLabel(e.url), { style: 'Hyperlink' })) : '') +
     tab({ bold: true }) +
     run(e.dates, { bold: true });
   const out = [para(`${RIGHT_TAB}${LINE}${IND}`, head)];
