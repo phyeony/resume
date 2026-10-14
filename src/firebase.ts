@@ -10,6 +10,9 @@ export const app = initializeApp({
   appId: '1:623299528746:web:40c24127d890f415539b53',
 });
 
+/** Must match the email in firestore.rules. */
+export const OWNER_EMAIL = 'phyeony@gmail.com';
+
 /**
  * Set on this device once I sign in to the editor, so my own visits to company links
  * aren't counted. Kept out of Firebase Auth to keep the public page's bundle small.
