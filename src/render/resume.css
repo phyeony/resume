@@ -22,7 +22,11 @@
 
 html { -webkit-text-size-adjust: 100%; }
 
-body {
+body { margin: 0; }
+
+/* Public pages wrap the sheet in .resume-page; the editor preview reuses .sheet alone. */
+.resume-page {
+  min-height: 100vh;
   margin: 0;
   padding: clamp(16px, 4vw, 48px) clamp(12px, 4vw, 32px);
   background: var(--backdrop);
@@ -90,6 +94,8 @@ body {
 
 /* the doc separated these with " | " — keep the pipes, drop the last one */
 .contact li + li { border-left: 1px solid #d4d6da; }
+
+.sheet { font-family: Calibri, Carlito, "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif; color: var(--ink); line-height: 1.4; font-size: var(--fs-body); }
 
 .contact a {
   display: inline-flex;
@@ -217,7 +223,7 @@ body {
     --fs-name: 17pt;
     --fs-head: 12pt;
   }
-  body {
+  .resume-page {
     padding: 0;
     background: #fff;
     line-height: 1.25;
@@ -235,3 +241,8 @@ body {
   .contact a { color: var(--ink); }
   a[href]::after { content: ""; }   /* no printed URLs — the doc had none */
 }
+
+/* --- unavailable link ------------------------------------------- */
+
+.sheet.gone { text-align: center; }
+.sheet.gone h1 { margin: 0; font-size: var(--fs-head); font-weight: 400; color: #3c4043; }

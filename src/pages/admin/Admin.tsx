@@ -1,0 +1,141 @@
+import { onAuthStateChanged, type User } from 'firebase/auth';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { OWNER_EMAIL, markOwnerDevice } from '../../firebase';
+import { auth, signIn, signOutUser } from './auth';
+import { listVersions, loadLibrary, loadProfile } from './store';
+import type { Library, Profile, Version } from '../../model/types';
+import { LibraryPage } from './LibraryPage';
+import { ProfilePage } from './ProfilePage';
+import { Setup } from './Setup';
+import { VersionBuilder } from './VersionBuilder';
+import { VersionsPage } from './VersionsPage';
+import './admin.css';
+
+interface OwnerData {
+  profile: Profile;
+  library: Library;
+  versions: Version[];
+  setProfile(p: Profile): void;
+  setLibrary(l: Library): void;
+  reloadVersions(): Promise<void>;
+}
+
+const Ctx = createContext<OwnerData | null>(null);
+
+export function useOwnerData(): OwnerData {
+  const v = useContext(Ctx);
+  if (!v) throw new Error('useOwnerData outside <Admin>');
+  return v;
+}
+
+export default function Admin() {
+  const [user, setUser] = useState<User | null | undefined>(undefined);
+  useEffect(() => onAuthStateChanged(auth, setUser), []);
+  useEffect(() => {
+    document.title = 'Resume Studio';
+  }, []);
+
+  if (user === undefined) return <div className="admin" />;
+  if (!user) {
+    return (
+      <div className="admin center">
+        <div className="card narrow">
+          <h1>Resume Studio</h1>
+          <p className="muted">Sign in to edit your resume.</p>
+          <button className="primary" onClick={() => void signIn()}>
+            Sign in with Google
+          </button>
+        </div>
+      </div>
+    );
+  }
+  if (user.email !== OWNER_EMAIL) {
+    return (
+      <div className="admin center">
+        <div className="card narrow">
+          <h1>Not authorized</h1>
+          <p className="muted">{user.email} can't edit this resume.</p>
+          <button onClick={() => void signOutUser()}>Sign out</button>
+        </div>
+      </div>
+    );
+  }
+  markOwnerDevice();
+  return <OwnerArea user={user} />;
+}
+
+function OwnerArea({ user }: { user: User }) {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [library, setLibrary] = useState<Library | null>(null);
+  const [versions, setVersions] = useState<Version[]>([]);
+  const [status, setStatus] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading');
+  const [error, setError] = useState('');
+
+  const reloadVersions = useCallback(async () => setVersions(await listVersions()), []);
+
+  const load = useCallback(async () => {
+    try {
+      const [p, l, v] = await Promise.all([loadProfile(), loadLibrary(), listVersions()]);
+      setProfile(p);
+      setLibrary(l);
+      setVersions(v);
+      setStatus(p && l ? 'ready' : 'empty');
+    } catch (e) {
+      setError(String(e));
+      setStatus('error');
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  return (
+    <div className="admin">
+      <header className="topbar">
+        <span className="brand">Resume Studio</span>
+        {status === 'ready' && (
+          <nav>
+            <NavLink to="/admin/versions">Versions</NavLink>
+            <NavLink to="/admin/library">Experience &amp; skills</NavLink>
+            <NavLink to="/admin/profile">Profile</NavLink>
+          </nav>
+        )}
+        <span className="spacer" />
+        <a href="/" target="_blank" rel="noopener" className="muted">
+          View site ↗
+        </a>
+        <button className="link" onClick={() => void signOutUser()} title={user.email ?? ''}>
+          Sign out
+        </button>
+      </header>
+
+      {status === 'loading' && <p className="pad muted">Loading…</p>}
+      {status === 'error' && (
+        <div className="pad">
+          <p className="error">Couldn't load your data: {error}</p>
+        </div>
+      )}
+      {status === 'empty' && <Setup onDone={load} />}
+      {status === 'ready' && profile && library && (
+        <Ctx.Provider value={{ profile, library, versions, setProfile, setLibrary, reloadVersions }}>
+          <Routes>
+            <Route index element={<Navigate to="versions" replace />} />
+            <Route path="versions" element={<VersionsPage />} />
+            <Route path="versions/:id" element={<KeyedBuilder />} />
+            <Route path="library" element={<LibraryPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="*" element={<Navigate to="versions" replace />} />
+          </Routes>
+        </Ctx.Provider>
+      )}
+    </div>
+  );
+}
+
+/** Fresh builder state per version (and per "duplicate from"), e.g. after creating one. */
+function KeyedBuilder() {
+  const { pathname, search } = useLocation();
+  return <VersionBuilder key={pathname + search} />;
+}

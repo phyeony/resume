@@ -1,0 +1,41 @@
+rules_version = '2';
+
+// Owner-only editor data; visitors can only fetch a published resume by its exact id
+// and log a view of it.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner() {
+      return request.auth != null
+        && request.auth.token.email == 'phyeony@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+
+    function isLive(d) {
+      return d.enabled == true && (d.expiresAt == null || d.expiresAt > request.time.toMillis());
+    }
+
+    match /owner/{doc} {
+      allow read, write: if isOwner();
+    }
+
+    match /versions/{id} {
+      allow read, write: if isOwner();
+    }
+
+    match /public/{slug} {
+      // get only: no listing, so company links can't be enumerated
+      allow get: if isOwner() || isLive(resource.data);
+      allow list, write: if isOwner();
+
+      match /views/{viewId} {
+        allow read, delete: if isOwner();
+        allow create: if isLive(get(/databases/$(database)/documents/public/$(slug)).data)
+          && request.resource.data.keys().hasOnly(['at', 'referrer', 'userAgent'])
+          && request.resource.data.at == request.time
+          && request.resource.data.referrer is string && request.resource.data.referrer.size() <= 500
+          && request.resource.data.userAgent is string && request.resource.data.userAgent.size() <= 500;
+      }
+    }
+  }
+}
