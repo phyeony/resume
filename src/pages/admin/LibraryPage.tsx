@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { newId, saveLibrary } from './store';
 import { SECTION_TITLES, type Entry, type EntrySection, type Library } from '../../model/types';
 import { useOwnerData } from './Admin';
+import { moveItem, useDragSort } from './useDragSort';
 
 const SECTIONS: EntrySection[] = ['work', 'projects', 'education'];
 
@@ -77,11 +78,10 @@ export function LibraryPage() {
               + Add {section === 'work' ? 'experience' : section === 'projects' ? 'project' : 'education'}
             </button>
           </div>
-          {draft.entries
-            .filter((e) => e.section === section && (showArchived || !e.archived))
-            .map((e) => (
-              <EntryEditor key={e.id} entry={e} update={update} />
-            ))}
+          <EntryList
+            entries={draft.entries.filter((e) => e.section === section && (showArchived || !e.archived))}
+            update={update}
+          />
         </section>
       ))}
     </div>
@@ -99,32 +99,44 @@ function useWarnOnLeave(dirty: boolean) {
 
 type Update = (fn: (l: Library) => void) => void;
 
-/** Move an entry past its neighbour within the same section. */
-function moveEntry(l: Library, id: string, dir: -1 | 1) {
-  const i = l.entries.findIndex((e) => e.id === id);
-  const section = l.entries[i].section;
-  let j = i + dir;
-  while (j >= 0 && j < l.entries.length && l.entries[j].section !== section) j += dir;
-  if (j < 0 || j >= l.entries.length) return;
-  [l.entries[i], l.entries[j]] = [l.entries[j], l.entries[i]];
+/** One section's visible entries. Drag positions are among these, then mapped back into the full list. */
+function EntryList({ entries, update }: { entries: Entry[]; update: Update }) {
+  const sort = useDragSort(
+    (from, to) =>
+      update((l) => {
+        const at = (id: string) => l.entries.findIndex((x) => x.id === id);
+        moveItem(l.entries, at(entries[from].id), at(entries[to].id));
+      }),
+    entries.length,
+  );
+  return entries.map((e, i) => (
+    <EntryEditor key={e.id} entry={e} update={update} sort={sort} index={i} />
+  ));
 }
 
-function swap<T>(arr: T[], i: number, j: number) {
-  if (j < 0 || j >= arr.length) return;
-  [arr[i], arr[j]] = [arr[j], arr[i]];
-}
-
-function EntryEditor({ entry: e, update }: { entry: Entry; update: Update }) {
+function EntryEditor({
+  entry: e,
+  update,
+  sort,
+  index,
+}: {
+  entry: Entry;
+  update: Update;
+  sort: ReturnType<typeof useDragSort>;
+  index: number;
+}) {
   const [open, setOpen] = useState(!e.title);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const edit = (fn: (x: Entry) => void) =>
     update((l) => {
       fn(l.entries.find((x) => x.id === e.id)!);
     });
+  const bullets = useDragSort((from, to) => edit((x) => moveItem(x.bullets, from, to)), e.bullets.length);
 
   return (
-    <article className={`card entry-editor ${e.archived ? 'archived' : ''}`}>
+    <article {...sort.row(index, `card entry-editor ${e.archived ? 'archived' : ''}`)}>
       <div className="entry-editor-head">
+        <span {...sort.handle(index)}>⋮⋮</span>
         <button className="icon" onClick={() => setOpen(!open)} aria-label={open ? 'Collapse' : 'Expand'}>
           {open ? '▾' : '▸'}
         </button>
@@ -141,12 +153,6 @@ function EntryEditor({ entry: e, update }: { entry: Entry; update: Update }) {
           <span className="muted small"> · {e.dates || 'no dates'}</span>
           {e.archived && <span className="badge tiny">archived</span>}
         </div>
-        <button className="icon" onClick={() => update((l) => moveEntry(l, e.id, -1))} aria-label="Move up">
-          ↑
-        </button>
-        <button className="icon" onClick={() => update((l) => moveEntry(l, e.id, 1))} aria-label="Move down">
-          ↓
-        </button>
       </div>
 
       {open && (
@@ -202,7 +208,8 @@ function EntryEditor({ entry: e, update }: { entry: Entry; update: Update }) {
           <div className="sub-label">Bullets</div>
           <ul className="bullet-editor">
             {e.bullets.map((b, i) => (
-              <li key={b.id}>
+              <li key={b.id} {...bullets.row(i)}>
+                <span {...bullets.handle(i)}>⋮⋮</span>
                 <button
                   className={`icon star-btn ${b.isDefault ? 'on' : ''}`}
                   title="Pre-select in new versions"
@@ -215,21 +222,13 @@ function EntryEditor({ entry: e, update }: { entry: Entry; update: Update }) {
                   value={b.text}
                   onChange={(ev) => edit((x) => void (x.bullets[i].text = ev.target.value))}
                 />
-                <div className="stack-btns">
-                  <button className="icon" onClick={() => edit((x) => swap(x.bullets, i, i - 1))} aria-label="Move up">
-                    ↑
-                  </button>
-                  <button className="icon" onClick={() => edit((x) => swap(x.bullets, i, i + 1))} aria-label="Move down">
-                    ↓
-                  </button>
-                  <button
-                    className="icon danger-text"
-                    onClick={() => edit((x) => void x.bullets.splice(i, 1))}
-                    aria-label="Remove bullet"
-                  >
-                    ×
-                  </button>
-                </div>
+                <button
+                  className="icon danger-text"
+                  onClick={() => edit((x) => void x.bullets.splice(i, 1))}
+                  aria-label="Remove bullet"
+                >
+                  ×
+                </button>
               </li>
             ))}
           </ul>
@@ -269,6 +268,7 @@ function EntryEditor({ entry: e, update }: { entry: Entry; update: Update }) {
 
 function SkillsEditor({ draft, update }: { draft: Library; update: Update }) {
   const [adding, setAdding] = useState<Record<string, string>>({});
+  const sort = useDragSort((from, to) => update((l) => moveItem(l.skills, from, to)), draft.skills.length);
   return (
     <section className="lib-section">
       <div className="lib-section-head">
@@ -278,20 +278,15 @@ function SkillsEditor({ draft, update }: { draft: Library; update: Update }) {
         </button>
       </div>
       {draft.skills.map((cat, ci) => (
-        <article key={cat.id} className="card skill-editor">
+        <article key={cat.id} {...sort.row(ci, 'card skill-editor')}>
           <div className="entry-editor-head">
+            <span {...sort.handle(ci)}>⋮⋮</span>
             <input
               className="cat-name"
               value={cat.name}
               onChange={(ev) => update((l) => void (l.skills[ci].name = ev.target.value))}
             />
             <span className="spacer" />
-            <button className="icon" onClick={() => update((l) => swap(l.skills, ci, ci - 1))} aria-label="Move up">
-              ↑
-            </button>
-            <button className="icon" onClick={() => update((l) => swap(l.skills, ci, ci + 1))} aria-label="Move down">
-              ↓
-            </button>
             <button
               className="icon danger-text"
               disabled={cat.items.length > 0}

@@ -145,7 +145,13 @@
 .builder legend { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--a-muted); padding: 0; margin-bottom: 8px; }
 .sub-label { font-size: 12px; font-weight: 600; color: var(--a-muted); margin: 10px 0 4px; }
 .order-list { list-style: none; margin: 0; padding: 0; }
-.order-list li { display: flex; align-items: center; padding: 3px 6px; border: 1px solid var(--a-line); border-radius: 6px; margin-bottom: 4px; }
+.order-list li { display: flex; align-items: center; gap: 6px; padding: 5px 6px; border: 1px solid var(--a-line); border-radius: 6px; margin-bottom: 4px; background: #fff; }
+.grip { cursor: grab; user-select: none; padding: 2px 3px; border-radius: 4px; color: #b0b4b9; letter-spacing: -3px; line-height: 1; }
+.grip:hover, .grip:focus-visible { color: var(--a-muted); background: #eef0f3; }
+.grip:active { cursor: grabbing; }
+.dragging { opacity: .4; }
+.drop-before, tr.drop-before > td { box-shadow: 0 -2px 0 var(--a-accent); }
+.drop-after, tr.drop-after > td { box-shadow: 0 2px 0 var(--a-accent); }
 .pick-entry { margin-bottom: 12px; }
 .pick-entry.off .entry-check { opacity: .6; }
 .pick-bullets { list-style: none; margin: 6px 0 0 22px; padding: 0; display: grid; gap: 6px; }
@@ -170,7 +176,6 @@
 .entry-editor-body { margin-top: 12px; padding-left: 32px; }
 .bullet-editor { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
 .bullet-editor li { display: flex; gap: 6px; align-items: flex-start; }
-.stack-btns { display: flex; flex-direction: column; }
 .skill-editor .chips { margin-top: 10px; }
 .cat-name { max-width: 240px; font-weight: 600; }
 .chip.editable { padding: 0 4px 0 2px; cursor: default; }

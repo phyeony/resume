@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { newId, saveProfile } from './store';
 import type { Contact, ContactKind, Profile } from '../../model/types';
 import { useOwnerData } from './Admin';
+import { moveItem, useDragSort } from './useDragSort';
 
 const KINDS: ContactKind[] = ['linkedin', 'email', 'phone', 'github', 'location', 'url'];
 
@@ -31,6 +32,7 @@ export function ProfilePage() {
   }
 
   const editContact = (i: number, fn: (c: Contact) => void) => update((p) => fn(p.contacts[i]));
+  const sort = useDragSort((from, to) => update((p) => moveItem(p.contacts, from, to)), draft.contacts.length);
 
   async function save() {
     setSaving(true);
@@ -73,6 +75,7 @@ export function ProfilePage() {
         <table className="contacts-table">
           <thead>
             <tr>
+              <th />
               <th>★</th>
               <th>Type</th>
               <th>Shown as</th>
@@ -82,7 +85,10 @@ export function ProfilePage() {
           </thead>
           <tbody>
             {draft.contacts.map((c, i) => (
-              <tr key={c.id}>
+              <tr key={c.id} {...sort.row(i)}>
+                <td>
+                  <span {...sort.handle(i)}>⋮⋮</span>
+                </td>
                 <td>
                   <button
                     className={`icon star-btn ${c.isDefault ? 'on' : ''}`}
@@ -109,12 +115,6 @@ export function ProfilePage() {
                   />
                 </td>
                 <td className="nowrap">
-                  <button className="icon" onClick={() => update((p) => swap(p.contacts, i, i - 1))} aria-label="Move up">
-                    ↑
-                  </button>
-                  <button className="icon" onClick={() => update((p) => swap(p.contacts, i, i + 1))} aria-label="Move down">
-                    ↓
-                  </button>
                   <button
                     className="icon danger-text"
                     onClick={() => update((p) => void p.contacts.splice(i, 1))}
@@ -138,9 +138,4 @@ export function ProfilePage() {
       </div>
     </div>
   );
-}
-
-function swap<T>(arr: T[], i: number, j: number) {
-  if (j < 0 || j >= arr.length) return;
-  [arr[i], arr[j]] = [arr[j], arr[i]];
 }

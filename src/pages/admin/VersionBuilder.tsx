@@ -15,6 +15,7 @@ import { ResumeView } from '../../render/ResumeView';
 import { useOwnerData } from './Admin';
 import { exportVersion } from './exporting';
 import { fmtDate } from './format';
+import { moveItem, useDragSort } from './useDragSort';
 
 /** A place a saved version shows up. */
 type Use = { kind: 'main' } | { kind: 'link'; link: ShareLink };
@@ -419,12 +420,14 @@ function toggle(list: string[], id: string, on: boolean): string[] {
 function LayoutEditor({ draft, update }: PickerProps) {
   const { profile } = useOwnerData();
   const order = draft.layout.sectionOrder;
-  const move = (i: number, dir: -1 | 1) =>
-    update((d) => {
-      const o = d.layout.sectionOrder;
-      [o[i], o[i + dir]] = [o[i + dir], o[i]];
-      return d;
-    });
+  const sort = useDragSort(
+    (from, to) =>
+      update((d) => {
+        moveItem(d.layout.sectionOrder, from, to);
+        return d;
+      }),
+    order.length,
+  );
 
   return (
     <fieldset>
@@ -432,15 +435,9 @@ function LayoutEditor({ draft, update }: PickerProps) {
       <div className="sub-label">Section order</div>
       <ol className="order-list">
         {order.map((key, i) => (
-          <li key={key}>
+          <li key={key} {...sort.row(i)}>
+            <span {...sort.handle(i)}>⋮⋮</span>
             <span>{SECTION_TITLES[key]}</span>
-            <span className="spacer" />
-            <button className="icon" disabled={i === 0} onClick={() => move(i, -1)} aria-label="Move up">
-              ↑
-            </button>
-            <button className="icon" disabled={i === order.length - 1} onClick={() => move(i, 1)} aria-label="Move down">
-              ↓
-            </button>
           </li>
         ))}
       </ol>
