@@ -1,8 +1,7 @@
-import { onAuthStateChanged, type User } from 'firebase/auth';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { OWNER_EMAIL, markOwnerDevice } from '../../firebase';
-import { auth, signIn, signOutUser } from './auth';
+import { signIn, signOutUser, watchUser, type SessionUser } from './auth';
 import { listVersions, loadLibrary, loadProfile } from './store';
 import type { Library, Profile, Version } from '../../model/types';
 import { LibraryPage } from './LibraryPage';
@@ -21,6 +20,9 @@ interface OwnerData {
   reloadVersions(): Promise<void>;
 }
 
+/** `npm run local`: data lives in this browser instead of Firebase. */
+const LOCAL = import.meta.env.MODE === 'preview-local';
+
 const Ctx = createContext<OwnerData | null>(null);
 
 export function useOwnerData(): OwnerData {
@@ -30,8 +32,8 @@ export function useOwnerData(): OwnerData {
 }
 
 export default function Admin() {
-  const [user, setUser] = useState<User | null | undefined>(undefined);
-  useEffect(() => onAuthStateChanged(auth, setUser), []);
+  const [user, setUser] = useState<SessionUser | null | undefined>(undefined);
+  useEffect(() => watchUser(setUser), []);
   useEffect(() => {
     document.title = 'Resume Studio';
   }, []);
@@ -61,11 +63,12 @@ export default function Admin() {
       </div>
     );
   }
-  markOwnerDevice();
+  // In the local preview, keep counting your own visits so you can try view tracking.
+  if (!LOCAL) markOwnerDevice();
   return <OwnerArea user={user} />;
 }
 
-function OwnerArea({ user }: { user: User }) {
+function OwnerArea({ user }: { user: SessionUser }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [library, setLibrary] = useState<Library | null>(null);
   const [versions, setVersions] = useState<Version[]>([]);
@@ -103,12 +106,15 @@ function OwnerArea({ user }: { user: User }) {
           </nav>
         )}
         <span className="spacer" />
+        {LOCAL && <span className="badge warn">Local preview · saved in this browser only</span>}
         <a href="/" target="_blank" rel="noopener" className="muted">
           View site ↗
         </a>
-        <button className="link" onClick={() => void signOutUser()} title={user.email ?? ''}>
-          Sign out
-        </button>
+        {!LOCAL && (
+          <button className="link" onClick={() => void signOutUser()} title={user.email ?? ''}>
+            Sign out
+          </button>
+        )}
       </header>
 
       {status === 'loading' && <p className="pad muted">Loading…</p>}

@@ -21,12 +21,11 @@ import {
   type Timestamp,
 } from 'firebase/firestore';
 import { MAIN_SLUG } from '../../data/publicStore';
-import type { ExportRecord, Library, Profile, PublicDoc, Version } from '../../model/types';
+import type { ExportRecord, Library, Profile, Version } from '../../model/types';
 import { db } from './auth';
+import { RESERVED, makeSlug, publicDoc, type ViewStats } from './storeShared';
 
-export function newId(prefix = ''): string {
-  return prefix + crypto.randomUUID().replace(/-/g, '').slice(0, 10);
-}
+export { newId, makeSlug, type ViewStats } from './storeShared';
 
 // ---- master data -----------------------------------------------------------
 
@@ -74,10 +73,6 @@ export async function deleteVersion(v: Version): Promise<void> {
   await batch.commit();
 }
 
-function publicDoc(v: Version, enabled: boolean, expiresAt: number | null): PublicDoc {
-  return { snapshot: v.snapshot, enabled, expiresAt, versionId: v.id };
-}
-
 export async function setMain(target: Version, all: Version[]): Promise<void> {
   const batch = writeBatch(db);
   for (const v of all) {
@@ -92,21 +87,6 @@ export const recordExport = (id: string, format: ExportRecord['format']) =>
   updateDoc(doc(db, 'versions', id), { exports: arrayUnion({ format, at: Date.now() }) });
 
 // ---- company links ---------------------------------------------------------
-
-export function makeSlug(company: string): string {
-  const base =
-    company
-      .toLowerCase()
-      .normalize('NFKD')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 30) || 'resume';
-  const suffix = crypto.getRandomValues(new Uint32Array(1))[0].toString(36).slice(0, 4).padEnd(4, '0');
-  return `${base}-${suffix}`;
-}
-
-/** Slugs that would collide with app routes. */
-const RESERVED = new Set([MAIN_SLUG, 'admin', 'assets', 'index']);
 
 export async function publishLink(v: Version): Promise<Version> {
   let slug = makeSlug(v.company || v.name);
@@ -123,11 +103,6 @@ export async function setLinkState(v: Version, enabled: boolean, expiresAt: numb
   if (v.slug) batch.update(doc(db, 'public', v.slug), { enabled, expiresAt });
   await batch.commit();
   return next;
-}
-
-export interface ViewStats {
-  count: number;
-  lastAt: number | null;
 }
 
 export async function viewStats(slug: string): Promise<ViewStats> {
