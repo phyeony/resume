@@ -3,7 +3,7 @@
 
 import { MAIN_SLUG } from '../../data/publicStore';
 import { clone, readDb, writeDb } from '../../data/localDb';
-import type { ExportRecord, Library, Profile, ShareLink, Version } from '../../model/types';
+import type { Application, ExportRecord, Library, Posting, Profile, ShareLink, Version } from '../../model/types';
 import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
 export { newId, makeSlug, slugProblem, type ViewStats } from './storeShared';
@@ -102,4 +102,23 @@ export async function migrateLegacyLinks(versions: Version[]): Promise<boolean> 
     }
   });
   return legacy.length > 0;
+}
+
+// ---- job applications --------------------------------------------------------
+
+export const listApplications = async (): Promise<Application[]> => clone(Object.values(readDb().applications));
+export const getPosting = async (id: string): Promise<Posting | null> => clone(readDb().postings[id] ?? null);
+
+export async function saveApplication(a: Application, posting?: Posting): Promise<void> {
+  writeDb((db) => {
+    db.applications[a.id] = clone(a);
+    if (posting) db.postings[a.id] = clone(posting);
+  });
+}
+
+export async function deleteApplication(id: string): Promise<void> {
+  writeDb((db) => {
+    delete db.applications[id];
+    delete db.postings[id];
+  });
 }

@@ -4,6 +4,8 @@ import { createLink, deleteLink, makeSlug, slugProblem, updateLink, viewStats, t
 import type { ShareLink, Version } from '../../model/types';
 import { useOwnerData } from './Admin';
 import { fmtDate, fmtDateTime, fromDateInput, toDateInput } from './format';
+import { currentStage } from '../../applications/model';
+import { STAGE_LABELS } from '../../model/types';
 
 /** Company links: each one shows a version at /<slug>, with its own switch, expiry and views. */
 export function LinksPage() {
@@ -181,6 +183,8 @@ function LinkCard({
   versions: Version[];
   reload(): Promise<void>;
 }) {
+  const { applications } = useOwnerData();
+  const apps = applications.filter((a) => a.linkSlug === link.slug);
   const [stats, setStats] = useState<ViewStats | null>(null);
   const [copied, setCopied] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -227,6 +231,12 @@ function LinkCard({
             Created {fmtDate(link.createdAt)}
             {link.note ? ` · ${link.note}` : ''}
           </div>
+          {apps.map((a) => (
+            <div key={a.id} className="small">
+              Application: <Link to={`/admin/applications/${a.id}`}>{a.role || a.company}</Link>{' '}
+              <span className="muted">({STAGE_LABELS[currentStage(a)]})</span>
+            </div>
+          ))}
         </div>
         <span className="spacer" />
         <div className="views">

@@ -4,6 +4,7 @@
 //   links/{slug}                        owner-only company links, each pointing at a version
 //   public/main, public/{slug}          published copies visitors may `get`
 //   public/{slug}/views/{auto}          visit log, create-only for visitors
+//   applications/{id}, postings/{id}    owner-only job applications and their captured postings
 // Editor-only; visitors go through src/data/publicStore.ts.
 
 import {
@@ -21,7 +22,7 @@ import {
   type Timestamp,
 } from 'firebase/firestore';
 import { MAIN_SLUG } from '../../data/publicStore';
-import type { ExportRecord, Library, Profile, ShareLink, Version } from '../../model/types';
+import type { Application, ExportRecord, Library, Posting, Profile, ShareLink, Version } from '../../model/types';
 import { db } from './auth';
 import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
@@ -163,4 +164,28 @@ export async function migrateLegacyLinks(versions: Version[]): Promise<boolean> 
     await batch.commit();
   }
   return legacy.length > 0;
+}
+
+// ---- job applications --------------------------------------------------------
+
+export async function listApplications(): Promise<Application[]> {
+  const snap = await getDocs(collection(db, 'applications'));
+  return snap.docs.map((d) => d.data() as Application);
+}
+
+export async function getPosting(id: string): Promise<Posting | null> {
+  const snap = await getDoc(doc(db, 'postings', id));
+  return snap.exists() ? (snap.data() as Posting) : null;
+}
+
+/** Saves the application, and its captured posting when one is given (first capture or re-capture). */
+export async function saveApplication(a: Application, posting?: Posting): Promise<void> {
+  const batch = writeBatch(db);
+  batch.set(doc(db, 'applications', a.id), a);
+  if (posting) batch.set(doc(db, 'postings', a.id), posting);
+  await batch.commit();
+}
+
+export async function deleteApplication(id: string): Promise<void> {
+  await writeBatch(db).delete(doc(db, 'applications', id)).delete(doc(db, 'postings', id)).commit();
 }

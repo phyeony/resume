@@ -1,0 +1,47 @@
+/* Applications: list, editor and the captured posting. */
+
+.stage-filter { margin: 12px 0 4px; }
+.admin button.chip { font: inherit; }
+
+.stage { display: inline-block; padding: 1px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; white-space: nowrap; background: #eef0f3; color: var(--a-muted); }
+.stage-applied { background: var(--a-accent-soft); color: var(--a-accent); }
+.stage-screening, .stage-interviewing { background: #fef7e0; color: var(--a-warn); }
+.stage-offer { background: #e6f4ea; color: var(--a-ok); }
+.stage-rejected { background: #fce8e6; color: var(--a-danger); }
+
+.app-row.closed { opacity: .7; }
+.app-row h2 a { color: var(--a-text); text-decoration: none; }
+.app-row h2 a:hover { color: var(--a-accent); }
+.app-row .grow-text { min-width: 0; }
+.app-side { display: grid; justify-items: end; gap: 3px; text-align: right; }
+
+.app-editor { max-width: 1240px; }
+.app-editor .page-head h1 { font-size: 19px; }
+.app-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr); gap: 14px; align-items: start; margin-top: 8px; }
+.app-side-col h2 { margin-bottom: 8px; }
+.app-side-col textarea { font-size: 13.5px; }
+
+.posting-card { position: sticky; top: 104px; max-height: calc(100vh - 120px); overflow-y: auto; }
+.posting-head { display: flex; align-items: center; gap: 8px; margin: 10px 0 6px; padding-top: 10px; border-top: 1px solid var(--a-line); }
+.admin select.block-pick { width: auto; max-width: 60%; padding: 3px 6px; font-size: 12.5px; }
+.posting { font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.posting h1, .posting h2, .posting h3, .posting h4, .posting h5, .posting h6 { font-size: 15px; margin: 16px 0 6px; }
+.posting p { margin: 0 0 10px; }
+.posting ul, .posting ol { margin: 0 0 10px; padding-left: 22px; }
+.posting li { margin-bottom: 3px; }
+
+.paste-zone { margin-top: 12px; }
+.admin textarea.paste-target { height: 110px; resize: none; border: 2px dashed #c6dafc; background: var(--a-accent-soft); text-align: center; padding-top: 40px; font-size: 14px; cursor: text; }
+.paste-zone kbd { font: 11.5px ui-monospace, monospace; padding: 0 4px; border: 1px solid var(--a-line); border-radius: 3px; background: #fff; }
+
+.timeline { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 6px; }
+.timeline li { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.stage-add { display: grid; grid-template-columns: auto auto 1fr auto; gap: 6px; align-items: center; }
+.admin .stage-add select { width: auto; }
+.file-version { margin-top: 10px; }
+
+@media (max-width: 900px) {
+  .app-grid { grid-template-columns: 1fr; }
+  .posting-card { position: static; max-height: none; }
+  .stage-add { grid-template-columns: 1fr 1fr; }
+}

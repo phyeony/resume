@@ -174,3 +174,87 @@ export interface PublicDoc {
   expiresAt: number | null;
   versionId: string;
 }
+
+// ---- Job applications ------------------------------------------------------
+
+export type Stage = 'saved' | 'applied' | 'screening' | 'interviewing' | 'offer' | 'rejected' | 'withdrawn' | 'ghosted';
+
+export const STAGES: Stage[] = ['saved', 'applied', 'screening', 'interviewing', 'offer', 'rejected', 'withdrawn', 'ghosted'];
+
+export const STAGE_LABELS: Record<Stage, string> = {
+  saved: 'Saved',
+  applied: 'Applied',
+  screening: 'Screening',
+  interviewing: 'Interviewing',
+  offer: 'Offer',
+  rejected: 'Rejected',
+  withdrawn: 'Withdrawn',
+  ghosted: 'Ghosted',
+};
+
+/** Stages that end an application. */
+export const CLOSED_STAGES: Stage[] = ['rejected', 'withdrawn', 'ghosted'];
+
+export interface StageEvent {
+  stage: Stage;
+  at: number; // epoch ms
+  note?: string;
+}
+
+export type SalaryPeriod = 'hour' | 'day' | 'week' | 'month' | 'year';
+
+export interface Salary {
+  /** As shown and edited, e.g. "$120,000 – $150,000 CAD / year". */
+  text: string;
+  min?: number;
+  max?: number;
+  currency?: string;
+  period?: SalaryPeriod;
+}
+
+export type WorkMode = 'remote' | 'hybrid' | 'onsite';
+
+/** The short version of a posting. Filled by a Summarizer, then corrected by hand. */
+export interface PostingSummary {
+  location?: string;
+  workMode?: WorkMode;
+  salary?: Salary;
+  responsibilities: string[];
+  requirements: string[];
+  niceToHave: string[];
+  benefits: string[];
+  /** What filled it: "rules", later e.g. "ai:<model>". */
+  filledBy: string;
+}
+
+/**
+ * The exact posting as captured: postings/{applicationId}. Written once, so it survives the company
+ * taking the posting down; replaced only by an explicit re-capture.
+ */
+export interface Posting {
+  /** Sanitized HTML: headings, paragraphs, lists, bold/italic, links. Wording untouched. */
+  html: string;
+  text: string;
+  capturedAt: number;
+  /** How the block was found: "json-ld", "known:<site>", "scored", "text". */
+  method: string;
+}
+
+export interface Application {
+  id: string;
+  company: string;
+  role: string;
+  /** The posting's address. */
+  url?: string;
+  /** Oldest first; the last entry is the current stage. */
+  history: StageEvent[];
+  /** Company link sent with this application. */
+  linkSlug?: string;
+  /** Version sent as a file, when there's no link. */
+  versionId?: string;
+  notes?: string;
+  summary: PostingSummary;
+  hasPosting: boolean;
+  createdAt: number;
+  updatedAt: number;
+}

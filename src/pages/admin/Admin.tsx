@@ -3,8 +3,10 @@ import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { markOwnerDevice } from '../../firebase';
 import { isAdmin, signIn, signOutUser, watchUser } from './auth';
 import { signInErrorMessage, type SessionUser } from './owner';
-import { listLinks, listVersions, loadLibrary, loadProfile, migrateLegacyLinks } from './store';
-import type { Library, Profile, ShareLink, Version } from '../../model/types';
+import { listApplications, listLinks, listVersions, loadLibrary, loadProfile, migrateLegacyLinks } from './store';
+import type { Application, Library, Profile, ShareLink, Version } from '../../model/types';
+import { ApplicationEditor } from './ApplicationEditor';
+import { ApplicationsPage } from './ApplicationsPage';
 import { LinksPage } from './LinksPage';
 import { LibraryPage } from './LibraryPage';
 import { ProfilePage } from './ProfilePage';
@@ -18,10 +20,12 @@ interface OwnerData {
   library: Library;
   versions: Version[];
   links: ShareLink[];
+  applications: Application[];
   setProfile(p: Profile): void;
   setLibrary(l: Library): void;
   /** Reloads versions and links together, since links show versions. */
   reloadVersions(): Promise<void>;
+  reloadApplications(): Promise<void>;
 }
 
 /** `npm run local`: data lives in this browser instead of Firebase. */
@@ -100,6 +104,7 @@ function OwnerArea({ user }: { user: SessionUser }) {
   const [library, setLibrary] = useState<Library | null>(null);
   const [versions, setVersions] = useState<Version[]>([]);
   const [links, setLinks] = useState<ShareLink[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading');
   const [error, setError] = useState('');
 
@@ -109,6 +114,8 @@ function OwnerArea({ user }: { user: SessionUser }) {
     setLinks(k);
   }, []);
 
+  const reloadApplications = useCallback(async () => setApplications(await listApplications()), []);
+
   const load = useCallback(async () => {
     try {
       const [p, l, v0] = await Promise.all([loadProfile(), loadLibrary(), listVersions()]);
@@ -116,7 +123,9 @@ function OwnerArea({ user }: { user: SessionUser }) {
       setProfile(p);
       setLibrary(l);
       setVersions(v);
-      setLinks(await listLinks());
+      const [k, a] = await Promise.all([listLinks(), listApplications()]);
+      setLinks(k);
+      setApplications(a);
       setStatus(p && l ? 'ready' : 'empty');
     } catch (e) {
       setError(String(e));
@@ -136,6 +145,7 @@ function OwnerArea({ user }: { user: SessionUser }) {
           <nav>
             <NavLink to="/admin/versions">Versions</NavLink>
             <NavLink to="/admin/links">Links</NavLink>
+            <NavLink to="/admin/applications">Applications</NavLink>
             <NavLink to="/admin/library">Experience &amp; skills</NavLink>
             <NavLink to="/admin/profile">Profile</NavLink>
           </nav>
@@ -160,12 +170,14 @@ function OwnerArea({ user }: { user: SessionUser }) {
       )}
       {status === 'empty' && <Setup onDone={load} />}
       {status === 'ready' && profile && library && (
-        <Ctx.Provider value={{ profile, library, versions, links, setProfile, setLibrary, reloadVersions }}>
+        <Ctx.Provider value={{ profile, library, versions, links, applications, setProfile, setLibrary, reloadVersions, reloadApplications }}>
           <Routes>
             <Route index element={<Navigate to="versions" replace />} />
             <Route path="versions" element={<VersionsPage />} />
             <Route path="versions/:id" element={<KeyedBuilder />} />
             <Route path="links" element={<LinksPage />} />
+            <Route path="applications" element={<ApplicationsPage />} />
+            <Route path="applications/:id" element={<KeyedApplication />} />
             <Route path="library" element={<LibraryPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="*" element={<Navigate to="versions" replace />} />
@@ -180,4 +192,9 @@ function OwnerArea({ user }: { user: SessionUser }) {
 function KeyedBuilder() {
   const { pathname, search } = useLocation();
   return <VersionBuilder key={pathname + search} />;
+}
+
+function KeyedApplication() {
+  const { pathname } = useLocation();
+  return <ApplicationEditor key={pathname} />;
 }

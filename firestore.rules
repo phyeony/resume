@@ -33,6 +33,14 @@ service cloud.firestore {
       allow read, write: if isOwner();
     }
 
+    match /applications/{id} {
+      allow read, write: if isOwner();
+    }
+
+    match /postings/{id} {
+      allow read, write: if isOwner();
+    }
+
     match /public/{slug} {
       // get only: no listing, so company links can't be enumerated
       allow get: if isOwner() || isLive(resource.data);
