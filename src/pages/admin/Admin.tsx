@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import { OWNER_EMAIL, markOwnerDevice } from '../../firebase';
-import { signIn, signOutUser, watchUser, type SessionUser } from './auth';
+import { markOwnerDevice } from '../../firebase';
+import { signIn, signOutUser, watchUser } from './auth';
+import { isOwner, signInErrorMessage, type SessionUser } from './owner';
 import { listVersions, loadLibrary, loadProfile } from './store';
 import type { Library, Profile, Version } from '../../model/types';
 import { LibraryPage } from './LibraryPage';
@@ -33,6 +34,8 @@ export function useOwnerData(): OwnerData {
 
 export default function Admin() {
   const [user, setUser] = useState<SessionUser | null | undefined>(undefined);
+  const [signInError, setSignInError] = useState<string | null>(null);
+  const [signingIn, setSigningIn] = useState(false);
   useEffect(() => watchUser(setUser), []);
   useEffect(() => {
     document.title = 'Resume Studio';
@@ -45,19 +48,30 @@ export default function Admin() {
         <div className="card narrow">
           <h1>Resume Studio</h1>
           <p className="muted">Sign in to edit your resume.</p>
-          <button className="primary" onClick={() => void signIn()}>
-            Sign in with Google
+          <button
+            className="primary"
+            disabled={signingIn}
+            onClick={() => {
+              setSigningIn(true);
+              setSignInError(null);
+              signIn()
+                .catch((e: unknown) => setSignInError(signInErrorMessage(e)))
+                .finally(() => setSigningIn(false));
+            }}
+          >
+            {signingIn ? 'Signing in…' : 'Sign in with Google'}
           </button>
+          {signInError && <p className="error small">{signInError}</p>}
         </div>
       </div>
     );
   }
-  if (user.email !== OWNER_EMAIL) {
+  if (!isOwner(user)) {
     return (
       <div className="admin center">
         <div className="card narrow">
           <h1>Not authorized</h1>
-          <p className="muted">{user.email} can't edit this resume.</p>
+          <p className="muted">{user.email ?? 'This account'} can't edit this resume. Sign in with the owner's Google account.</p>
           <button onClick={() => void signOutUser()}>Sign out</button>
         </div>
       </div>
