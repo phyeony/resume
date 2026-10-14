@@ -1,0 +1,237 @@
+/* ---------------------------------------------------------------
+   Hyeonyoung Park — resume
+   Type + color carried over from the source Word document:
+   Calibri (Carlito as the metric-compatible web fallback),
+   #1155CC section headings over a hairline rule, #0F0F0F body.
+   --------------------------------------------------------------- */
+
+:root {
+  --accent: #1155CC;
+  --ink: #0F0F0F;
+  --rule: #9aa0a6;
+  --page: #ffffff;
+  --backdrop: #f4f5f7;
+
+  /* Word: name 17pt / headings 12pt / body 10pt — same ratios, scaled up for screen */
+  --fs-body: 16.5px;
+  --fs-name: 30px;
+  --fs-head: 20.5px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  padding: clamp(16px, 4vw, 48px) clamp(12px, 4vw, 32px);
+  background: var(--backdrop);
+  color: var(--ink);
+  font-family: Calibri, Carlito, "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  font-size: var(--fs-body);
+  line-height: 1.4;
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+}
+.skip:focus {
+  left: 8px; top: 8px;
+  z-index: 10;
+  padding: 8px 14px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+/* --- the sheet ------------------------------------------------- */
+
+.sheet {
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: clamp(28px, 5vw, 56px) clamp(20px, 5vw, 60px) clamp(36px, 6vw, 64px);
+  background: var(--page);
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(15, 15, 15, .06), 0 8px 28px rgba(15, 15, 15, .08);
+}
+
+/* --- masthead -------------------------------------------------- */
+
+.masthead { text-align: center; }
+
+.masthead h1 {
+  margin: 0 0 .35em;
+  font-size: var(--fs-name);
+  font-weight: 700;
+  letter-spacing: .2px;
+  line-height: 1.15;
+}
+
+.contact {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: .95em;
+}
+
+.contact li {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 14px;
+}
+
+/* the doc separated these with " | " — keep the pipes, drop the last one */
+.contact li + li { border-left: 1px solid #d4d6da; }
+
+.contact a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color .12s ease, border-color .12s ease;
+}
+.contact a:hover,
+.contact a:focus-visible {
+  color: var(--accent);
+  border-bottom-color: currentColor;
+}
+
+.ico {
+  width: 1em;
+  height: 1em;
+  flex: none;
+}
+
+/* --- sections -------------------------------------------------- */
+
+.section { margin-top: 1.5em; }
+
+.section h2 {
+  margin: 0 0 .5em;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--rule);   /* Word's single 0.5pt bottom border */
+  color: var(--accent);
+  font-size: var(--fs-head);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+/* --- entries --------------------------------------------------- */
+
+.entry { margin-bottom: 1.05em; }
+.entry:last-child { margin-bottom: 0; }
+
+.entry-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 2px 16px;
+}
+
+.role {
+  font-weight: 700;
+}
+
+.dates {
+  font-weight: 700;
+  white-space: nowrap;          /* Word held these on one line at the right tab stop */
+}
+
+.entry-head.sub .dates,
+.entry-head.sub .gpa,
+.entry-head.sub .org { font-weight: 400; }
+
+.org {
+  font-style: italic;
+  margin-bottom: .1em;
+}
+
+.entry-head .org { margin-bottom: 0; }
+
+.gpa { white-space: nowrap; }
+
+.sep {
+  font-weight: 400;
+  color: #5f6368;
+  padding: 0 1px;
+}
+
+.stack {
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* --- bullets --------------------------------------------------- */
+
+.bullets {
+  margin: .25em 0 0;
+  padding-left: 1.35em;
+  list-style: none;
+}
+
+.bullets li {
+  position: relative;
+  margin-bottom: .22em;
+}
+
+.bullets li::before {
+  content: "•";
+  position: absolute;
+  left: -1.05em;
+  color: var(--ink);
+}
+
+.bullets strong { font-weight: 700; }
+
+/* --- narrow screens: date drops under the role ------------------ */
+
+@media (max-width: 620px) {
+  :root {
+    --fs-body: 16px;
+    --fs-name: 26px;
+    --fs-head: 19px;
+  }
+  .entry-head { flex-direction: column; }
+  .dates { font-weight: 400; color: #3c4043; }
+  .entry-head.sub { flex-direction: column; }
+  .contact li { padding: 2px 10px; }
+  .contact li + li { border-left: 0; }
+}
+
+/* --- print: back to a clean sheet of paper ---------------------- */
+
+@media print {
+  :root {
+    --fs-body: 10pt;
+    --fs-name: 17pt;
+    --fs-head: 12pt;
+  }
+  body {
+    padding: 0;
+    background: #fff;
+    line-height: 1.25;
+  }
+  .sheet {
+    max-width: none;
+    margin: 0;
+    padding: 0.4in 0.5in;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .section { margin-top: 12pt; }
+  .entry { margin-bottom: 8pt; page-break-inside: avoid; }
+  .section h2 { page-break-after: avoid; }
+  .contact a { color: var(--ink); }
+  a[href]::after { content: ""; }   /* no printed URLs — the doc had none */
+}
