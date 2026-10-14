@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { newId, saveVersion } from './store';
+import { newId, saveVersion, setMain, updateLink } from './store';
 import { buildSnapshot, defaultLayout, defaultSelection } from '../../model/snapshot';
 import {
   SECTION_TITLES,
@@ -8,12 +8,25 @@ import {
   type EntrySection,
   type Layout,
   type Selection,
+  type ShareLink,
   type Version,
 } from '../../model/types';
 import { ResumeView } from '../../render/ResumeView';
 import { useOwnerData } from './Admin';
 import { exportVersion } from './exporting';
 import { fmtDate } from './format';
+
+/** A place a saved version shows up. */
+type Use = { kind: 'main' } | { kind: 'link'; link: ShareLink };
+
+const useLabel = (u: Use) => (u.kind === 'main' ? 'main site' : u.link.company);
+const useKey = (u: Use) => (u.kind === 'main' ? 'main' : u.link.slug);
+
+/** What to do with edits to a version that several places show. */
+type SaveChoiceResult =
+  | { mode: 'all' }
+  | { mode: 'only'; use: Use; name: string }
+  | { mode: 'new'; name: string };
 
 interface Draft {
   name: string;
@@ -66,10 +79,17 @@ export function VersionBuilder() {
   // Opening an old version after editing the library: show that saving will pick up the edits.
   const drifted = !!existing && !dirty && stableJson(existing.snapshot) !== stableJson(snapshot);
   const pages = usePageCount(snapshot);
-  const liveAt = [
-    ...(existing?.isMain ? ['your main site'] : []),
-    ...links.filter((l) => existing && l.versionId === existing.id).map((l) => l.company),
-  ];
+  const uses: Use[] = existing
+    ? [
+        ...(existing.isMain ? [{ kind: 'main' } as const] : []),
+        ...links.filter((l) => l.versionId === existing.id).map((link) => ({ kind: 'link', link }) as const),
+      ]
+    : [];
+  // Shared versions ask where an edit should go, so one company's tweak can't leak into the others.
+  const shared = uses.length > 1;
+  const openedFor = search.get('for');
+  const openedUse = uses.find((u) => useKey(u) === openedFor);
+  const [choosing, setChoosing] = useState<{ then?: (v: Version) => Promise<void> } | null>(null);
 
   if (id !== 'new' && !existing) {
     return <p className="pad error">Version not found.</p>;
@@ -80,46 +100,104 @@ export function VersionBuilder() {
     setDirty(true);
   }
 
-  async function save(): Promise<Version | null> {
-    if (!draft.name.trim()) {
-      setError('Give the version a name, e.g. “Amazon — SDE II”.');
-      return null;
-    }
+  function draftFields(now: number) {
+    return {
+      name: draft.name.trim(),
+      company: draft.company.trim(),
+      role: draft.role.trim(),
+      notes: draft.notes.trim(),
+      selection: draft.selection,
+      overrides: pruneOverrides(draft.overrides, draft.selection),
+      layout: draft.layout,
+      snapshot,
+      updatedAt: now,
+    };
+  }
+
+  async function guarded<T>(fn: () => Promise<T>): Promise<T | null> {
     setSaving(true);
     setError('');
     try {
-      const now = Date.now();
-      const v: Version = {
-        ...(existing ?? { id: newId('v-'), createdAt: now, isMain: false, exports: [] }),
-        name: draft.name.trim(),
-        company: draft.company.trim(),
-        role: draft.role.trim(),
-        notes: draft.notes.trim(),
-        selection: draft.selection,
-        overrides: pruneOverrides(draft.overrides, draft.selection),
-        layout: draft.layout,
-        snapshot,
-        updatedAt: now,
-      };
-      await saveVersion(v);
-      await reloadVersions();
-      setDirty(false);
-      if (!existing) navigate(`/admin/versions/${v.id}`, { replace: true });
-      return v;
+      return await fn();
     } catch (e) {
-      setError(String(e));
+      setError(e instanceof Error ? e.message : String(e));
       return null;
     } finally {
       setSaving(false);
     }
   }
 
+  /** Writes the edits into this version, updating every place that shows it. */
+  async function saveInPlace(): Promise<Version | null> {
+    return guarded(async () => {
+      const now = Date.now();
+      const v: Version = {
+        ...(existing ?? { id: newId('v-'), createdAt: now, isMain: false, exports: [] }),
+        ...draftFields(now),
+      };
+      await saveVersion(v);
+      await reloadVersions();
+      setDirty(false);
+      if (!existing) navigate(`/admin/versions/${v.id}`, { replace: true });
+      return v;
+    });
+  }
+
+  /** Saves the edits as a new version, optionally moving one place onto it; the original stays as it was. */
+  async function saveAsNew(name: string, use: Use | null, then?: (v: Version) => Promise<void>) {
+    await guarded(async () => {
+      const now = Date.now();
+      const v: Version = {
+        ...draftFields(now),
+        id: newId('v-'),
+        createdAt: now,
+        isMain: false,
+        exports: [],
+        name: name.trim() || `${draft.name.trim()} (copy)`,
+        ...(use?.kind === 'link' ? { company: use.link.company } : {}),
+      };
+      await saveVersion(v);
+      if (use?.kind === 'link') await updateLink({ ...use.link, versionId: v.id }, v);
+      if (use?.kind === 'main') await setMain(v, versions);
+      if (then) await then(v);
+      await reloadVersions();
+      setDirty(false);
+      navigate(`/admin/versions/${v.id}`);
+    });
+  }
+
+  /** Save button: asks first when the version is shared. `then` runs on whichever version ends up saved. */
+  async function requestSave(then?: (v: Version) => Promise<void>) {
+    if (!draft.name.trim()) {
+      setError('Give the version a name, e.g. “Amazon — SDE II”.');
+      return;
+    }
+    if (shared) {
+      setChoosing({ then });
+      return;
+    }
+    const v = await saveInPlace();
+    if (v && then) await then(v);
+  }
+
+  async function resolveChoice(choice: SaveChoiceResult) {
+    const then = choosing?.then;
+    setChoosing(null);
+    if (choice.mode === 'all') {
+      const v = await saveInPlace();
+      if (v && then) await then(v);
+    } else {
+      await saveAsNew(choice.name, choice.mode === 'only' ? choice.use : null, then);
+    }
+  }
+
   async function exportAs(format: 'pdf' | 'docx') {
-    const v = dirty || drifted || !existing ? await save() : existing;
-    if (v) {
+    const after = async (v: Version) => {
       await exportVersion(v, format);
       await reloadVersions();
-    }
+    };
+    if (dirty || drifted || !existing) await requestSave(after);
+    else await after(existing);
   }
 
   return (
@@ -130,7 +208,7 @@ export function VersionBuilder() {
             ← Versions
           </button>
           <span className="spacer" />
-          <button className="primary" disabled={saving || (!dirty && !drifted)} onClick={() => void save()}>
+          <button className="primary" disabled={saving || (!dirty && !drifted)} onClick={() => void requestSave()}>
             {saving ? 'Saving…' : existing ? 'Save' : 'Create version'}
           </button>
         </div>
@@ -142,8 +220,12 @@ export function VersionBuilder() {
           </p>
         )}
 
-        {liveAt.length > 0 && (
-          <p className="muted small">Live on {liveAt.join(', ')}. Saving updates {liveAt.length > 1 ? 'those pages' : 'that page'} too.</p>
+        {uses.length === 1 && <p className="muted small">Live on {useLabel(uses[0])}. Saving updates it too.</p>}
+        {shared && (
+          <p className="muted small">
+            Live on {uses.map(useLabel).join(', ')}. When you save, you'll choose whether the change goes everywhere or
+            only to {openedUse ? useLabel(openedUse) : 'one of them'}.
+          </p>
         )}
 
         <fieldset>
@@ -188,6 +270,107 @@ export function VersionBuilder() {
           <ResumeView snapshot={snapshot} />
         </div>
       </section>
+      {choosing && (
+        <SaveChoice
+          uses={uses}
+          baseName={draft.name.trim()}
+          preferred={openedFor}
+          onCancel={() => setChoosing(null)}
+          onConfirm={(c) => void resolveChoice(c)}
+        />
+      )}
+    </div>
+  );
+}
+
+function SaveChoice({
+  uses,
+  baseName,
+  preferred,
+  onCancel,
+  onConfirm,
+}: {
+  uses: Use[];
+  baseName: string;
+  preferred: string | null;
+  onCancel(): void;
+  onConfirm(c: SaveChoiceResult): void;
+}) {
+  // 'all' | 'new' | a use key
+  const [pick, setPick] = useState(() => (uses.some((u) => useKey(u) === preferred) ? preferred! : 'all'));
+  const suggested = (p: string) => {
+    const use = uses.find((u) => useKey(u) === p);
+    return use ? `${baseName} — ${use.kind === 'main' ? 'main' : use.link.company}` : `${baseName} (copy)`;
+  };
+  const [name, setName] = useState(() => suggested(pick));
+
+  function choose(p: string) {
+    setPick(p);
+    setName(suggested(p));
+  }
+
+  function confirm() {
+    if (pick === 'all') return onConfirm({ mode: 'all' });
+    if (pick === 'new') return onConfirm({ mode: 'new', name });
+    onConfirm({ mode: 'only', use: uses.find((u) => useKey(u) === pick)!, name });
+  }
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onCancel();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onCancel]);
+
+  return (
+    <div className="modal-backdrop" onClick={onCancel}>
+      <div className="card modal" role="dialog" aria-modal="true" aria-labelledby="save-choice-title" onClick={(e) => e.stopPropagation()}>
+        <h2 id="save-choice-title">Where should this change go?</h2>
+        <p className="muted small">This version is live on {uses.map(useLabel).join(', ')}.</p>
+
+        <label className="check choice">
+          <input type="radio" name="save-choice" checked={pick === 'all'} onChange={() => choose('all')} />
+          <span>
+            <strong>Update everywhere</strong>
+            <span className="muted small"> For fixes that belong on all of them, like a typo or new dates.</span>
+          </span>
+        </label>
+        {uses.map((u) => (
+          <label key={useKey(u)} className="check choice">
+            <input type="radio" name="save-choice" checked={pick === useKey(u)} onChange={() => choose(useKey(u))} />
+            <span>
+              <strong>Only for {useLabel(u)}</strong>
+              <span className="muted small">
+                {' '}
+                Saves a new version and moves {u.kind === 'main' ? 'your main site' : `the ${u.link.company} link`} to it.
+                The others keep the current version.
+              </span>
+            </span>
+          </label>
+        ))}
+        <label className="check choice">
+          <input type="radio" name="save-choice" checked={pick === 'new'} onChange={() => choose('new')} />
+          <span>
+            <strong>Save as a new version</strong>
+            <span className="muted small"> Nothing moves to it; every link keeps the current version.</span>
+          </span>
+        </label>
+
+        {pick !== 'all' && (
+          <label>
+            New version name
+            <input value={name} onChange={(e) => setName(e.target.value)} />
+          </label>
+        )}
+
+        <div className="btn-row">
+          <button className="primary" onClick={confirm}>
+            Save
+          </button>
+          <button className="link" onClick={onCancel}>
+            Cancel
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

@@ -40,6 +40,7 @@ export async function deleteVersion(v: Version, links: ShareLink[]): Promise<voi
 export async function setMain(target: Version, all: Version[]): Promise<void> {
   writeDb((db) => {
     for (const v of all) if (db.versions[v.id]) db.versions[v.id].isMain = v.id === target.id;
+    if (db.versions[target.id]) db.versions[target.id].isMain = true;
     db.public[MAIN_SLUG] = clone(publicDoc(target, true, null));
   });
 }

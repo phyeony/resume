@@ -281,8 +281,8 @@ function LinkCard({
           </select>
         </label>
         {version && (
-          <Link className="small" to={`/admin/versions/${version.id}`}>
-            Edit version
+          <Link className="small" to={`/admin/versions/${version.id}?for=${link.slug}`}>
+            Edit for {link.company}
           </Link>
         )}
         <label className="toggle small">
