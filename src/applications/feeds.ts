@@ -300,6 +300,8 @@ export function filterJobs(jobs: FeedJob[], s: FeedSettings, now = Date.now()): 
   const include = words(s.include);
   const exclude = words(s.exclude);
   const places = words(s.locations);
+  // "2027" keeps every 2027 term; "Summer 2027" just that one.
+  const terms = s.terms.map((t) => t.trim().toLowerCase()).filter(Boolean);
   const categories = new Set(s.categories.flatMap((c) => CATEGORIES[c] ?? [c]));
   return jobs.filter((j) => {
     if (j.postedAt !== undefined && now - j.postedAt > s.maxAgeDays * DAY) return false;
@@ -308,7 +310,7 @@ export function filterJobs(jobs: FeedJob[], s: FeedSettings, now = Date.now()): 
     if (exclude.some((w) => title.includes(w))) return false;
     if (places.length && !j.locations.some((l) => places.some((p) => l.toLowerCase().includes(p)))) return false;
     if (j.category !== undefined && categories.size && !categories.has(j.category)) return false;
-    if (j.terms !== undefined && s.terms.length && !j.terms.some((t) => s.terms.includes(t))) return false;
+    if (j.terms !== undefined && terms.length && !j.terms.some((t) => terms.some((w) => t.toLowerCase().includes(w)))) return false;
     return true;
   });
 }

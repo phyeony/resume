@@ -111,6 +111,12 @@ describe('parseHanzili', () => {
     ]);
   });
 
+  it('matches a term by any part of it', () => {
+    const jobs = parseHanzili(md);
+    expect(filterJobs(jobs, { ...DEFAULT_FEED_SETTINGS, categories: [], terms: ['2027'] }, NOW)).toHaveLength(2);
+    expect(filterJobs(jobs, { ...DEFAULT_FEED_SETTINGS, categories: [], terms: ['summer 2027'] }, NOW)).toHaveLength(1);
+  });
+
   it('passes the age filter without a posting date', () => {
     const jobs = parseHanzili(md);
     expect(filterJobs(jobs, { ...DEFAULT_FEED_SETTINGS, categories: [], terms: [] }, NOW)).toHaveLength(2);
