@@ -257,8 +257,35 @@ export interface Application {
   /** Version sent as a file, when there's no link. */
   versionId?: string;
   notes?: string;
+  /** Where the job was found: "LinkedIn", "Simplify", "Referral"… */
+  source?: string;
   summary: PostingSummary;
   hasPosting: boolean;
   createdAt: number;
   updatedAt: number;
+}
+
+// ---- Leads ---------------------------------------------------------------------
+
+/** new: not looked at yet · dismissed: not for me · tracked: became an application. */
+export type LeadStatus = 'new' | 'dismissed' | 'tracked';
+
+/**
+ * A job worth a look, before deciding to apply: leads/{id}. Cheap to add (no captured posting), so a
+ * feed can drop in many; "Track" turns one into an application.
+ */
+export interface Lead {
+  id: string;
+  company: string;
+  role: string;
+  url: string;
+  location?: string;
+  /** Where it was found, carried over to the application. */
+  source: string;
+  /** Its id in the source's feed, so a re-import skips it. */
+  sourceId?: string;
+  postedAt?: number;
+  addedAt: number;
+  status: LeadStatus;
+  applicationId?: string;
 }

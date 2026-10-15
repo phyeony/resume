@@ -45,3 +45,25 @@
   .posting-card { position: static; max-height: none; }
   .stage-add { grid-template-columns: 1fr 1fr; }
 }
+
+/* Leads */
+.add-lead { margin: 12px 0; }
+.lead-actions { display: flex; align-items: center; gap: 6px; }
+
+/* Stats */
+.stat-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 8px 0 14px; }
+.stat-tile { margin: 0; }
+.stat-value { font-size: 26px; font-weight: 600; margin: 2px 0; }
+.week-bars { display: flex; align-items: flex-end; gap: 2px; height: 140px; padding-top: 8px; border-bottom: 1px solid var(--a-line); }
+.week-col { position: relative; flex: 1; height: 100%; display: flex; align-items: flex-end; }
+.week-col:hover { background: var(--a-accent-soft); }
+.week-bar { width: 100%; min-height: 0; background: var(--a-accent); border-radius: 4px 4px 0 0; }
+.week-col:hover::after { content: attr(data-tip); position: absolute; bottom: calc(100% + 4px); left: 50%; transform: translateX(-50%); padding: 3px 8px; border-radius: 6px; background: var(--a-text); color: #fff; font-size: 12px; white-space: nowrap; pointer-events: none; z-index: 1; }
+.week-col:first-child:hover::after { left: 0; transform: none; }
+.week-col:last-child:hover::after { left: auto; right: 0; transform: none; }
+.week-axis { display: flex; justify-content: space-between; margin-top: 4px; }
+.table-wrap { overflow-x: auto; }
+.stats-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.stats-table th { text-align: left; font-weight: 600; color: var(--a-muted); font-size: 12px; }
+.stats-table th, .stats-table td { padding: 6px 10px 6px 0; border-bottom: 1px solid var(--a-line); white-space: nowrap; }
+.stats-table td:first-child { white-space: normal; }

@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState, type ClipboardEvent } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { STAGES, STAGE_LABELS, type Application, type Posting, type PostingSummary, type Stage, type WorkMode } from '../../model/types';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { STAGES, STAGE_LABELS, type Application, type Lead, type Posting, type PostingSummary, type Stage, type WorkMode } from '../../model/types';
 import { capturePosting, sanitize, type Capture } from '../../applications/capture';
 import { companyFromUrl, summarize } from '../../applications/summarize';
 import { parseSalary } from '../../applications/salary';
-import { currentStage, isSummaryEmpty, newApplication, nextStage, sortHistory } from '../../applications/model';
-import { createLink, deleteApplication, getPosting, makeSlug, newId, saveApplication, viewStats, type ViewStats } from './store';
+import { currentStage, isSummaryEmpty, newApplication, nextStage, sortHistory, urlKey } from '../../applications/model';
+import { knownSources } from '../../applications/stats';
+import { createLink, deleteApplication, getPosting, makeSlug, newId, saveApplication, saveLead, viewStats, type ViewStats } from './store';
 import { useOwnerData } from './Admin';
 import { StageBadge } from './ApplicationsPage';
+import { DuplicateNote, SourceField } from './LeadsPage';
 import { fmtDate, fmtDateTime, fromDateInput, toDateInput } from './format';
 import './applications.css';
 
@@ -22,11 +24,14 @@ const LIST_FIELDS: { key: 'responsibilities' | 'requirements' | 'niceToHave' | '
 export function ApplicationEditor() {
   const { id = 'new' } = useParams();
   const isNew = id === 'new';
-  const { applications, reloadApplications } = useOwnerData();
+  const { applications, leads, reloadApplications, reloadLeads } = useOwnerData();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  /** Tracking a lead: it becomes this application. */
+  const lead = isNew ? leads.find((l) => l.id === params.get('lead')) : undefined;
 
   const stored = applications.find((a) => a.id === id);
-  const [app, setApp] = useState<Application>(() => stored ?? newApplication(newId('a')));
+  const [app, setApp] = useState<Application>(() => stored ?? fromLead(newApplication(newId('a')), lead));
   const [posting, setPosting] = useState<Posting | null>(null);
   const [postingLoaded, setPostingLoaded] = useState(isNew || !stored?.hasPosting);
   /** A fresh paste not saved yet: the blocks to choose from. */
@@ -101,7 +106,8 @@ export function ApplicationEditor() {
     try {
       const next: Application = { ...app, company: app.company.trim(), role: app.role.trim(), hasPosting: !!posting, updatedAt: Date.now() };
       await saveApplication(next, capture && posting ? posting : undefined);
-      await reloadApplications();
+      if (lead) await saveLead({ ...lead, status: 'tracked', applicationId: next.id });
+      await Promise.all([reloadApplications(), lead ? reloadLeads() : null]);
       setDirty(false);
       setCapture(null);
       if (isNew) navigate(`/admin/applications/${next.id}`, { replace: true });
@@ -126,6 +132,9 @@ export function ApplicationEditor() {
 
   const showPaste = postingLoaded && (!posting || recapturing);
   const s = app.summary;
+  const key = urlKey(app.url);
+  const dupApp = key ? applications.find((a) => a.id !== app.id && urlKey(a.url) === key) : undefined;
+  const dupLead = key && !lead ? leads.find((l) => l.status !== 'tracked' && urlKey(l.url) === key) : undefined;
 
   return (
     <div className="pad app-editor">
@@ -168,6 +177,7 @@ export function ApplicationEditor() {
               Open posting ↗
             </a>
           )}
+          <DuplicateNote application={dupApp} lead={dupLead} />
 
           {showPaste && (
             <div className="paste-zone">
@@ -281,6 +291,11 @@ export function ApplicationEditor() {
           <ResumeSection app={app} onChange={patch} />
 
           <section className="card">
+            <SourceField
+              value={app.source ?? ''}
+              options={knownSources([...applications, ...leads])}
+              onChange={(v) => patch({ source: v || undefined })}
+            />
             <label>
               Notes
               <textarea rows={4} value={app.notes ?? ''} placeholder="Recruiter, referral, interview prep…" onChange={(e) => patch({ notes: e.target.value || undefined })} />
@@ -310,6 +325,19 @@ export function ApplicationEditor() {
       </div>
     </div>
   );
+}
+
+/** A new application filled in from the lead it tracks. */
+function fromLead(a: Application, lead: Lead | undefined): Application {
+  if (!lead) return a;
+  return {
+    ...a,
+    company: lead.company,
+    role: lead.role,
+    url: lead.url,
+    source: lead.source,
+    summary: { ...a.summary, ...(lead.location ? { location: lead.location } : {}) },
+  };
 }
 
 /** The captured posting, read-only. Sanitized again on the way out, in case stored data was edited. */

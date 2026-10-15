@@ -3,10 +3,13 @@ import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { markOwnerDevice } from '../../firebase';
 import { signIn, signOutUser, watchUser } from './auth';
 import { isOwner, signInErrorMessage, type SessionUser } from './owner';
-import { listApplications, listLinks, listVersions, loadLibrary, loadProfile, migrateLegacyLinks } from './store';
-import type { Application, Library, Profile, ShareLink, Version } from '../../model/types';
+import { listApplications, listLeads, listLinks, listVersions, loadLibrary, loadProfile, migrateLegacyLinks } from './store';
+import type { Application, Lead, Library, Profile, ShareLink, Version } from '../../model/types';
 import { ApplicationEditor } from './ApplicationEditor';
 import { ApplicationsPage } from './ApplicationsPage';
+import { ApplicationStats } from './ApplicationStats';
+import { LeadsPage } from './LeadsPage';
+import { currentStage, isClosed, waitingDays } from '../../applications/model';
 import { LinksPage } from './LinksPage';
 import { LibraryPage } from './LibraryPage';
 import { ProfilePage } from './ProfilePage';
@@ -21,11 +24,13 @@ interface OwnerData {
   versions: Version[];
   links: ShareLink[];
   applications: Application[];
+  leads: Lead[];
   setProfile(p: Profile): void;
   setLibrary(l: Library): void;
   /** Reloads versions and links together, since links show versions. */
   reloadVersions(): Promise<void>;
   reloadApplications(): Promise<void>;
+  reloadLeads(): Promise<void>;
 }
 
 /** `npm run local`: data lives in this browser instead of Firebase. */
@@ -95,6 +100,7 @@ function OwnerArea({ user }: { user: SessionUser }) {
   const [versions, setVersions] = useState<Version[]>([]);
   const [links, setLinks] = useState<ShareLink[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [status, setStatus] = useState<'loading' | 'ready' | 'empty' | 'error'>('loading');
   const [error, setError] = useState('');
 
@@ -105,6 +111,7 @@ function OwnerArea({ user }: { user: SessionUser }) {
   }, []);
 
   const reloadApplications = useCallback(async () => setApplications(await listApplications()), []);
+  const reloadLeads = useCallback(async () => setLeads(await listLeads()), []);
 
   const load = useCallback(async () => {
     try {
@@ -113,9 +120,10 @@ function OwnerArea({ user }: { user: SessionUser }) {
       setProfile(p);
       setLibrary(l);
       setVersions(v);
-      const [k, a] = await Promise.all([listLinks(), listApplications()]);
+      const [k, a, d] = await Promise.all([listLinks(), listApplications(), listLeads()]);
       setLinks(k);
       setApplications(a);
+      setLeads(d);
       setStatus(p && l ? 'ready' : 'empty');
     } catch (e) {
       setError(String(e));
@@ -135,7 +143,18 @@ function OwnerArea({ user }: { user: SessionUser }) {
           <nav>
             <NavLink to="/admin/versions">Versions</NavLink>
             <NavLink to="/admin/links">Links</NavLink>
-            <NavLink to="/admin/applications">Applications</NavLink>
+            <NavLink to="/admin/leads">
+              Leads
+              <NavCount n={leads.filter((l) => l.status === 'new').length} title="new" />
+            </NavLink>
+            <NavLink to="/admin/applications">
+              Applications
+              <NavCount
+                n={applications.filter((a) => !isClosed(currentStage(a)) && waitingDays(a) !== null).length}
+                title="to follow up"
+                warn
+              />
+            </NavLink>
             <NavLink to="/admin/library">Experience &amp; skills</NavLink>
             <NavLink to="/admin/profile">Profile</NavLink>
           </nav>
@@ -160,13 +179,15 @@ function OwnerArea({ user }: { user: SessionUser }) {
       )}
       {status === 'empty' && <Setup onDone={load} />}
       {status === 'ready' && profile && library && (
-        <Ctx.Provider value={{ profile, library, versions, links, applications, setProfile, setLibrary, reloadVersions, reloadApplications }}>
+        <Ctx.Provider value={{ profile, library, versions, links, applications, leads, setProfile, setLibrary, reloadVersions, reloadApplications, reloadLeads }}>
           <Routes>
             <Route index element={<Navigate to="versions" replace />} />
             <Route path="versions" element={<VersionsPage />} />
             <Route path="versions/:id" element={<KeyedBuilder />} />
             <Route path="links" element={<LinksPage />} />
+            <Route path="leads" element={<LeadsPage />} />
             <Route path="applications" element={<ApplicationsPage />} />
+            <Route path="applications/stats" element={<ApplicationStats />} />
             <Route path="applications/:id" element={<KeyedApplication />} />
             <Route path="library" element={<LibraryPage />} />
             <Route path="profile" element={<ProfilePage />} />
@@ -185,6 +206,15 @@ function KeyedBuilder() {
 }
 
 function KeyedApplication() {
-  const { pathname } = useLocation();
-  return <ApplicationEditor key={pathname} />;
+  const { pathname, search } = useLocation();
+  return <ApplicationEditor key={pathname + search} />;
+}
+
+function NavCount({ n, title, warn }: { n: number; title: string; warn?: boolean }) {
+  if (!n) return null;
+  return (
+    <span className={`badge tiny ${warn ? 'warn' : ''}`} title={`${n} ${title}`}>
+      {n}
+    </span>
+  );
 }

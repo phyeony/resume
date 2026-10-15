@@ -3,7 +3,7 @@
 
 import { MAIN_SLUG } from '../../data/publicStore';
 import { clone, readDb, writeDb } from '../../data/localDb';
-import type { Application, ExportRecord, Library, Posting, Profile, ShareLink, Version } from '../../model/types';
+import type { Application, ExportRecord, Lead, Library, Posting, Profile, ShareLink, Version } from '../../model/types';
 import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
 export { newId, makeSlug, slugProblem, type ViewStats } from './storeShared';
@@ -121,4 +121,12 @@ export async function deleteApplication(id: string): Promise<void> {
     delete db.applications[id];
     delete db.postings[id];
   });
+}
+
+// ---- leads -------------------------------------------------------------------
+
+export const listLeads = async (): Promise<Lead[]> => clone(Object.values(readDb().leads));
+
+export async function saveLead(l: Lead): Promise<void> {
+  writeDb((db) => void (db.leads[l.id] = clone(l)));
 }

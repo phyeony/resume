@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { STAGES, STAGE_LABELS, type Application, type Stage } from '../../model/types';
-import { appliedAt, currentStage, isClosed, lastEventAt, waitingDays } from '../../applications/model';
-import { viewStats, type ViewStats } from './store';
+import { appliedAt, currentStage, isClosed, lastEventAt, waitingDays, withFollowUp } from '../../applications/model';
+import { saveApplication, viewStats, type ViewStats } from './store';
 import { useOwnerData } from './Admin';
 import { fmtDate } from './format';
 import './applications.css';
 
-type Filter = 'active' | 'all' | Stage;
+type Filter = 'active' | 'all' | 'follow-up' | Stage;
+
+const needsFollowUp = (a: Application) => !isClosed(currentStage(a)) && waitingDays(a) !== null;
 
 const WORK_MODE: Record<string, string> = { remote: 'Remote', hybrid: 'Hybrid', onsite: 'On-site' };
 
@@ -28,19 +30,24 @@ export function ApplicationsPage() {
       applications
         .filter((a) => {
           const s = currentStage(a);
-          return filter === 'all' || (filter === 'active' ? !isClosed(s) : s === filter);
+          if (filter === 'all') return true;
+          if (filter === 'active') return !isClosed(s);
+          if (filter === 'follow-up') return needsFollowUp(a);
+          return s === filter;
         })
         .sort((a, b) => lastEventAt(b) - lastEventAt(a)),
     [applications, filter],
   );
 
   const activeCount = applications.filter((a) => !isClosed(currentStage(a))).length;
+  const followUpCount = applications.filter(needsFollowUp).length;
 
   return (
     <div className="pad">
       <div className="page-head">
         <h1>Applications</h1>
         <span className="spacer" />
+        <button onClick={() => navigate('/admin/applications/stats')}>Stats</button>
         <button className="primary" onClick={() => navigate('/admin/applications/new')}>
           + New application
         </button>
@@ -51,6 +58,9 @@ export function ApplicationsPage() {
 
       <div className="chips stage-filter">
         <FilterChip on={filter === 'active'} onClick={() => setFilter('active')} label="Active" count={activeCount} />
+        {(followUpCount > 0 || filter === 'follow-up') && (
+          <FilterChip on={filter === 'follow-up'} onClick={() => setFilter('follow-up')} label="Follow up" count={followUpCount} />
+        )}
         <FilterChip on={filter === 'all'} onClick={() => setFilter('all')} label="All" count={applications.length} />
         {STAGES.filter((s) => counts.get(s)).map((s) => (
           <FilterChip key={s} on={filter === s} onClick={() => setFilter(s)} label={STAGE_LABELS[s]} count={counts.get(s)!} />
@@ -83,7 +93,8 @@ export function StageBadge({ stage }: { stage: Stage }) {
 }
 
 function ApplicationRow({ app }: { app: Application }) {
-  const { links } = useOwnerData();
+  const { links, reloadApplications } = useOwnerData();
+  const [busy, setBusy] = useState(false);
   const stage = currentStage(app);
   const applied = appliedAt(app);
   const waiting = waitingDays(app);
@@ -108,12 +119,30 @@ function ApplicationRow({ app }: { app: Application }) {
             {applied ? `Applied ${fmtDate(applied)}` : `Saved ${fmtDate(app.createdAt)}`}
             {where && ` · ${where}`}
             {s.salary?.text && ` · ${s.salary.text}`}
+            {app.source && ` · via ${app.source}`}
           </div>
         </div>
         <span className="spacer" />
         <div className="app-side">
           <StageBadge stage={stage} />
-          {waiting !== null && <div className="small warn-text">No update in {waiting} days</div>}
+          {waiting !== null && (
+            <div className="small">
+              <span className="warn-text">No update in {waiting} days</span>{' '}
+              <button
+                className="link small"
+                disabled={busy}
+                title="Sent a follow-up today: start the wait over"
+                onClick={() => {
+                  setBusy(true);
+                  saveApplication(withFollowUp(app))
+                    .then(reloadApplications)
+                    .finally(() => setBusy(false));
+                }}
+              >
+                Followed up
+              </button>
+            </div>
+          )}
           {link && (
             <div className="muted small">
               /{link.slug}:{' '}

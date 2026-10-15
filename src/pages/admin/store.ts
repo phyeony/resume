@@ -5,6 +5,7 @@
 //   public/main, public/{slug}          published copies visitors may `get`
 //   public/{slug}/views/{auto}          visit log, create-only for visitors
 //   applications/{id}, postings/{id}    owner-only job applications and their captured postings
+//   leads/{id}                          owner-only jobs worth a look, before applying
 // Editor-only; visitors go through src/data/publicStore.ts.
 
 import {
@@ -22,7 +23,7 @@ import {
   type Timestamp,
 } from 'firebase/firestore';
 import { MAIN_SLUG } from '../../data/publicStore';
-import type { Application, ExportRecord, Library, Posting, Profile, ShareLink, Version } from '../../model/types';
+import type { Application, ExportRecord, Lead, Library, Posting, Profile, ShareLink, Version } from '../../model/types';
 import { db } from './auth';
 import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
@@ -189,3 +190,12 @@ export async function saveApplication(a: Application, posting?: Posting): Promis
 export async function deleteApplication(id: string): Promise<void> {
   await writeBatch(db).delete(doc(db, 'applications', id)).delete(doc(db, 'postings', id)).commit();
 }
+
+// ---- leads -------------------------------------------------------------------
+
+export async function listLeads(): Promise<Lead[]> {
+  const snap = await getDocs(collection(db, 'leads'));
+  return snap.docs.map((d) => d.data() as Lead);
+}
+
+export const saveLead = (l: Lead) => setDoc(doc(db, 'leads', l.id), l);

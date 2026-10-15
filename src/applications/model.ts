@@ -49,7 +49,7 @@ export function appliedAt(a: Application): number | null {
 
 export const isClosed = (s: Stage) => CLOSED_STAGES.includes(s);
 
-/** Days since the last change while waiting to hear back, else null. */
+/** Days since the last change while waiting to hear back, else null. Also: time to follow up. */
 export function waitingDays(a: Application, now = Date.now()): number | null {
   const s = currentStage(a);
   if (s !== 'applied' && s !== 'screening') return null;
@@ -62,4 +62,30 @@ export function nextStage(s: Stage): Stage {
   const flow: Stage[] = ['saved', 'applied', 'screening', 'interviewing', 'offer'];
   const i = flow.indexOf(s);
   return i >= 0 && i < flow.length - 1 ? flow[i + 1] : s;
+}
+
+/** Records a follow-up: the current stage again, so the wait starts over. */
+export function withFollowUp(a: Application, now = Date.now()): Application {
+  return { ...a, history: [...a.history, { stage: currentStage(a), at: now, note: 'Followed up' }], updatedAt: now };
+}
+
+// Query parameters that only say how you got to a page, not which page it is.
+const TRACKING_PARAM = /^(utm_.*|st_source|ref|refs|source|src|gh_src|lever-source|lever-origin|trk|trackingid|embed|iis|iisn)$/i;
+
+/**
+ * The same posting gives the same key however it was reached: no tracking parameters, no "www.", no
+ * fragment, and the apply page counts as the posting (…/apply, …/application).
+ */
+export function urlKey(raw: string | undefined): string | null {
+  if (!raw?.trim()) return null;
+  let u: URL;
+  try {
+    u = new URL(raw.trim());
+  } catch {
+    return null;
+  }
+  const params = [...u.searchParams].filter(([k]) => !TRACKING_PARAM.test(k)).sort(([a], [b]) => a.localeCompare(b));
+  const path = u.pathname.replace(/\/(apply|application)\/?$/i, '').replace(/\/+$/, '');
+  const query = params.length ? '?' + new URLSearchParams(params).toString() : '';
+  return u.hostname.toLowerCase().replace(/^www\./, '') + path + query;
 }
