@@ -270,6 +270,8 @@ export interface Application {
 /** new: not looked at yet · dismissed: not for me · tracked: became an application. */
 export type LeadStatus = 'new' | 'dismissed' | 'tracked';
 
+export type LeadTier = 'faang' | 'quant';
+
 /**
  * A job worth a look, before deciding to apply: leads/{id}. Cheap to add (no captured posting), so a
  * feed can drop in many; "Track" turns one into an application.
@@ -282,6 +284,8 @@ export interface Lead {
   location?: string;
   /** As the source shows it, e.g. "$55/hr". */
   salary?: string;
+  /** SpeedyApply's grouping of the company: FAANG+ or Quant. */
+  tier?: LeadTier;
   /** Where it was found, carried over to the application. */
   source: string;
   /** Its id in the source's feed, so a re-import skips it. */
@@ -308,5 +312,9 @@ export interface FeedSettings {
   exclude: string;
   /** Comma-separated places; a location must contain one. Empty keeps all. */
   locations: string;
+  /** Best match: comma-separated title words that rank a lead higher. */
+  prefer: string;
+  /** Best match: comma-separated places that rank a lead higher. */
+  preferPlaces: string;
   lastImportAt?: number;
 }

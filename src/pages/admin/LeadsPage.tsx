@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { FeedSettings, Lead, LeadStatus } from '../../model/types';
-import { CATEGORIES, DEFAULT_FEED_SETTINGS, FEEDS, fetchFeed, filterJobs, planImport } from '../../applications/feeds';
+import { CATEGORIES, DEFAULT_FEED_SETTINGS, FEEDS, fetchFeed, filterJobs, planImport, tiersByCompany } from '../../applications/feeds';
+import { SORT_LABELS, groupByCompany, matchPrefs, scoreLead, sortLeads, type LeadSort, type MatchPrefs } from '../../applications/leadSort';
 import { urlKey } from '../../applications/model';
 import { knownSources } from '../../applications/stats';
 import { companyFromUrl } from '../../applications/summarize';
@@ -14,9 +15,23 @@ const STATUS_LABELS: Record<LeadStatus, string> = { new: 'New', tracked: 'Tracke
 
 /** Jobs worth a look, before deciding to apply. Track one to start an application; dismiss the rest. */
 export function LeadsPage() {
-  const { leads, applications, reloadLeads } = useOwnerData();
+  const { leads, library, reloadLeads } = useOwnerData();
   const [filter, setFilter] = useState<LeadStatus>('new');
   const [search, setSearch] = useState('');
+  const [settings, setSettings] = useState<FeedSettings | null>(null);
+  const [sort, setSort] = useState<LeadSort>(() => (remembered('sort') as LeadSort | null) ?? 'match');
+  const [grouped, setGrouped] = useState(() => remembered('grouped') === '1');
+
+  useEffect(() => {
+    loadFeedSettings().then(
+      (s) => setSettings({ ...DEFAULT_FEED_SETTINGS, ...s }),
+      () => setSettings(DEFAULT_FEED_SETTINGS),
+    );
+  }, []);
+  useEffect(() => remember('sort', sort), [sort]);
+  useEffect(() => remember('grouped', grouped ? '1' : '0'), [grouped]);
+
+  const prefs = useMemo(() => matchPrefs(settings ?? DEFAULT_FEED_SETTINGS, library), [settings, library]);
   const [adding, setAdding] = useState(false);
   const [confirmDismiss, setConfirmDismiss] = useState(false);
   const [error, setError] = useState('');
@@ -25,9 +40,10 @@ export function LeadsPage() {
     const q = search.trim().toLowerCase();
     return leads
       .filter((l) => l.status === filter)
-      .filter((l) => !q || [l.company, l.role, l.location ?? '', l.source].some((t) => t.toLowerCase().includes(q)))
-      .sort((a, b) => (b.postedAt ?? b.addedAt) - (a.postedAt ?? a.addedAt));
+      .filter((l) => !q || [l.company, l.role, l.location ?? '', l.source].some((t) => t.toLowerCase().includes(q)));
   }, [leads, filter, search]);
+  const sorted = useMemo(() => sortLeads(shown, sort, prefs), [shown, sort, prefs]);
+  const groups = useMemo(() => (grouped ? groupByCompany(sorted) : null), [grouped, sorted]);
   const count = (s: LeadStatus) => leads.filter((l) => l.status === s).length;
 
   async function dismissShown() {
@@ -52,7 +68,7 @@ export function LeadsPage() {
         rest.
       </p>
 
-      <ImportPanel onImported={() => setFilter('new')} />
+      {settings && <ImportPanel settings={settings} onSettings={setSettings} onImported={() => setFilter('new')} />}
       {adding && <AddLead onClose={() => setAdding(false)} />}
 
       <div className="lead-toolbar">
@@ -64,6 +80,17 @@ export function LeadsPage() {
           ))}
         </div>
         <input className="lead-search" type="search" value={search} placeholder="Filter by company, role, place…" onChange={(e) => setSearch(e.target.value)} />
+        <select className="lead-sort" value={sort} onChange={(e) => setSort(e.target.value as LeadSort)} title="Sort">
+          {(Object.keys(SORT_LABELS) as LeadSort[]).map((k) => (
+            <option key={k} value={k}>
+              {SORT_LABELS[k]}
+            </option>
+          ))}
+        </select>
+        <label className="check small">
+          <input type="checkbox" checked={grouped} onChange={(e) => setGrouped(e.target.checked)} />
+          Group by company
+        </label>
         {filter === 'new' && shown.length > 1 &&
           (confirmDismiss ? (
             <span className="small">
@@ -82,35 +109,29 @@ export function LeadsPage() {
           ))}
       </div>
       {error && <p className="error small">{error}</p>}
+      {sort === 'match' && !prefs.prefer.length && !prefs.places.length && (
+        <p className="muted small">Best match uses your resume's skills and FAANG+/Quant for now. Add title words and places under Filters → Best match.</p>
+      )}
 
       {leads.length === 0 && <p className="muted">No leads yet. Import from the job lists, or add one when you spot a job.</p>}
       {leads.length > 0 && shown.length === 0 && <p className="muted">Nothing here.</p>}
       <div className="version-list">
-        {shown.map((l) => (
-          <LeadRow key={l.id} lead={l} application={l.applicationId ? applications.find((a) => a.id === l.applicationId) : undefined} />
-        ))}
+        {groups
+          ? groups.map((g) => <CompanyGroup key={g.company} company={g.company} leads={g.leads} prefs={prefs} />)
+          : sorted.map((l) => <LeadRow key={l.id} lead={l} prefs={prefs} />)}
       </div>
     </div>
   );
 }
 
 /** Pulls new jobs from the public lists into leads, with filters kept in owner/leadFeeds. */
-function ImportPanel({ onImported }: { onImported(): void }) {
+function ImportPanel({ settings, onSettings: setSettings, onImported }: { settings: FeedSettings; onSettings(s: FeedSettings): void; onImported(): void }) {
   const { leads, applications, reloadLeads } = useOwnerData();
-  const [settings, setSettings] = useState<FeedSettings | null>(null);
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState('');
   const [result, setResult] = useState('');
   const [errors, setErrors] = useState<string[]>([]);
 
-  useEffect(() => {
-    loadFeedSettings().then(
-      (s) => setSettings({ ...DEFAULT_FEED_SETTINGS, ...s }),
-      () => setSettings(DEFAULT_FEED_SETTINGS),
-    );
-  }, []);
-
-  if (!settings) return null;
   const enabled = FEEDS.filter((f) => settings.feeds.includes(f.id));
 
   async function run(s: FeedSettings) {
@@ -124,9 +145,9 @@ function ImportPanel({ onImported }: { onImported(): void }) {
       const jobs = fetched.flatMap((r) => (r.status === 'fulfilled' ? r.value : []));
       setErrors(failed);
       if (failed.length === enabled.length) return;
-      const plan = planImport(filterJobs(jobs, s, now), { leads, applications }, () => newId('l'), now);
+      const plan = planImport(filterJobs(jobs, s, now), { leads, applications }, () => newId('l'), now, tiersByCompany(jobs));
       setBusy(`Saving ${plan.leads.length} leads…`);
-      await saveLeads(plan.leads);
+      await saveLeads([...plan.leads, ...plan.updated]);
       const next = { ...s, lastImportAt: now };
       await saveFeedSettings(next);
       setSettings(next);
@@ -235,6 +256,22 @@ function ImportSettings({ settings, onSave }: { settings: FeedSettings; onSave(s
         Location has one of
         <input value={s.locations} placeholder="New York, Remote, Seattle (empty: anywhere)" onChange={(e) => patch({ locations: e.target.value })} />
       </label>
+      <fieldset>
+        <legend>
+          Best match <span className="muted small">(ranks leads; doesn't hide any)</span>
+        </legend>
+        <div className="two">
+          <label>
+            Rank higher: title words
+            <input value={s.prefer} placeholder="backend, full stack, new grad" onChange={(e) => patch({ prefer: e.target.value })} />
+          </label>
+          <label>
+            Rank higher: places
+            <input value={s.preferPlaces} placeholder="New York, Remote" onChange={(e) => patch({ preferPlaces: e.target.value })} />
+          </label>
+        </div>
+        <p className="muted small">Skills from Experience &amp; skills found in a title and FAANG+/Quant companies also count, a little less.</p>
+      </fieldset>
       <p className="muted small">
         SpeedyApply lists only software jobs and doesn't say which term, so the category and term filters apply to
         Simplify only. Dismissed leads stay dismissed: importing again never brings them back.
@@ -258,8 +295,29 @@ function ImportSettings({ settings, onSave }: { settings: FeedSettings; onSave(s
   );
 }
 
-function LeadRow({ lead, application }: { lead: Lead; application?: { id: string } }) {
-  const { reloadLeads } = useOwnerData();
+/** A company's leads under one heading: the best one shown, the rest behind "more". */
+function CompanyGroup({ company, leads, prefs }: { company: string; leads: Lead[]; prefs: MatchPrefs }) {
+  const [open, setOpen] = useState(false);
+  if (leads.length === 1) return <LeadRow lead={leads[0]} prefs={prefs} />;
+  return (
+    <div className="lead-group">
+      <div className="lead-group-head small">
+        <strong>{company}</strong> <span className="muted">· {leads.length} leads</span>
+      </div>
+      {(open ? leads : leads.slice(0, 1)).map((l) => (
+        <LeadRow key={l.id} lead={l} prefs={prefs} />
+      ))}
+      <button className="link small" onClick={() => setOpen((o) => !o)}>
+        {open ? 'Show fewer' : `+ ${leads.length - 1} more from ${company}`}
+      </button>
+    </div>
+  );
+}
+
+function LeadRow({ lead, prefs }: { lead: Lead; prefs: MatchPrefs }) {
+  const { reloadLeads, applications } = useOwnerData();
+  const application = lead.applicationId ? applications.find((a) => a.id === lead.applicationId) : undefined;
+  const reasons = scoreLead(lead, prefs).reasons;
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -284,6 +342,7 @@ function LeadRow({ lead, application }: { lead: Lead; application?: { id: string
               {lead.role || '(no role)'}
             </a>
             <span className="muted"> · {lead.company || '(no company)'}</span>
+            {lead.tier && <span className="badge tiny">{lead.tier === 'faang' ? 'FAANG+' : 'Quant'}</span>}
           </h2>
           <div className="muted small">
             {lead.postedAt ? `Posted ${fmtDate(lead.postedAt)}` : `Added ${fmtDate(lead.addedAt)}`}
@@ -291,6 +350,7 @@ function LeadRow({ lead, application }: { lead: Lead; application?: { id: string
             {lead.salary && ` · ${lead.salary}`}
             {` · via ${lead.source}`}
           </div>
+          {reasons.length > 0 && <div className="small lead-reasons">Matches {reasons.join(', ')}</div>}
           {error && <p className="error small">{error}</p>}
         </div>
         <span className="spacer" />
@@ -438,4 +498,23 @@ export function DuplicateNote({ lead, application }: { lead?: Lead; application?
     );
   }
   return null;
+}
+
+// Sort and grouping are per-browser conveniences; storage may be unavailable.
+const STORE_KEY = 'resume-studio:leads:';
+
+function remembered(key: string): string | null {
+  try {
+    return localStorage.getItem(STORE_KEY + key);
+  } catch {
+    return null;
+  }
+}
+
+function remember(key: string, value: string): void {
+  try {
+    localStorage.setItem(STORE_KEY + key, value);
+  } catch {
+    // not remembered; fine
+  }
 }

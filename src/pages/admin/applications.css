@@ -77,3 +77,9 @@
 .admin .import-settings label.check input { width: auto; }
 .lead-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0 4px; }
 .admin input.lead-search { width: 240px !important; max-width: 100%; }
+.admin select.lead-sort { width: auto; }
+.lead-toolbar label.check { display: flex; align-items: center; gap: 5px; margin: 0; font-weight: normal; }
+.lead-reasons { margin-top: 3px; color: var(--a-ok); }
+.lead-group { display: grid; gap: 6px; }
+.lead-group-head { padding: 2px 2px 0; }
+.lead-group > button.link { justify-self: start; }

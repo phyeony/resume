@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Lead } from '../model/types';
 import { newApplication } from './model';
-import { DEFAULT_FEED_SETTINGS, filterJobs, parseSimplify, parseSpeedyApply, planImport, type FeedJob } from './feeds';
+import { DEFAULT_FEED_SETTINGS, filterJobs, parseSimplify, parseSpeedyApply, planImport, tiersByCompany, type FeedJob } from './feeds';
 
 const DAY = 86_400_000;
 const NOW = Date.UTC(2026, 9, 15);
@@ -93,5 +93,28 @@ describe('planImport', () => {
       ['Notion', 'Simplify', 'new'],
       ['Figma', 'Simplify', 'new'],
     ]);
+  });
+});
+
+describe('tiers', () => {
+  const md = [
+    '<!-- TABLE_FAANG_START -->',
+    '| <strong>Figma</strong> | Intern | SF | $60/hr | <a href="https://f.com/1">Apply</a> | 1d |',
+    '<!-- TABLE_FAANG_END -->',
+    '<!-- TABLE_QUANT_START -->',
+    '| <strong>Jane Street</strong> | Intern | NYC | $90/hr | <a href="https://j.com/1">Apply</a> | 1d |',
+    '<!-- TABLE_QUANT_END -->',
+    '<!-- TABLE_START -->',
+    '| <strong>Acme</strong> | Intern | NYC | <a href="https://a.com/1">Apply</a> | 1d |',
+  ].join('\n');
+
+  it('records the SpeedyApply table and lends it to other lists and older leads', () => {
+    const speedy = parseSpeedyApply(md, NOW);
+    expect(speedy.map((j) => j.tier)).toEqual(['faang', 'quant', undefined]);
+    const tiers = tiersByCompany(speedy);
+    const older: Lead = { id: 'old', company: 'Jane Street', role: 'Other intern', url: 'https://j.com/9', source: 'Simplify', addedAt: 0, status: 'new' };
+    const plan = planImport([job({ company: 'FIGMA', role: 'Software Intern' })], { leads: [older], applications: [] }, () => 'n', NOW, tiers);
+    expect(plan.leads[0].tier).toBe('faang');
+    expect(plan.updated).toEqual([{ ...older, tier: 'quant' }]);
   });
 });

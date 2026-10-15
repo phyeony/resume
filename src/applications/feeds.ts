@@ -1,7 +1,7 @@
 // Public job lists that "Import" turns into leads. Both live on GitHub, whose raw files any page may
 // fetch: SimplifyJobs keeps a JSON file, SpeedyApply only markdown tables.
 
-import type { Application, FeedSettings, Lead } from '../model/types';
+import type { Application, FeedSettings, Lead, LeadTier } from '../model/types';
 import { urlKey } from './model';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -48,6 +48,8 @@ export const DEFAULT_FEED_SETTINGS: FeedSettings = {
   include: '',
   exclude: 'PhD, High School',
   locations: '',
+  prefer: '',
+  preferPlaces: '',
 };
 
 /** One job from any feed, before filtering. */
@@ -61,6 +63,8 @@ export interface FeedJob {
   locations: string[];
   postedAt: number;
   salary?: string;
+  /** SpeedyApply only: the table it was listed in. */
+  tier?: LeadTier;
   /** Simplify only. */
   category?: string;
   terms?: string[];
@@ -104,7 +108,11 @@ export function parseSimplify(listings: SimplifyListing[], source = 'Simplify'):
  */
 export function parseSpeedyApply(markdown: string, now = Date.now(), source = 'SpeedyApply'): FeedJob[] {
   const jobs: FeedJob[] = [];
+  let tier: LeadTier | undefined;
   for (const line of markdown.split('\n')) {
+    // Each table opens with a marker: TABLE_FAANG_START, TABLE_QUANT_START, then TABLE_START for the rest.
+    const marker = /<!--\s*TABLE_(\w*?)_?START\s*-->/.exec(line);
+    if (marker) tier = marker[1] === 'FAANG' ? 'faang' : marker[1] === 'QUANT' ? 'quant' : undefined;
     if (!line.startsWith('|') || line.startsWith('|---') || /^\|\s*Company\s*\|/.test(line)) continue;
     const cells = line.split('|').slice(1, -1).map((c) => c.trim());
     if (cells.length < 5) continue;
@@ -125,6 +133,7 @@ export function parseSpeedyApply(markdown: string, now = Date.now(), source = 'S
       locations: [cellText(cells[2])].filter(Boolean),
       postedAt: now - ageDays * DAY,
       ...(cells.length >= 6 && cellText(cells[3]) ? { salary: cellText(cells[3]) } : {}),
+      ...(tier ? { tier } : {}),
     });
   }
   return jobs;
@@ -180,6 +189,14 @@ export function filterJobs(jobs: FeedJob[], s: FeedSettings, now = Date.now()): 
 
 /** Same job, whichever list it came from: company and title without punctuation or case. */
 const jobKey = (company: string, role: string) => `${company}|${role}`.toLowerCase().replace(/[^a-z0-9|]+/g, '');
+const companyKey = (company: string) => company.toLowerCase().replace(/[^a-z0-9]+/g, '');
+
+/** Companies SpeedyApply files under FAANG+ or Quant, from every job fetched (before filtering). */
+export function tiersByCompany(jobs: FeedJob[]): Map<string, LeadTier> {
+  const m = new Map<string, LeadTier>();
+  for (const j of jobs) if (j.tier) m.set(companyKey(j.company), j.tier);
+  return m;
+}
 
 export interface ImportPlan {
   /** New leads to save. */
@@ -187,6 +204,8 @@ export interface ImportPlan {
   matched: number;
   /** Matched, but already a lead (including dismissed ones) or an application. */
   known: number;
+  /** New leads from earlier imports that now get their company's tier. */
+  updated: Lead[];
 }
 
 /** Turns matching jobs into new leads, skipping anything already seen in any form. */
@@ -195,6 +214,7 @@ export function planImport(
   existing: { leads: Lead[]; applications: Application[] },
   makeId: () => string,
   now = Date.now(),
+  tiers: Map<string, LeadTier> = tiersByCompany(jobs),
 ): ImportPlan {
   const ids = new Set(existing.leads.map((l) => l.sourceId).filter(Boolean));
   const urls = new Set([...existing.leads, ...existing.applications].map((x) => urlKey(x.url)).filter(Boolean));
@@ -218,6 +238,7 @@ export function planImport(
       url: j.url,
       ...(j.locations.length ? { location: j.locations.join('; ') } : {}),
       ...(j.salary ? { salary: j.salary } : {}),
+      ...((j.tier ?? tiers.get(companyKey(j.company))) ? { tier: j.tier ?? tiers.get(companyKey(j.company)) } : {}),
       source: j.source,
       sourceId: j.sourceId,
       postedAt: j.postedAt,
@@ -225,7 +246,11 @@ export function planImport(
       status: 'new',
     });
   }
-  return { leads, matched: jobs.length, known };
+  const updated = existing.leads.flatMap((l) => {
+    const tier = l.status === 'new' && !l.tier ? tiers.get(companyKey(l.company)) : undefined;
+    return tier ? [{ ...l, tier }] : [];
+  });
+  return { leads, matched: jobs.length, known, updated };
 }
 
 // ---- fetching --------------------------------------------------------------------
