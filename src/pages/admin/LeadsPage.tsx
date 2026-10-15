@@ -1,60 +1,258 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import type { Lead, LeadStatus } from '../../model/types';
+import type { FeedSettings, Lead, LeadStatus } from '../../model/types';
+import { CATEGORIES, DEFAULT_FEED_SETTINGS, FEEDS, fetchFeed, filterJobs, planImport } from '../../applications/feeds';
 import { urlKey } from '../../applications/model';
 import { knownSources } from '../../applications/stats';
 import { companyFromUrl } from '../../applications/summarize';
-import { newId, saveLead } from './store';
+import { loadFeedSettings, newId, saveFeedSettings, saveLead, saveLeads } from './store';
 import { useOwnerData } from './Admin';
-import { fmtDate } from './format';
+import { fmtDate, fmtDateTime } from './format';
 import './applications.css';
 
 const STATUS_LABELS: Record<LeadStatus, string> = { new: 'New', tracked: 'Tracked', dismissed: 'Dismissed' };
 
 /** Jobs worth a look, before deciding to apply. Track one to start an application; dismiss the rest. */
 export function LeadsPage() {
-  const { leads, applications } = useOwnerData();
+  const { leads, applications, reloadLeads } = useOwnerData();
   const [filter, setFilter] = useState<LeadStatus>('new');
+  const [search, setSearch] = useState('');
   const [adding, setAdding] = useState(false);
+  const [confirmDismiss, setConfirmDismiss] = useState(false);
+  const [error, setError] = useState('');
 
-  const shown = useMemo(
-    () => leads.filter((l) => l.status === filter).sort((a, b) => (b.postedAt ?? b.addedAt) - (a.postedAt ?? a.addedAt)),
-    [leads, filter],
-  );
+  const shown = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return leads
+      .filter((l) => l.status === filter)
+      .filter((l) => !q || [l.company, l.role, l.location ?? '', l.source].some((t) => t.toLowerCase().includes(q)))
+      .sort((a, b) => (b.postedAt ?? b.addedAt) - (a.postedAt ?? a.addedAt));
+  }, [leads, filter, search]);
   const count = (s: LeadStatus) => leads.filter((l) => l.status === s).length;
+
+  async function dismissShown() {
+    setConfirmDismiss(false);
+    try {
+      await saveLeads(shown.map((l) => ({ ...l, status: 'dismissed' as const })));
+      await reloadLeads();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }
 
   return (
     <div className="pad">
       <div className="page-head">
         <h1>Leads</h1>
         <span className="spacer" />
-        {!adding && (
-          <button className="primary" onClick={() => setAdding(true)}>
-            + Add lead
-          </button>
-        )}
+        {!adding && <button onClick={() => setAdding(true)}>+ Add lead</button>}
       </div>
       <p className="muted">
         Jobs worth a look, before you decide to apply. Track one to start an application with its posting; dismiss the
         rest.
       </p>
 
+      <ImportPanel onImported={() => setFilter('new')} />
       {adding && <AddLead onClose={() => setAdding(false)} />}
 
-      <div className="chips stage-filter">
-        {(['new', 'tracked', 'dismissed'] as LeadStatus[]).map((s) => (
-          <button key={s} className={`chip ${filter === s ? 'on' : ''}`} onClick={() => setFilter(s)}>
-            {STATUS_LABELS[s]} <span className="muted small">{count(s)}</span>
-          </button>
-        ))}
+      <div className="lead-toolbar">
+        <div className="chips">
+          {(['new', 'tracked', 'dismissed'] as LeadStatus[]).map((s) => (
+            <button key={s} className={`chip ${filter === s ? 'on' : ''}`} onClick={() => setFilter(s)}>
+              {STATUS_LABELS[s]} <span className="muted small">{count(s)}</span>
+            </button>
+          ))}
+        </div>
+        <input className="lead-search" type="search" value={search} placeholder="Filter by company, role, place…" onChange={(e) => setSearch(e.target.value)} />
+        {filter === 'new' && shown.length > 1 &&
+          (confirmDismiss ? (
+            <span className="small">
+              Dismiss these {shown.length}?{' '}
+              <button className="link" onClick={() => void dismissShown()}>
+                Dismiss
+              </button>
+              <button className="link" onClick={() => setConfirmDismiss(false)}>
+                Cancel
+              </button>
+            </span>
+          ) : (
+            <button className="link small" onClick={() => setConfirmDismiss(true)}>
+              Dismiss all shown
+            </button>
+          ))}
       </div>
+      {error && <p className="error small">{error}</p>}
 
-      {leads.length === 0 && <p className="muted">No leads yet. Add one when you spot a job, even if you're not sure about it.</p>}
+      {leads.length === 0 && <p className="muted">No leads yet. Import from the job lists, or add one when you spot a job.</p>}
       {leads.length > 0 && shown.length === 0 && <p className="muted">Nothing here.</p>}
       <div className="version-list">
         {shown.map((l) => (
           <LeadRow key={l.id} lead={l} application={l.applicationId ? applications.find((a) => a.id === l.applicationId) : undefined} />
         ))}
+      </div>
+    </div>
+  );
+}
+
+/** Pulls new jobs from the public lists into leads, with filters kept in owner/leadFeeds. */
+function ImportPanel({ onImported }: { onImported(): void }) {
+  const { leads, applications, reloadLeads } = useOwnerData();
+  const [settings, setSettings] = useState<FeedSettings | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [busy, setBusy] = useState('');
+  const [result, setResult] = useState('');
+  const [errors, setErrors] = useState<string[]>([]);
+
+  useEffect(() => {
+    loadFeedSettings().then(
+      (s) => setSettings({ ...DEFAULT_FEED_SETTINGS, ...s }),
+      () => setSettings(DEFAULT_FEED_SETTINGS),
+    );
+  }, []);
+
+  if (!settings) return null;
+  const enabled = FEEDS.filter((f) => settings.feeds.includes(f.id));
+
+  async function run(s: FeedSettings) {
+    setBusy(`Fetching ${enabled.length} list${enabled.length === 1 ? '' : 's'}…`);
+    setResult('');
+    setErrors([]);
+    try {
+      const now = Date.now();
+      const fetched = await Promise.allSettled(enabled.map((f) => fetchFeed(f, now)));
+      const failed = fetched.flatMap((r, i) => (r.status === 'rejected' ? [`${enabled[i].label}: ${String(r.reason)}`] : []));
+      const jobs = fetched.flatMap((r) => (r.status === 'fulfilled' ? r.value : []));
+      setErrors(failed);
+      if (failed.length === enabled.length) return;
+      const plan = planImport(filterJobs(jobs, s, now), { leads, applications }, () => newId('l'), now);
+      setBusy(`Saving ${plan.leads.length} leads…`);
+      await saveLeads(plan.leads);
+      const next = { ...s, lastImportAt: now };
+      await saveFeedSettings(next);
+      setSettings(next);
+      await reloadLeads();
+      setResult(
+        `Added ${plan.leads.length} new lead${plan.leads.length === 1 ? '' : 's'} from ${plan.matched} matching job${plan.matched === 1 ? '' : 's'}` +
+          (plan.known ? ` (${plan.known} already seen).` : '.'),
+      );
+      onImported();
+    } catch (e) {
+      setErrors([e instanceof Error ? e.message : String(e)]);
+    } finally {
+      setBusy('');
+    }
+  }
+
+  return (
+    <section className="card import-panel">
+      <div className="import-head">
+        <button className="primary" disabled={!!busy || !enabled.length} onClick={() => void run(settings)}>
+          {busy || 'Import new jobs'}
+        </button>
+        <span className="muted small grow-text">
+          {enabled.length ? `From ${enabled.map((f) => f.label).join(', ')}` : 'No lists chosen'}
+          {settings.lastImportAt ? ` · last ${fmtDateTime(settings.lastImportAt)}` : ''}
+        </span>
+        <button className="link small" onClick={() => setEditing((e) => !e)}>
+          {editing ? 'Close filters' : 'Filters'}
+        </button>
+      </div>
+      {result && <p className="ok-text small">{result}</p>}
+      {errors.map((e) => (
+        <p key={e} className="error small">
+          {e}
+        </p>
+      ))}
+      {editing && (
+        <ImportSettings
+          settings={settings}
+          onSave={async (s) => {
+            await saveFeedSettings(s);
+            setSettings(s);
+            setEditing(false);
+          }}
+        />
+      )}
+    </section>
+  );
+}
+
+function ImportSettings({ settings, onSave }: { settings: FeedSettings; onSave(s: FeedSettings): Promise<void> }) {
+  const [s, setS] = useState(settings);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const patch = (p: Partial<FeedSettings>) => setS((x) => ({ ...x, ...p }));
+  const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
+
+  return (
+    <div className="import-settings">
+      <fieldset>
+        <legend>Lists</legend>
+        {FEEDS.map((f) => (
+          <label key={f.id} className="check">
+            <input type="checkbox" checked={s.feeds.includes(f.id)} onChange={() => patch({ feeds: toggle(s.feeds, f.id) })} />
+            {f.label}
+          </label>
+        ))}
+      </fieldset>
+      <fieldset>
+        <legend>
+          Simplify categories <span className="muted small">(none ticked keeps all)</span>
+        </legend>
+        <div className="chips">
+          {Object.keys(CATEGORIES).map((c) => (
+            <button key={c} className={`chip ${s.categories.includes(c) ? 'on' : ''}`} onClick={() => patch({ categories: toggle(s.categories, c) })}>
+              {c}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+      <div className="two">
+        <label>
+          Simplify terms <span className="muted small">(comma-separated)</span>
+          <input
+            value={s.terms.join(', ')}
+            placeholder="Summer 2027, Fall 2027"
+            onChange={(e) => patch({ terms: e.target.value.split(',').map((t) => t.trim()).filter(Boolean) })}
+          />
+        </label>
+        <label>
+          Posted within (days)
+          <input type="number" min={1} max={120} value={s.maxAgeDays} onChange={(e) => patch({ maxAgeDays: Math.max(1, Number(e.target.value) || 1) })} />
+        </label>
+      </div>
+      <div className="two">
+        <label>
+          Title has one of
+          <input value={s.include} placeholder="software, backend, full stack" onChange={(e) => patch({ include: e.target.value })} />
+        </label>
+        <label>
+          Skip titles with
+          <input value={s.exclude} placeholder="PhD, High School" onChange={(e) => patch({ exclude: e.target.value })} />
+        </label>
+      </div>
+      <label>
+        Location has one of
+        <input value={s.locations} placeholder="New York, Remote, Seattle (empty: anywhere)" onChange={(e) => patch({ locations: e.target.value })} />
+      </label>
+      <p className="muted small">
+        SpeedyApply lists only software jobs and doesn't say which term, so the category and term filters apply to
+        Simplify only. Dismissed leads stay dismissed: importing again never brings them back.
+      </p>
+      <div className="btn-row">
+        <button
+          disabled={saving}
+          onClick={() => {
+            setSaving(true);
+            onSave(s).catch((e: unknown) => {
+              setError(e instanceof Error ? e.message : String(e));
+              setSaving(false);
+            });
+          }}
+        >
+          {saving ? 'Saving…' : 'Save filters'}
+        </button>
+        {error && <span className="error small">{error}</span>}
       </div>
     </div>
   );
@@ -90,6 +288,7 @@ function LeadRow({ lead, application }: { lead: Lead; application?: { id: string
           <div className="muted small">
             {lead.postedAt ? `Posted ${fmtDate(lead.postedAt)}` : `Added ${fmtDate(lead.addedAt)}`}
             {lead.location && ` · ${lead.location}`}
+            {lead.salary && ` · ${lead.salary}`}
             {` · via ${lead.source}`}
           </div>
           {error && <p className="error small">{error}</p>}

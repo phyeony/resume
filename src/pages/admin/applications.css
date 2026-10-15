@@ -67,3 +67,13 @@
 .stats-table th { text-align: left; font-weight: 600; color: var(--a-muted); font-size: 12px; }
 .stats-table th, .stats-table td { padding: 6px 10px 6px 0; border-bottom: 1px solid var(--a-line); white-space: nowrap; }
 .stats-table td:first-child { white-space: normal; }
+.import-panel { margin: 12px 0; }
+.import-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.import-head .grow-text { flex: 1; min-width: 200px; }
+.import-settings { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--a-line); }
+.import-settings fieldset { border: 0; margin: 0 0 10px; padding: 0; }
+.import-settings legend { font-weight: 600; font-size: 13px; margin-bottom: 4px; padding: 0; }
+.admin .import-settings label.check { display: flex; align-items: center; gap: 6px; margin: 3px 0; font-weight: normal; }
+.admin .import-settings label.check input { width: auto; }
+.lead-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0 4px; }
+.admin input.lead-search { width: 240px !important; max-width: 100%; }

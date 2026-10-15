@@ -1,5 +1,6 @@
 // All Firestore access lives here. Layout:
 //   owner/profile, owner/library        owner-only master data
+//   owner/leadFeeds                     owner-only lead import settings
 //   versions/{id}                       owner-only tailored versions (frozen snapshots)
 //   links/{slug}                        owner-only company links, each pointing at a version
 //   public/main, public/{slug}          published copies visitors may `get`
@@ -23,7 +24,7 @@ import {
   type Timestamp,
 } from 'firebase/firestore';
 import { MAIN_SLUG } from '../../data/publicStore';
-import type { Application, ExportRecord, Lead, Library, Posting, Profile, ShareLink, Version } from '../../model/types';
+import type { Application, ExportRecord, FeedSettings, Lead, Library, Posting, Profile, ShareLink, Version } from '../../model/types';
 import { db } from './auth';
 import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
@@ -199,3 +200,20 @@ export async function listLeads(): Promise<Lead[]> {
 }
 
 export const saveLead = (l: Lead) => setDoc(doc(db, 'leads', l.id), l);
+
+/** Many at once, e.g. an import. */
+export async function saveLeads(leads: Lead[]): Promise<void> {
+  // batches hold 500 writes
+  for (let i = 0; i < leads.length; i += 450) {
+    const batch = writeBatch(db);
+    for (const l of leads.slice(i, i + 450)) batch.set(doc(db, 'leads', l.id), l);
+    await batch.commit();
+  }
+}
+
+export async function loadFeedSettings(): Promise<FeedSettings | null> {
+  const snap = await getDoc(doc(db, 'owner', 'leadFeeds'));
+  return snap.exists() ? (snap.data() as FeedSettings) : null;
+}
+
+export const saveFeedSettings = (s: FeedSettings) => setDoc(doc(db, 'owner', 'leadFeeds'), s);

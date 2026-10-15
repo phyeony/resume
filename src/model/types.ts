@@ -280,6 +280,8 @@ export interface Lead {
   role: string;
   url: string;
   location?: string;
+  /** As the source shows it, e.g. "$55/hr". */
+  salary?: string;
   /** Where it was found, carried over to the application. */
   source: string;
   /** Its id in the source's feed, so a re-import skips it. */
@@ -288,4 +290,23 @@ export interface Lead {
   addedAt: number;
   status: LeadStatus;
   applicationId?: string;
+}
+
+/** What "Import" pulls into leads: owner/leadFeeds. */
+export interface FeedSettings {
+  /** Enabled feed ids (see FEEDS in src/applications/feeds.ts). */
+  feeds: string[];
+  /** Simplify categories to keep; empty keeps all. */
+  categories: string[];
+  /** Simplify terms to keep, e.g. "Summer 2027"; empty keeps all. */
+  terms: string[];
+  /** Skip jobs posted longer ago than this. */
+  maxAgeDays: number;
+  /** Comma-separated words; the title must contain one. Empty keeps all. */
+  include: string;
+  /** Comma-separated words; a title containing one is skipped. */
+  exclude: string;
+  /** Comma-separated places; a location must contain one. Empty keeps all. */
+  locations: string;
+  lastImportAt?: number;
 }

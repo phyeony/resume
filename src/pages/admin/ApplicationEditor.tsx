@@ -336,7 +336,11 @@ function fromLead(a: Application, lead: Lead | undefined): Application {
     role: lead.role,
     url: lead.url,
     source: lead.source,
-    summary: { ...a.summary, ...(lead.location ? { location: lead.location } : {}) },
+    summary: {
+      ...a.summary,
+      ...(lead.location ? { location: lead.location } : {}),
+      ...(lead.salary ? { salary: { ...(parseSalary(lead.salary) ?? {}), text: lead.salary } } : {}),
+    },
   };
 }
 
