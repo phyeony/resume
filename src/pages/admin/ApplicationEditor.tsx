@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState, type ClipboardEvent } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { STAGES, STAGE_LABELS, type Application, type Lead, type Posting, type PostingSummary, type Stage, type WorkMode } from '../../model/types';
+import { STAGES, STAGE_LABELS, type Application, type Posting, type PostingSummary, type Stage, type WorkMode } from '../../model/types';
 import { capturePosting, sanitize, type Capture } from '../../applications/capture';
 import { companyFromUrl, summarize } from '../../applications/summarize';
 import { parseSalary } from '../../applications/salary';
-import { currentStage, isSummaryEmpty, newApplication, nextStage, sortHistory, urlKey } from '../../applications/model';
+import { currentStage, fromLead, isSummaryEmpty, newApplication, nextStage, sortHistory, urlKey } from '../../applications/model';
 import { knownSources } from '../../applications/stats';
 import { createLink, deleteApplication, getPosting, makeSlug, newId, saveApplication, saveLead, viewStats, type ViewStats } from './store';
 import { useOwnerData } from './Admin';
@@ -325,23 +325,6 @@ export function ApplicationEditor() {
       </div>
     </div>
   );
-}
-
-/** A new application filled in from the lead it tracks. */
-function fromLead(a: Application, lead: Lead | undefined): Application {
-  if (!lead) return a;
-  return {
-    ...a,
-    company: lead.company,
-    role: lead.role,
-    url: lead.url,
-    source: lead.source,
-    summary: {
-      ...a.summary,
-      ...(lead.location ? { location: lead.location } : {}),
-      ...(lead.salary ? { salary: { ...(parseSalary(lead.salary) ?? {}), text: lead.salary } } : {}),
-    },
-  };
 }
 
 /** The captured posting, read-only. Sanitized again on the way out, in case stored data was edited. */

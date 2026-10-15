@@ -1,6 +1,7 @@
 // All Firestore access lives here. Layout:
 //   owner/profile, owner/library        owner-only master data
 //   owner/leadFeeds                     owner-only lead import settings
+//   owner/answers                       owner-only answer bank for application forms
 //   versions/{id}                       owner-only tailored versions (frozen snapshots)
 //   links/{slug}                        owner-only company links, each pointing at a version
 //   public/main, public/{slug}          published copies visitors may `get`
@@ -25,7 +26,7 @@ import {
   type Timestamp,
 } from 'firebase/firestore';
 import { MAIN_SLUG } from '../../data/publicStore';
-import type { Application, CompanyInfo, ExportRecord, FeedSettings, Lead, Library, Posting, Profile, ShareLink, Version } from '../../model/types';
+import type { Application, ApplicationAnswers, CompanyInfo, ExportRecord, FeedSettings, Lead, Library, Posting, Profile, ShareLink, Version } from '../../model/types';
 import { db } from './auth';
 import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
@@ -39,6 +40,13 @@ export async function loadProfile(): Promise<Profile | null> {
 }
 
 export const saveProfile = (p: Profile) => setDoc(doc(db, 'owner', 'profile'), p);
+
+export async function loadAnswers(): Promise<Partial<ApplicationAnswers> | null> {
+  const snap = await getDoc(doc(db, 'owner', 'answers'));
+  return snap.exists() ? (snap.data() as Partial<ApplicationAnswers>) : null;
+}
+
+export const saveAnswers = (a: ApplicationAnswers) => setDoc(doc(db, 'owner', 'answers'), a);
 
 export async function loadLibrary(): Promise<Library | null> {
   const snap = await getDoc(doc(db, 'owner', 'library'));

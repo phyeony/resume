@@ -3,6 +3,7 @@ import { newId, saveProfile } from './store';
 import type { Contact, ContactKind, Profile } from '../../model/types';
 import { useOwnerData } from './Admin';
 import { moveItem, useDragSort } from './useDragSort';
+import { AnswersSection } from './AnswersSection';
 
 const KINDS: ContactKind[] = ['linkedin', 'email', 'phone', 'github', 'location', 'url'];
 
@@ -136,6 +137,8 @@ export function ProfilePage() {
           + Add contact
         </button>
       </div>
+
+      <AnswersSection />
     </div>
   );
 }

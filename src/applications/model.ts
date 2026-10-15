@@ -1,6 +1,7 @@
 // Small helpers over Application records, shared by the list and the editor.
 
-import { CLOSED_STAGES, type Application, type PostingSummary, type Stage, type StageEvent } from '../model/types';
+import { CLOSED_STAGES, type Application, type Lead, type PostingSummary, type Stage, type StageEvent } from '../model/types';
+import { parseSalary } from './salary';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -27,6 +28,29 @@ export function newApplication(id: string, now = Date.now()): Application {
     createdAt: now,
     updatedAt: now,
   };
+}
+
+/** A new application filled in from the lead it tracks. */
+export function fromLead(a: Application, lead: Lead | undefined): Application {
+  if (!lead) return a;
+  return {
+    ...a,
+    company: lead.company,
+    role: lead.role,
+    url: lead.url,
+    source: lead.source,
+    summary: {
+      ...a.summary,
+      ...(lead.location ? { location: lead.location } : {}),
+      ...(lead.salary ? { salary: { ...(parseSalary(lead.salary) ?? {}), text: lead.salary } } : {}),
+    },
+  };
+}
+
+/** "Applied" on a lead: the application, already at stage applied, with the resume version that was sent. */
+export function appliedFromLead(id: string, lead: Lead, versionId: string | undefined, now = Date.now()): Application {
+  const a = fromLead(newApplication(id, now), lead);
+  return { ...a, history: [...a.history, { stage: 'applied', at: now }], ...(versionId ? { versionId } : {}) };
 }
 
 /** History in date order; ties keep the order they were added in. */

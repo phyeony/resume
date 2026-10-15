@@ -195,3 +195,11 @@
   .topbar { flex-wrap: wrap; gap: 8px 14px; padding: 10px 16px; }
   .pad { padding: 16px 16px 40px; }
 }
+
+/* Application answers (Profile) */
+.answers-head { margin-top: 28px; }
+.answers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0 12px; }
+.answers-grid label > input { width: 100%; }
+.kit-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.kit-row label { margin: 0; }
+.kit-row select { display: block; margin-top: 3px; }

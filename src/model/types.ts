@@ -265,6 +265,74 @@ export interface Application {
   updatedAt: number;
 }
 
+// ---- Application answers (autofill) ----------------------------------------------
+
+/** Work status for one country. Questions usually name it: "authorized to work in the United States?". */
+export interface WorkAuth {
+  id: string;
+  /** "Canada", "United States", "Germany"…; "*" = any country not listed, or none named. */
+  country: string;
+  /** "Yes" / "No" as you'd answer it. */
+  authorized: string;
+  sponsorship: string;
+  /** For your own reference, e.g. "Working Holiday visa". Not filled into forms. */
+  note?: string;
+}
+
+/** A question the standard fields don't cover: forms whose question contains `pattern` get `answer`. */
+export interface CustomAnswer {
+  id: string;
+  /** Words from the question, e.g. "how did you hear". Case doesn't matter. */
+  pattern: string;
+  answer: string;
+}
+
+/**
+ * What job application forms ask every time: owner/answers. Owner-only, never in the repo; travels to
+ * the autofill tools inside a downloaded apply kit.
+ */
+export interface ApplicationAnswers {
+  firstName: string;
+  lastName: string;
+  preferredName: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  region: string;
+  country: string;
+  postalCode: string;
+  linkedin: string;
+  github: string;
+  website: string;
+  school: string;
+  degree: string;
+  major: string;
+  /** As you'd type it, e.g. "May 2027". */
+  graduation: string;
+  startDate: string;
+  salary: string;
+  pronouns: string;
+  gender: string;
+  race: string;
+  hispanic: string;
+  veteran: string;
+  disability: string;
+  workAuth: WorkAuth[];
+  custom: CustomAnswer[];
+  /** Version in the last downloaded kit; "Applied" on a lead records it as the resume sent. */
+  kitVersionId?: string;
+}
+
+/** The file the autofill tools read: answers plus the resume PDF. */
+export interface ApplyKit {
+  kind: 'resume-studio-apply-kit';
+  format: 1;
+  createdAt: number;
+  answers: ApplicationAnswers;
+  resume: { versionId: string; versionName: string; fileName: string; pdfBase64: string };
+}
+
 // ---- Leads ---------------------------------------------------------------------
 
 /** new: not looked at yet · dismissed: not for me · tracked: became an application. */

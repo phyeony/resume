@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body { font: 13px/1.4 system-ui, sans-serif; width: 340px; margin: 0; padding: 12px; color: #202124; }
+      h1 { font-size: 14px; margin: 0 0 8px; }
+      button { font: inherit; padding: 6px 12px; border-radius: 6px; border: 1px solid #dadce0; background: #fff; cursor: pointer; }
+      button.primary { background: #1a73e8; border-color: #1a73e8; color: #fff; }
+      button:disabled { opacity: .5; cursor: default; }
+      .muted { color: #5f6368; font-size: 12px; }
+      .row { display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+      .error { color: #d93025; }
+      ul { margin: 4px 0 8px; padding-left: 18px; }
+      li { margin: 2px 0; }
+      .ok { color: #1e8e3e; }
+      .left { color: #b06000; }
+      h2 { font-size: 12.5px; margin: 10px 0 2px; }
+      #file { display: none; }
+    </style>
+  </head>
+  <body>
+    <h1>Resume Studio Autofill</h1>
+    <div id="kit" class="muted">No apply kit yet.</div>
+    <div class="row">
+      <button id="import">Import apply kit…</button>
+      <input id="file" type="file" accept=".json,application/json" />
+      <button id="fill" class="primary" disabled>Fill this page</button>
+    </div>
+    <div id="error" class="error"></div>
+    <div id="report"></div>
+    <p class="muted">
+      Nothing is submitted for you. Check the page (green = filled, amber = left for you), finish it, and click Submit
+      yourself. Then press <b>Applied</b> on the lead in Resume Studio.
+    </p>
+    <script src="popup.js"></script>
+  </body>
+</html>

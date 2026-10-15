@@ -1,0 +1,12 @@
+{
+  "name": "resume-studio-autofill",
+  "private": true,
+  "type": "module",
+  "description": "Fills a job application in a browser window from your apply kit; submits only after you confirm.",
+  "scripts": {
+    "apply": "node apply.mjs"
+  },
+  "dependencies": {
+    "playwright": "1.63.0"
+  }
+}

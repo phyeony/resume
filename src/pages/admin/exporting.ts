@@ -8,7 +8,7 @@ function fileBase(v: Version): string {
   return `Hyeonyoung_Park_${label}_${date}`;
 }
 
-function download(blob: Blob, filename: string) {
+export function download(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

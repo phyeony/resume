@@ -3,13 +3,15 @@
 
 import { MAIN_SLUG } from '../../data/publicStore';
 import { clone, readDb, writeDb } from '../../data/localDb';
-import type { Application, CompanyInfo, ExportRecord, FeedSettings, Lead, Library, Posting, Profile, ShareLink, Version } from '../../model/types';
+import type { Application, ApplicationAnswers, CompanyInfo, ExportRecord, FeedSettings, Lead, Library, Posting, Profile, ShareLink, Version } from '../../model/types';
 import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
 export { newId, makeSlug, slugProblem, type ViewStats } from './storeShared';
 
 export const loadProfile = async (): Promise<Profile | null> => clone(readDb().profile);
 export const saveProfile = async (p: Profile) => writeDb((db) => void (db.profile = clone(p)));
+export const loadAnswers = async (): Promise<Partial<ApplicationAnswers> | null> => clone(readDb().answers ?? null);
+export const saveAnswers = async (a: ApplicationAnswers) => writeDb((db) => void (db.answers = clone(a)));
 export const loadLibrary = async (): Promise<Library | null> => clone(readDb().library);
 export const saveLibrary = async (l: Library) => writeDb((db) => void (db.library = clone(l)));
 

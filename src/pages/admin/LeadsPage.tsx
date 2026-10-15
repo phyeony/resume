@@ -4,10 +4,10 @@ import type { CompanyInfo, FeedSettings, Lead, LeadStatus } from '../../model/ty
 import { CATEGORIES, DEFAULT_FEED_SETTINGS, FEEDS, fetchFeed, filterJobs, planImport, companyFacts } from '../../applications/feeds';
 import { RateLimited, articleFromUrl, articleUrl, companyKey, domainHints, fameLabel, findArticles, lastMonth, monthlyViews } from '../../applications/fame';
 import { SORT_LABELS, groupByCompany, matchPrefs, scoreLead, sortLeads, type LeadSort, type MatchPrefs } from '../../applications/leadSort';
-import { urlKey } from '../../applications/model';
+import { appliedFromLead, urlKey } from '../../applications/model';
 import { knownSources } from '../../applications/stats';
 import { companyFromUrl } from '../../applications/summarize';
-import { listCompanies, loadFeedSettings, newId, saveCompanies, saveFeedSettings, saveLead, saveLeads } from './store';
+import { listCompanies, loadAnswers, loadFeedSettings, newId, saveApplication, saveCompanies, saveFeedSettings, saveLead, saveLeads } from './store';
 import { useOwnerData } from './Admin';
 import { fmtDate, fmtDateTime } from './format';
 import './applications.css';
@@ -593,7 +593,7 @@ function Fame({ company }: { company: string }) {
 }
 
 function LeadRow({ lead, prefs }: { lead: Lead; prefs: MatchPrefs }) {
-  const { reloadLeads, applications } = useOwnerData();
+  const { reloadLeads, reloadApplications, applications, versions } = useOwnerData();
   const companies = useCompanies();
   const application = lead.applicationId ? applications.find((a) => a.id === lead.applicationId) : undefined;
   const reasons = scoreLead(lead, prefs).reasons;
@@ -606,6 +606,23 @@ function LeadRow({ lead, prefs }: { lead: Lead; prefs: MatchPrefs }) {
     try {
       await saveLead({ ...lead, status });
       await reloadLeads();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setBusy(false);
+    }
+  }
+
+  /** Submitted it (by hand or with the autofill tools): record it as applied, with the kit's resume. */
+  async function markApplied() {
+    setBusy(true);
+    setError('');
+    try {
+      const kitVersion = (await loadAnswers())?.kitVersionId;
+      const versionId = versions.some((v) => v.id === kitVersion) ? kitVersion : versions.find((v) => v.isMain)?.id;
+      const app = appliedFromLead(newId('a'), lead, versionId);
+      await saveApplication(app);
+      await saveLead({ ...lead, status: 'tracked', applicationId: app.id });
+      await Promise.all([reloadApplications(), reloadLeads()]);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
       setBusy(false);
@@ -644,6 +661,13 @@ function LeadRow({ lead, prefs }: { lead: Lead; prefs: MatchPrefs }) {
             <>
               <button className="primary" disabled={busy} onClick={() => navigate(`/admin/applications/new?lead=${lead.id}`)}>
                 Track
+              </button>
+              <button
+                disabled={busy}
+                title="Already submitted: record it as applied, with the resume from your last apply kit (or main)"
+                onClick={() => void markApplied()}
+              >
+                Applied
               </button>
               <button disabled={busy} onClick={() => void setStatus('dismissed')}>
                 Dismiss
