@@ -3,7 +3,7 @@
 
 import { MAIN_SLUG } from '../../data/publicStore';
 import { clone, readDb, writeDb } from '../../data/localDb';
-import type { Application, ExportRecord, FeedSettings, Lead, Library, Posting, Profile, ShareLink, Version } from '../../model/types';
+import type { Application, CompanyInfo, ExportRecord, FeedSettings, Lead, Library, Posting, Profile, ShareLink, Version } from '../../model/types';
 import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
 export { newId, makeSlug, slugProblem, type ViewStats } from './storeShared';
@@ -139,4 +139,12 @@ export const loadFeedSettings = async (): Promise<FeedSettings | null> => clone(
 
 export async function saveFeedSettings(s: FeedSettings): Promise<void> {
   writeDb((db) => void (db.feedSettings = clone(s)));
+}
+
+// ---- companies -------------------------------------------------------------------
+
+export const listCompanies = async (): Promise<CompanyInfo[]> => clone(Object.values(readDb().companies));
+
+export async function saveCompanies(companies: CompanyInfo[]): Promise<void> {
+  writeDb((db) => companies.forEach((c) => (db.companies[c.key] = clone(c))));
 }

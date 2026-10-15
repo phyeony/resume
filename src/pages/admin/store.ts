@@ -7,6 +7,7 @@
 //   public/{slug}/views/{auto}          visit log, create-only for visitors
 //   applications/{id}, postings/{id}    owner-only job applications and their captured postings
 //   leads/{id}                          owner-only jobs worth a look, before applying
+//   companies/{key}                     owner-only stars, hiding and Wikipedia fame per company
 // Editor-only; visitors go through src/data/publicStore.ts.
 
 import {
@@ -24,7 +25,7 @@ import {
   type Timestamp,
 } from 'firebase/firestore';
 import { MAIN_SLUG } from '../../data/publicStore';
-import type { Application, ExportRecord, FeedSettings, Lead, Library, Posting, Profile, ShareLink, Version } from '../../model/types';
+import type { Application, CompanyInfo, ExportRecord, FeedSettings, Lead, Library, Posting, Profile, ShareLink, Version } from '../../model/types';
 import { db } from './auth';
 import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
@@ -217,3 +218,18 @@ export async function loadFeedSettings(): Promise<FeedSettings | null> {
 }
 
 export const saveFeedSettings = (s: FeedSettings) => setDoc(doc(db, 'owner', 'leadFeeds'), s);
+
+// ---- companies -------------------------------------------------------------------
+
+export async function listCompanies(): Promise<CompanyInfo[]> {
+  const snap = await getDocs(collection(db, 'companies'));
+  return snap.docs.map((d) => d.data() as CompanyInfo);
+}
+
+export async function saveCompanies(companies: CompanyInfo[]): Promise<void> {
+  for (let i = 0; i < companies.length; i += 450) {
+    const batch = writeBatch(db);
+    for (const c of companies.slice(i, i + 450)) batch.set(doc(db, 'companies', c.key), c);
+    await batch.commit();
+  }
+}

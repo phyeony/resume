@@ -1,17 +1,32 @@
-import { useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import type { FeedSettings, Lead, LeadStatus } from '../../model/types';
-import { CATEGORIES, DEFAULT_FEED_SETTINGS, FEEDS, fetchFeed, filterJobs, planImport, tiersByCompany } from '../../applications/feeds';
+import type { CompanyInfo, FeedSettings, Lead, LeadStatus } from '../../model/types';
+import { CATEGORIES, DEFAULT_FEED_SETTINGS, FEEDS, fetchFeed, filterJobs, planImport, companyFacts } from '../../applications/feeds';
+import { RateLimited, articleFromUrl, articleUrl, companyKey, domainHints, fameLabel, findArticles, lastMonth, monthlyViews } from '../../applications/fame';
 import { SORT_LABELS, groupByCompany, matchPrefs, scoreLead, sortLeads, type LeadSort, type MatchPrefs } from '../../applications/leadSort';
 import { urlKey } from '../../applications/model';
 import { knownSources } from '../../applications/stats';
 import { companyFromUrl } from '../../applications/summarize';
-import { loadFeedSettings, newId, saveFeedSettings, saveLead, saveLeads } from './store';
+import { listCompanies, loadFeedSettings, newId, saveCompanies, saveFeedSettings, saveLead, saveLeads } from './store';
 import { useOwnerData } from './Admin';
 import { fmtDate, fmtDateTime } from './format';
 import './applications.css';
 
 const STATUS_LABELS: Record<LeadStatus, string> = { new: 'New', tracked: 'Tracked', dismissed: 'Dismissed' };
+
+interface Companies {
+  get(company: string): CompanyInfo | undefined;
+  /** Saves changes to companies, creating them as needed; returns them as saved. */
+  update(changes: (Partial<CompanyInfo> & { name: string })[]): Promise<CompanyInfo[]>;
+}
+
+const CompaniesCtx = createContext<Companies | null>(null);
+
+function useCompanies(): Companies {
+  const v = useContext(CompaniesCtx);
+  if (!v) throw new Error('useCompanies outside <LeadsPage>');
+  return v;
+}
 
 /** Jobs worth a look, before deciding to apply. Track one to start an application; dismiss the rest. */
 export function LeadsPage() {
@@ -31,20 +46,57 @@ export function LeadsPage() {
   useEffect(() => remember('sort', sort), [sort]);
   useEffect(() => remember('grouped', grouped ? '1' : '0'), [grouped]);
 
-  const prefs = useMemo(() => matchPrefs(settings ?? DEFAULT_FEED_SETTINGS, library), [settings, library]);
+  const [companyMap, setCompanyMap] = useState<Map<string, CompanyInfo> | null>(null);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    listCompanies().then(
+      (list) => setCompanyMap(new Map(list.map((c) => [c.key, c]))),
+      (e: unknown) => {
+        setCompanyMap(new Map());
+        setError(`Couldn't load companies: ${String(e)}`);
+      },
+    );
+  }, []);
+  // Latest map for async work that outlives a render.
+  const companyRef = useRef(companyMap);
+  companyRef.current = companyMap;
+  const companies = useMemo<Companies>(
+    () => ({
+      get: (company) => companyMap?.get(companyKey(company)),
+      update: async (changes) => {
+        const merged = changes.map((c) => {
+          const key = companyKey(c.name);
+          return { ...(companyRef.current?.get(key) ?? { key }), ...c, key } as CompanyInfo;
+        });
+        await saveCompanies(merged);
+        setCompanyMap((m) => {
+          const next = new Map(m);
+          for (const c of merged) next.set(c.key, c);
+          return next;
+        });
+        return merged;
+      },
+    }),
+    [companyMap],
+  );
+  const lookup = useFameLookup(leads, companyMap, companies);
+
+  const prefs = useMemo(() => matchPrefs(settings ?? DEFAULT_FEED_SETTINGS, library, companyMap ?? new Map()), [settings, library, companyMap]);
+  const isHidden = useCallback((l: Lead) => !!companyMap?.get(companyKey(l.company))?.hidden, [companyMap]);
+  const [showHidden, setShowHidden] = useState(false);
   const [adding, setAdding] = useState(false);
   const [confirmDismiss, setConfirmDismiss] = useState(false);
-  const [error, setError] = useState('');
 
   const shown = useMemo(() => {
     const q = search.trim().toLowerCase();
     return leads
-      .filter((l) => l.status === filter)
+      .filter((l) => l.status === filter && !isHidden(l))
       .filter((l) => !q || [l.company, l.role, l.location ?? '', l.source].some((t) => t.toLowerCase().includes(q)));
-  }, [leads, filter, search]);
+  }, [leads, filter, search, isHidden]);
+  const hiddenCompanies = useMemo(() => [...(companyMap?.values() ?? [])].filter((c) => c.hidden).sort((a, b) => a.name.localeCompare(b.name)), [companyMap]);
   const sorted = useMemo(() => sortLeads(shown, sort, prefs), [shown, sort, prefs]);
   const groups = useMemo(() => (grouped ? groupByCompany(sorted) : null), [grouped, sorted]);
-  const count = (s: LeadStatus) => leads.filter((l) => l.status === s).length;
+  const count = (s: LeadStatus) => leads.filter((l) => l.status === s && !isHidden(l)).length;
 
   async function dismissShown() {
     setConfirmDismiss(false);
@@ -56,7 +108,10 @@ export function LeadsPage() {
     }
   }
 
+  if (!companyMap) return <p className="pad muted">Loading…</p>;
+
   return (
+    <CompaniesCtx.Provider value={companies}>
     <div className="pad">
       <div className="page-head">
         <h1>Leads</h1>
@@ -68,7 +123,18 @@ export function LeadsPage() {
         rest.
       </p>
 
-      {settings && <ImportPanel settings={settings} onSettings={setSettings} onImported={() => setFilter('new')} />}
+      {settings && (
+        <ImportPanel
+          settings={settings}
+          onSettings={setSettings}
+          hidden={(company) => !!companyMap.get(companyKey(company))?.hidden}
+          onImported={() => {
+            setFilter('new');
+            lookup.start();
+          }}
+          lookupStatus={lookup.status}
+        />
+      )}
       {adding && <AddLead onClose={() => setAdding(false)} />}
 
       <div className="lead-toolbar">
@@ -109,6 +175,31 @@ export function LeadsPage() {
           ))}
       </div>
       {error && <p className="error small">{error}</p>}
+      {hiddenCompanies.length > 0 && (
+        <p className="muted small">
+          {hiddenCompanies.length} hidden compan{hiddenCompanies.length === 1 ? 'y' : 'ies'}{' '}
+          <button className="link small" onClick={() => setShowHidden((v) => !v)}>
+            {showHidden ? 'Close' : 'Show'}
+          </button>
+          {showHidden &&
+            hiddenCompanies.map((c) => (
+              <span key={c.key} className="hidden-company">
+                {c.name}{' '}
+                <button className="link small" onClick={() => void companies.update([{ name: c.name, hidden: false }])}>
+                  Unhide
+                </button>
+              </span>
+            ))}
+        </p>
+      )}
+      {sort === 'known' && lookup.pending > 0 && !lookup.running && (
+        <p className="muted small">
+          {lookup.pending} compan{lookup.pending === 1 ? 'y' : 'ies'} not looked up on Wikipedia yet.{' '}
+          <button className="link small" onClick={lookup.start}>
+            Look up now
+          </button>
+        </p>
+      )}
       {sort === 'match' && !prefs.prefer.length && !prefs.places.length && (
         <p className="muted small">Best match uses your resume's skills and FAANG+/Quant for now. Add title words and places under Filters → Best match.</p>
       )}
@@ -121,11 +212,118 @@ export function LeadsPage() {
           : sorted.map((l) => <LeadRow key={l.id} lead={l} prefs={prefs} />)}
       </div>
     </div>
+    </CompaniesCtx.Provider>
   );
 }
 
+/**
+ * Looks up how well known the companies of new leads are, in the background: their Wikipedia articles
+ * in one query, then each article's views a second apart (Wikimedia rate-limits clients that hurry).
+ * Saved as it goes, so leaving the page loses nothing; starts by itself when something is missing.
+ */
+function useFameLookup(leads: Lead[], companyMap: Map<string, CompanyInfo> | null, companies: Companies) {
+  const [status, setStatus] = useState('');
+  const [running, setRunning] = useState(false);
+  const runningRef = useRef(false);
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => void (alive.current = false);
+  }, []);
+  const latest = useRef({ leads, companyMap, companies });
+  latest.current = { leads, companyMap, companies };
+
+  const pendingOf = useCallback((map: Map<string, CompanyInfo>, all: Lead[]) => {
+    const month = lastMonth();
+    const byKey = new Map<string, Lead>();
+    for (const l of all) if (l.status === 'new' && l.company) byKey.set(companyKey(l.company), l);
+    const articles: Lead[] = [];
+    const views: CompanyInfo[] = [];
+    for (const [key, lead] of byKey) {
+      const c = map.get(key);
+      if (c?.hidden) continue;
+      if (c?.article === undefined) articles.push(lead);
+      else if (c.article && c.viewsMonth !== month) views.push(c);
+    }
+    return { articles, views };
+  }, []);
+
+  const pending = useMemo(() => {
+    if (!companyMap) return 0;
+    const p = pendingOf(companyMap, leads);
+    return p.articles.length + p.views.length;
+  }, [companyMap, leads, pendingOf]);
+
+  const start = useCallback(() => {
+    if (runningRef.current) return;
+    runningRef.current = true;
+    setRunning(true);
+    void (async () => {
+      try {
+        // Wait a tick so a just-finished import's leads are in `latest`.
+        await new Promise((r) => setTimeout(r, 0));
+        const { leads: all, companyMap: loaded } = latest.current;
+        if (!loaded) return;
+        const map = new Map(loaded);
+        const { articles } = pendingOf(map, all);
+        if (articles.length) {
+          setStatus(`Finding ${articles.length} compan${articles.length === 1 ? 'y' : 'ies'} on Wikipedia…`);
+          const found = await findArticles(articles.map((l) => ({ name: l.company, hints: domainHints(l) })));
+          const now = Date.now();
+          const saved = await latest.current.companies.update(
+            articles.map((l) => {
+              const m = found.get(companyKey(l.company));
+              return m ? { name: l.company, article: m.article, langs: m.langs, matchedBy: m.matchedBy, checkedAt: now } : { name: l.company, article: null, checkedAt: now };
+            }),
+          );
+          for (const c of saved) map.set(c.key, c);
+        }
+        // Views for every matched company still missing last month's.
+        const { views } = pendingOf(map, all);
+        const month = lastMonth();
+        for (let i = 0; i < views.length && alive.current; i++) {
+          setStatus(`Wikipedia views ${i + 1}/${views.length}…`);
+          const c = views[i];
+          const n = await monthlyViews(c.article!, month);
+          await latest.current.companies.update([{ name: c.name, views: n ?? 0, viewsMonth: month }]);
+          await new Promise((r) => setTimeout(r, 1100));
+        }
+        setStatus('');
+      } catch (e) {
+        setStatus(e instanceof RateLimited ? e.message : `Wikipedia lookup stopped: ${e instanceof Error ? e.message : String(e)}`);
+      } finally {
+        runningRef.current = false;
+        if (alive.current) setRunning(false);
+      }
+    })();
+  }, [pendingOf]);
+
+  // Start by itself once companies are loaded and something is missing.
+  const started = useRef(false);
+  useEffect(() => {
+    if (companyMap && pending > 0 && !started.current) {
+      started.current = true;
+      start();
+    }
+  }, [companyMap, pending, start]);
+
+  return { status, running, pending, start };
+}
+
 /** Pulls new jobs from the public lists into leads, with filters kept in owner/leadFeeds. */
-function ImportPanel({ settings, onSettings: setSettings, onImported }: { settings: FeedSettings; onSettings(s: FeedSettings): void; onImported(): void }) {
+function ImportPanel({
+  settings,
+  onSettings: setSettings,
+  hidden,
+  onImported,
+  lookupStatus,
+}: {
+  settings: FeedSettings;
+  onSettings(s: FeedSettings): void;
+  hidden(company: string): boolean;
+  onImported(): void;
+  lookupStatus: string;
+}) {
   const { leads, applications, reloadLeads } = useOwnerData();
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState('');
@@ -145,7 +343,8 @@ function ImportPanel({ settings, onSettings: setSettings, onImported }: { settin
       const jobs = fetched.flatMap((r) => (r.status === 'fulfilled' ? r.value : []));
       setErrors(failed);
       if (failed.length === enabled.length) return;
-      const plan = planImport(filterJobs(jobs, s, now), { leads, applications }, () => newId('l'), now, tiersByCompany(jobs));
+      const wanted = filterJobs(jobs, s, now).filter((j) => !hidden(j.company));
+      const plan = planImport(wanted, { leads, applications }, () => newId('l'), now, companyFacts(jobs));
       setBusy(`Saving ${plan.leads.length} leads…`);
       await saveLeads([...plan.leads, ...plan.updated]);
       const next = { ...s, lastImportAt: now };
@@ -179,6 +378,7 @@ function ImportPanel({ settings, onSettings: setSettings, onImported }: { settin
         </button>
       </div>
       {result && <p className="ok-text small">{result}</p>}
+      {lookupStatus && <p className="muted small">{lookupStatus}</p>}
       {errors.map((e) => (
         <p key={e} className="error small">
           {e}
@@ -302,6 +502,7 @@ function CompanyGroup({ company, leads, prefs }: { company: string; leads: Lead[
   return (
     <div className="lead-group">
       <div className="lead-group-head small">
+        <StarButton company={company} />
         <strong>{company}</strong> <span className="muted">· {leads.length} leads</span>
       </div>
       {(open ? leads : leads.slice(0, 1)).map((l) => (
@@ -314,8 +515,86 @@ function CompanyGroup({ company, leads, prefs }: { company: string; leads: Lead[
   );
 }
 
+function StarButton({ company }: { company: string }) {
+  const companies = useCompanies();
+  const starred = !!companies.get(company)?.starred;
+  return (
+    <button
+      className={`star ${starred ? 'on' : ''}`}
+      title={starred ? `Unstar ${company}` : `Star ${company}: always first`}
+      aria-pressed={starred}
+      onClick={() => void companies.update([{ name: company, starred: !starred }])}
+    >
+      {starred ? '★' : '☆'}
+    </button>
+  );
+}
+
+/** "29k Wikipedia views/mo", with a way to fix a wrong match. */
+function Fame({ company }: { company: string }) {
+  const companies = useCompanies();
+  const info = companies.get(company);
+  const [fixing, setFixing] = useState(false);
+  const [link, setLink] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const label = fameLabel(info);
+
+  async function save(article: string | null) {
+    setBusy(true);
+    setError('');
+    try {
+      const month = lastMonth();
+      const views = article ? await monthlyViews(article, month) : null;
+      await companies.update([
+        { name: company, article, matchedBy: 'manual', checkedAt: Date.now(), langs: undefined, ...(article ? { views: views ?? 0, viewsMonth: month } : { views: undefined, viewsMonth: undefined }) },
+      ]);
+      setFixing(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (fixing) {
+    const article = articleFromUrl(link);
+    return (
+      <span className="fame-fix">
+        <input value={link} autoFocus placeholder="https://en.wikipedia.org/wiki/…" onChange={(e) => setLink(e.target.value)} />
+        <button disabled={busy || !article} onClick={() => void save(article)}>
+          Use this
+        </button>
+        <button className="link small" disabled={busy} onClick={() => void save(null)}>
+          Not on Wikipedia
+        </button>
+        <button className="link small" onClick={() => setFixing(false)}>
+          Cancel
+        </button>
+        {error && <span className="error small">{error}</span>}
+      </span>
+    );
+  }
+  if (!label) return null;
+  return (
+    <span>
+      {info?.article ? (
+        <a href={articleUrl(info.article)} target="_blank" rel="noopener noreferrer" title={`Wikipedia: ${info.article}`}>
+          {label}
+        </a>
+      ) : (
+        label
+      )}{' '}
+      <button className="link small" title="Wrong article? Pick the right one." onClick={() => setFixing(true)}>
+        fix
+      </button>
+    </span>
+  );
+}
+
 function LeadRow({ lead, prefs }: { lead: Lead; prefs: MatchPrefs }) {
   const { reloadLeads, applications } = useOwnerData();
+  const companies = useCompanies();
   const application = lead.applicationId ? applications.find((a) => a.id === lead.applicationId) : undefined;
   const reasons = scoreLead(lead, prefs).reasons;
   const navigate = useNavigate();
@@ -338,6 +617,7 @@ function LeadRow({ lead, prefs }: { lead: Lead; prefs: MatchPrefs }) {
       <div className="version-head">
         <div className="grow-text">
           <h2>
+            <StarButton company={lead.company} />
             <a href={lead.url} target="_blank" rel="noopener noreferrer">
               {lead.role || '(no role)'}
             </a>
@@ -350,7 +630,12 @@ function LeadRow({ lead, prefs }: { lead: Lead; prefs: MatchPrefs }) {
             {lead.salary && ` · ${lead.salary}`}
             {` · via ${lead.source}`}
           </div>
-          {reasons.length > 0 && <div className="small lead-reasons">Matches {reasons.join(', ')}</div>}
+          <div className="small lead-extra">
+            {reasons.length > 0 && <span className="lead-reasons">Matches {reasons.join(', ')}</span>}
+            <span className="muted">
+              <Fame company={lead.company} />
+            </span>
+          </div>
           {error && <p className="error small">{error}</p>}
         </div>
         <span className="spacer" />
@@ -364,6 +649,15 @@ function LeadRow({ lead, prefs }: { lead: Lead; prefs: MatchPrefs }) {
                 Dismiss
               </button>
             </>
+          )}
+          {lead.status === 'new' && (
+            <button
+              className="link small"
+              title={`Hide every lead from ${lead.company}, now and in later imports`}
+              onClick={() => void companies.update([{ name: lead.company, hidden: true }])}
+            >
+              Hide company
+            </button>
           )}
           {lead.status === 'dismissed' && (
             <button className="link" disabled={busy} onClick={() => void setStatus('new')}>

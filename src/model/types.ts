@@ -286,6 +286,8 @@ export interface Lead {
   salary?: string;
   /** SpeedyApply's grouping of the company: FAANG+ or Quant. */
   tier?: LeadTier;
+  /** The company's own website, when the source gives it; helps find its Wikipedia article. */
+  companySite?: string;
   /** Where it was found, carried over to the application. */
   source: string;
   /** Its id in the source's feed, so a re-import skips it. */
@@ -317,4 +319,28 @@ export interface FeedSettings {
   /** Best match: comma-separated places that rank a lead higher. */
   preferPlaces: string;
   lastImportAt?: number;
+}
+
+/**
+ * What's known about a company across its leads: companies/{key}, key = lowercased letters and digits
+ * of the name. Starred and hidden are the owner's; the rest comes from Wikipedia.
+ */
+export interface CompanyInfo {
+  key: string;
+  name: string;
+  /** Always sorts first. */
+  starred?: boolean;
+  /** Its leads aren't shown or imported. */
+  hidden?: boolean;
+  /** English Wikipedia article; null when looked up and none matched; absent when not looked up yet. */
+  article?: string | null;
+  /** How the article was chosen: by the company's website, its name as a website, its description, or by hand. */
+  matchedBy?: 'site' | 'name' | 'description' | 'manual';
+  /** How many Wikipedias have an article on it. */
+  langs?: number;
+  /** Views of the English article by people during viewsMonth. */
+  views?: number;
+  /** "2026-09". */
+  viewsMonth?: string;
+  checkedAt?: number;
 }

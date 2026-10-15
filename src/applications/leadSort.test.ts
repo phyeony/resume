@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Lead, Library } from '../model/types';
+import type { CompanyInfo, Lead, Library } from '../model/types';
 import { groupByCompany, matchPrefs, scoreLead, sortLeads, yearlyPay } from './leadSort';
 
 const lead = (p: Partial<Lead>): Lead => ({ id: Math.random().toString(), company: 'Acme', role: 'Software Engineer Intern', url: 'https://a.com', source: 'Simplify', addedAt: 0, postedAt: 0, status: 'new', ...p });
@@ -43,5 +43,31 @@ describe('sortLeads', () => {
       ['Amazon', 2],
       ['Alpha', 1],
     ]);
+  });
+});
+
+describe('best known', () => {
+  const info = (name: string, p: Partial<CompanyInfo>): [string, CompanyInfo] => [name.toLowerCase(), { key: name.toLowerCase(), name, ...p }];
+  const companies = new Map([
+    info('Amazon', { article: 'Amazon (company)', views: 400_000 }),
+    info('Ramp', { article: 'Ramp (company)', langs: 3 }),
+    info('Tiny', { article: null, starred: true }),
+    info('Databricks', { article: 'Databricks', views: 29_000 }),
+  ]);
+  const p = matchPrefs({ prefer: '', preferPlaces: '' }, null, companies);
+  const [amazon, ramp, tiny, dbx, nobody, quant] = ['Amazon', 'Ramp', 'Tiny', 'Databricks', 'Nobody', 'Quanty'].map((company) =>
+    lead({ company, tier: company === 'Quanty' ? 'quant' : undefined }),
+  );
+
+  it('puts stars first, then fame, then tier', () => {
+    expect(sortLeads([nobody, ramp, quant, dbx, tiny, amazon], 'known', p).map((l) => l.company)).toEqual([
+      'Tiny', 'Amazon', 'Databricks', 'Ramp', 'Quanty', 'Nobody',
+    ]);
+  });
+  it('counts stars and fame in best match', () => {
+    expect(scoreLead(tiny, p)).toEqual({ score: 5, reasons: ['★ starred'] });
+    expect(scoreLead(amazon, p)).toEqual({ score: 2, reasons: ['well known'] });
+    expect(scoreLead(dbx, p)).toEqual({ score: 1, reasons: ['known'] });
+    expect(scoreLead(ramp, p).score).toBe(0);
   });
 });

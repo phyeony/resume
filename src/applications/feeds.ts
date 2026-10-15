@@ -2,6 +2,7 @@
 // fetch: SimplifyJobs keeps a JSON file, SpeedyApply only markdown tables.
 
 import type { Application, FeedSettings, Lead, LeadTier } from '../model/types';
+import { companyKey } from './fame';
 import { urlKey } from './model';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -65,6 +66,8 @@ export interface FeedJob {
   salary?: string;
   /** SpeedyApply only: the table it was listed in. */
   tier?: LeadTier;
+  /** SpeedyApply only: the company's homepage. */
+  companySite?: string;
   /** Simplify only. */
   category?: string;
   terms?: string[];
@@ -122,6 +125,7 @@ export function parseSpeedyApply(markdown: string, now = Date.now(), source = 'S
     if (!href || ageDays === null) continue;
     const url = decodeEntities(href);
     const company = cellText(cells[0]);
+    const companySite = /href="(https?:[^"]+)"/.exec(cells[0])?.[1];
     const role = cellText(cells[1]);
     if (!company || !role) continue;
     jobs.push({
@@ -134,6 +138,7 @@ export function parseSpeedyApply(markdown: string, now = Date.now(), source = 'S
       postedAt: now - ageDays * DAY,
       ...(cells.length >= 6 && cellText(cells[3]) ? { salary: cellText(cells[3]) } : {}),
       ...(tier ? { tier } : {}),
+      ...(companySite ? { companySite: decodeEntities(companySite) } : {}),
     });
   }
   return jobs;
@@ -189,13 +194,20 @@ export function filterJobs(jobs: FeedJob[], s: FeedSettings, now = Date.now()): 
 
 /** Same job, whichever list it came from: company and title without punctuation or case. */
 const jobKey = (company: string, role: string) => `${company}|${role}`.toLowerCase().replace(/[^a-z0-9|]+/g, '');
-const companyKey = (company: string) => company.toLowerCase().replace(/[^a-z0-9]+/g, '');
 
-/** Companies SpeedyApply files under FAANG+ or Quant, from every job fetched (before filtering). */
-export function tiersByCompany(jobs: FeedJob[]): Map<string, LeadTier> {
-  const m = new Map<string, LeadTier>();
-  for (const j of jobs) if (j.tier) m.set(companyKey(j.company), j.tier);
-  return m;
+/** What SpeedyApply says about companies, from every job fetched (before filtering), to lend to other lists. */
+export interface CompanyFacts {
+  tiers: Map<string, LeadTier>;
+  sites: Map<string, string>;
+}
+
+export function companyFacts(jobs: FeedJob[]): CompanyFacts {
+  const facts: CompanyFacts = { tiers: new Map(), sites: new Map() };
+  for (const j of jobs) {
+    if (j.tier) facts.tiers.set(companyKey(j.company), j.tier);
+    if (j.companySite) facts.sites.set(companyKey(j.company), j.companySite);
+  }
+  return facts;
 }
 
 export interface ImportPlan {
@@ -204,7 +216,7 @@ export interface ImportPlan {
   matched: number;
   /** Matched, but already a lead (including dismissed ones) or an application. */
   known: number;
-  /** New leads from earlier imports that now get their company's tier. */
+  /** New leads from earlier imports that now get their company's tier or website. */
   updated: Lead[];
 }
 
@@ -214,8 +226,9 @@ export function planImport(
   existing: { leads: Lead[]; applications: Application[] },
   makeId: () => string,
   now = Date.now(),
-  tiers: Map<string, LeadTier> = tiersByCompany(jobs),
+  facts: CompanyFacts = companyFacts(jobs),
 ): ImportPlan {
+  const { tiers, sites } = facts;
   const ids = new Set(existing.leads.map((l) => l.sourceId).filter(Boolean));
   const urls = new Set([...existing.leads, ...existing.applications].map((x) => urlKey(x.url)).filter(Boolean));
   const keys = new Set([...existing.leads, ...existing.applications].map((x) => jobKey(x.company, x.role)));
@@ -239,6 +252,7 @@ export function planImport(
       ...(j.locations.length ? { location: j.locations.join('; ') } : {}),
       ...(j.salary ? { salary: j.salary } : {}),
       ...((j.tier ?? tiers.get(companyKey(j.company))) ? { tier: j.tier ?? tiers.get(companyKey(j.company)) } : {}),
+      ...((j.companySite ?? sites.get(companyKey(j.company))) ? { companySite: j.companySite ?? sites.get(companyKey(j.company)) } : {}),
       source: j.source,
       sourceId: j.sourceId,
       postedAt: j.postedAt,
@@ -247,8 +261,10 @@ export function planImport(
     });
   }
   const updated = existing.leads.flatMap((l) => {
-    const tier = l.status === 'new' && !l.tier ? tiers.get(companyKey(l.company)) : undefined;
-    return tier ? [{ ...l, tier }] : [];
+    if (l.status !== 'new') return [];
+    const tier = !l.tier ? tiers.get(companyKey(l.company)) : undefined;
+    const companySite = !l.companySite ? sites.get(companyKey(l.company)) : undefined;
+    return tier || companySite ? [{ ...l, ...(tier ? { tier } : {}), ...(companySite ? { companySite } : {}) }] : [];
   });
   return { leads, matched: jobs.length, known, updated };
 }

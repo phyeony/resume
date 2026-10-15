@@ -79,7 +79,14 @@
 .admin input.lead-search { width: 240px !important; max-width: 100%; }
 .admin select.lead-sort { width: auto; }
 .lead-toolbar label.check { display: flex; align-items: center; gap: 5px; margin: 0; font-weight: normal; }
-.lead-reasons { margin-top: 3px; color: var(--a-ok); }
+.lead-reasons { color: var(--a-ok); }
 .lead-group { display: grid; gap: 6px; }
 .lead-group-head { padding: 2px 2px 0; }
 .lead-group > button.link { justify-self: start; }
+.admin button.star { border: 0; background: none; padding: 0 4px 0 0; font-size: 16px; line-height: 1; color: var(--a-muted); vertical-align: -1px; }
+.admin button.star.on { color: var(--a-warn); }
+.lead-extra { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 3px; }
+.lead-extra:empty { display: none; }
+.fame-fix { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.admin .fame-fix input { width: 300px !important; max-width: 100%; padding: 3px 6px; font-size: 12.5px; }
+.hidden-company { margin-left: 10px; }

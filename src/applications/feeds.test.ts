@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Lead } from '../model/types';
 import { newApplication } from './model';
-import { DEFAULT_FEED_SETTINGS, filterJobs, parseSimplify, parseSpeedyApply, planImport, tiersByCompany, type FeedJob } from './feeds';
+import { DEFAULT_FEED_SETTINGS, filterJobs, parseSimplify, parseSpeedyApply, planImport, companyFacts, type FeedJob } from './feeds';
 
 const DAY = 86_400_000;
 const NOW = Date.UTC(2026, 9, 15);
@@ -99,7 +99,7 @@ describe('planImport', () => {
 describe('tiers', () => {
   const md = [
     '<!-- TABLE_FAANG_START -->',
-    '| <strong>Figma</strong> | Intern | SF | $60/hr | <a href="https://f.com/1">Apply</a> | 1d |',
+    '| <a href="https://www.figma.com"><strong>Figma</strong></a> | Intern | SF | $60/hr | <a href="https://f.com/1">Apply</a> | 1d |',
     '<!-- TABLE_FAANG_END -->',
     '<!-- TABLE_QUANT_START -->',
     '| <strong>Jane Street</strong> | Intern | NYC | $90/hr | <a href="https://j.com/1">Apply</a> | 1d |',
@@ -111,10 +111,11 @@ describe('tiers', () => {
   it('records the SpeedyApply table and lends it to other lists and older leads', () => {
     const speedy = parseSpeedyApply(md, NOW);
     expect(speedy.map((j) => j.tier)).toEqual(['faang', 'quant', undefined]);
-    const tiers = tiersByCompany(speedy);
+    const facts = companyFacts(speedy);
     const older: Lead = { id: 'old', company: 'Jane Street', role: 'Other intern', url: 'https://j.com/9', source: 'Simplify', addedAt: 0, status: 'new' };
-    const plan = planImport([job({ company: 'FIGMA', role: 'Software Intern' })], { leads: [older], applications: [] }, () => 'n', NOW, tiers);
+    const plan = planImport([job({ company: 'FIGMA', role: 'Software Intern' })], { leads: [older], applications: [] }, () => 'n', NOW, facts);
     expect(plan.leads[0].tier).toBe('faang');
+    expect(plan.leads[0].companySite).toBe('https://www.figma.com');
     expect(plan.updated).toEqual([{ ...older, tier: 'quant' }]);
   });
 });
