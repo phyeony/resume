@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { CompanyInfo, FeedSettings, Lead, LeadStatus } from '../../model/types';
+import { TIER_LABELS } from '../../model/types';
 import { CATEGORIES, DEFAULT_FEED_SETTINGS, FEEDS, fetchFeed, filterJobs, planImport, companyFacts } from '../../applications/feeds';
 import { RateLimited, articleFromUrl, articleUrl, companyKey, domainHints, fameLabel, findArticles, lastMonth, monthlyViews } from '../../applications/fame';
 import { SORT_LABELS, groupByCompany, matchPrefs, scoreLead, sortLeads, type LeadSort, type MatchPrefs } from '../../applications/leadSort';
@@ -418,7 +419,7 @@ function ImportSettings({ settings, onSave }: { settings: FeedSettings; onSave(s
       </fieldset>
       <fieldset>
         <legend>
-          Simplify categories <span className="muted small">(none ticked keeps all)</span>
+          Categories <span className="muted small">(none ticked keeps all)</span>
         </legend>
         <div className="chips">
           {Object.keys(CATEGORIES).map((c) => (
@@ -430,7 +431,7 @@ function ImportSettings({ settings, onSave }: { settings: FeedSettings; onSave(s
       </fieldset>
       <div className="two">
         <label>
-          Simplify terms <span className="muted small">(comma-separated)</span>
+          Terms <span className="muted small">(comma-separated)</span>
           <input
             value={s.terms.join(', ')}
             placeholder="Summer 2027, Fall 2027"
@@ -470,11 +471,12 @@ function ImportSettings({ settings, onSave }: { settings: FeedSettings; onSave(s
             <input value={s.preferPlaces} placeholder="New York, Remote" onChange={(e) => patch({ preferPlaces: e.target.value })} />
           </label>
         </div>
-        <p className="muted small">Skills from Experience &amp; skills found in a title and FAANG+/Quant companies also count, a little less.</p>
+        <p className="muted small">Skills from Experience &amp; skills found in a title and FAANG+/Quant/🔥 companies also count, a little less.</p>
       </fieldset>
       <p className="muted small">
-        SpeedyApply lists only software jobs and doesn't say which term, so the category and term filters apply to
-        Simplify only. Dismissed leads stay dismissed: importing again never brings them back.
+        A filter only applies where a list gives what it checks: SpeedyApply and negarprh have no categories, a
+        term counts only when the job names one, and hanzili has no posting dates. Dismissed leads stay dismissed:
+        importing again never brings them back.
       </p>
       <div className="btn-row">
         <button
@@ -639,7 +641,7 @@ function LeadRow({ lead, prefs }: { lead: Lead; prefs: MatchPrefs }) {
               {lead.role || '(no role)'}
             </a>
             <span className="muted"> · {lead.company || '(no company)'}</span>
-            {lead.tier && <span className="badge tiny">{lead.tier === 'faang' ? 'FAANG+' : 'Quant'}</span>}
+            {lead.tier && <span className="badge tiny">{TIER_LABELS[lead.tier]}</span>}
           </h2>
           <div className="muted small">
             {lead.postedAt ? `Posted ${fmtDate(lead.postedAt)}` : `Added ${fmtDate(lead.addedAt)}`}

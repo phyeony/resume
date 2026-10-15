@@ -338,7 +338,13 @@ export interface ApplyKit {
 /** new: not looked at yet · dismissed: not for me · tracked: became an application. */
 export type LeadStatus = 'new' | 'dismissed' | 'tracked';
 
-export type LeadTier = 'faang' | 'quant';
+/** faang, quant: SpeedyApply's tables. hot: marked 🔥 on hanzili's Canadian list. */
+export type LeadTier = 'faang' | 'quant' | 'hot';
+
+export const TIER_LABELS: Record<LeadTier, string> = { faang: 'FAANG+', quant: 'Quant', hot: '🔥 Hot' };
+
+/** Which tier wins when lists disagree, and how tiers sort. */
+export const TIER_RANK: Record<LeadTier, number> = { faang: 3, quant: 2, hot: 1 };
 
 /**
  * A job worth a look, before deciding to apply: leads/{id}. Cheap to add (no captured posting), so a
@@ -352,7 +358,7 @@ export interface Lead {
   location?: string;
   /** As the source shows it, e.g. "$55/hr". */
   salary?: string;
-  /** SpeedyApply's grouping of the company: FAANG+ or Quant. */
+  /** How a list rates the company: SpeedyApply's FAANG+ or Quant table, or hanzili's 🔥. */
   tier?: LeadTier;
   /** The company's own website, when the source gives it; helps find its Wikipedia article. */
   companySite?: string;
@@ -370,9 +376,9 @@ export interface Lead {
 export interface FeedSettings {
   /** Enabled feed ids (see FEEDS in src/applications/feeds.ts). */
   feeds: string[];
-  /** Simplify categories to keep; empty keeps all. */
+  /** Categories to keep, for lists that have them; empty keeps all. */
   categories: string[];
-  /** Simplify terms to keep, e.g. "Summer 2027"; empty keeps all. */
+  /** Terms to keep, e.g. "Summer 2027", for jobs that name one; empty keeps all. */
   terms: string[];
   /** Skip jobs posted longer ago than this. */
   maxAgeDays: number;

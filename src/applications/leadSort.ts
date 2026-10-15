@@ -1,6 +1,7 @@
 // Ordering the leads list: a "best match" score from the owner's preferences, or plain sorts.
 
 import type { CompanyInfo, FeedSettings, Lead, Library, SalaryPeriod } from '../model/types';
+import { TIER_LABELS, TIER_RANK } from '../model/types';
 import { companyKey, fame } from './fame';
 import { parseSalary } from './salary';
 
@@ -80,7 +81,7 @@ export function scoreLead(lead: Lead, p: MatchPrefs): Match {
   reasons.push(...skills);
   if (lead.tier) {
     score += 1;
-    reasons.push(lead.tier === 'faang' ? 'FAANG+' : 'Quant');
+    reasons.push(TIER_LABELS[lead.tier]);
   }
   const known = fame(company) ?? 0;
   if (known >= WELL_KNOWN) {
@@ -117,7 +118,7 @@ export function sortLeads(leads: Lead[], sort: LeadSort, p: MatchPrefs): Lead[] 
     const rank = new Map(
       leads.map((l) => {
         const c = p.companies.get(companyKey(l.company));
-        return [l, [c?.starred ? 1 : 0, fame(c) ?? -1, l.tier === 'faang' ? 2 : l.tier === 'quant' ? 1 : 0]] as const;
+        return [l, [c?.starred ? 1 : 0, fame(c) ?? -1, l.tier ? TIER_RANK[l.tier] : 0]] as const;
       }),
     );
     return [...leads].sort((a, b) => {

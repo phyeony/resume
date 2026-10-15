@@ -1,7 +1,8 @@
-// Public job lists that "Import" turns into leads. Both live on GitHub, whose raw files any page may
-// fetch: SimplifyJobs keeps a JSON file, SpeedyApply only markdown tables.
+// Public job lists that "Import" turns into leads. All live on GitHub, whose raw files any page may
+// fetch: SimplifyJobs keeps a JSON file, the others only markdown tables.
 
 import type { Application, FeedSettings, Lead, LeadTier } from '../model/types';
+import { TIER_RANK } from '../model/types';
 import { companyKey } from './fame';
 import { urlKey } from './model';
 
@@ -13,7 +14,7 @@ export interface Feed {
   /** Becomes the lead's source. */
   source: string;
   url: string;
-  kind: 'simplify' | 'speedyapply';
+  kind: 'simplify' | 'speedyapply' | 'negarprh' | 'hanzili';
 }
 
 const SPEEDY = 'https://raw.githubusercontent.com/speedyapply/2027-SWE-College-Jobs/main';
@@ -30,6 +31,20 @@ export const FEEDS: Feed[] = [
   { id: 'speedy-newgrad-usa', label: 'SpeedyApply · new grad, USA', source: 'SpeedyApply', url: `${SPEEDY}/NEW_GRAD_USA.md`, kind: 'speedyapply' },
   { id: 'speedy-intern-intl', label: 'SpeedyApply · internships, international', source: 'SpeedyApply', url: `${SPEEDY}/INTERN_INTL.md`, kind: 'speedyapply' },
   { id: 'speedy-newgrad-intl', label: 'SpeedyApply · new grad, international', source: 'SpeedyApply', url: `${SPEEDY}/NEW_GRAD_INTL.md`, kind: 'speedyapply' },
+  {
+    id: 'negarprh-canada-2027',
+    label: 'Canadian Tech Internships 2027 (negarprh)',
+    source: 'Canadian Tech Internships',
+    url: 'https://raw.githubusercontent.com/negarprh/Canadian-Tech-Internships-2027/main/README.md',
+    kind: 'negarprh',
+  },
+  {
+    id: 'hanzili-canada-intern',
+    label: 'Canada SDE internships (hanzili)',
+    source: 'hanzili Canada list',
+    url: 'https://raw.githubusercontent.com/hanzili/canada_sde_intern_position/main/README.md',
+    kind: 'hanzili',
+  },
 ];
 
 /** Simplify's categories, with the older spellings some listings still use. */
@@ -62,14 +77,16 @@ export interface FeedJob {
   role: string;
   url: string;
   locations: string[];
-  postedAt: number;
+  /** Absent when the list doesn't say (hanzili). */
+  postedAt?: number;
   salary?: string;
-  /** SpeedyApply only: the table it was listed in. */
+  /** SpeedyApply's table, or hanzili's 🔥. */
   tier?: LeadTier;
   /** SpeedyApply only: the company's homepage. */
   companySite?: string;
-  /** Simplify only. */
+  /** Simplify and hanzili; absent when the list doesn't sort jobs into categories. */
   category?: string;
+  /** Absent when the job doesn't name a term. */
   terms?: string[];
 }
 
@@ -144,6 +161,110 @@ export function parseSpeedyApply(markdown: string, now = Date.now(), source = 'S
   return jobs;
 }
 
+/**
+ * negarprh's Canadian list: Company | Role | Location | Apply | Date Posted. "↳" repeats the company
+ * above; closed jobs say "Closed🔒" instead of a link; a term may follow the title, as "(Winter 2027)".
+ */
+export function parseNegarprh(markdown: string, source = 'Canadian Tech Internships'): FeedJob[] {
+  const jobs: FeedJob[] = [];
+  let company = '';
+  for (const raw of markdown.split('\n')) {
+    const line = raw.trim();
+    if (!line.startsWith('|') || /^\|\s*:?-/.test(line) || /^\|\s*Company\s*\|/.test(line)) continue;
+    const cells = rowCells(line);
+    if (cells.length < 5) continue;
+    const name = cellText(cells[0]);
+    if (name && name !== '↳') company = name;
+    // The link wraps a badge image; its address may itself hold parentheses.
+    const url = /\]\((https?:\S+)\)$/.exec(cells[3].replace(/!\[[^\]]*\]\([^)]*\)/g, ''))?.[1];
+    const postedAt = Date.parse(cellText(cells[4]));
+    const role = cellText(cells[1]);
+    if (!url || Number.isNaN(postedAt) || !company || !role) continue;
+    const terms = termsIn(role);
+    jobs.push({
+      source,
+      sourceId: `negarprh:${urlKey(url) ?? url}`,
+      company,
+      role,
+      url,
+      locations: cellText(cells[2]).split(/\s+\/\s+/).filter(Boolean),
+      postedAt,
+      ...(terms ? { terms } : {}),
+    });
+  }
+  return jobs;
+}
+
+/** hanzili's sections, as the categories the filters offer; the rest keep their own names. */
+const HANZILI_CATEGORIES: Record<string, string> = {
+  'Software Engineering': 'Software',
+  'DevOps / SRE / Platform': 'Software',
+  Mobile: 'Software',
+  'QA / Test / Automation': 'Software',
+  Security: 'Software',
+  'Data / ML': 'AI/ML/Data',
+  'Hardware / Firmware': 'Hardware',
+  'Product / TPM': 'Product',
+};
+
+/**
+ * hanzili's Canadian list, one table per "## Category": Title | Company | Role | Company Info | Details |
+ * Location | Apply. The title carries 🆕/🔥/💤 and an <!--id:n--> comment; details read like
+ * "Co-op · 4mo · $30/hr · Winter 2027". No posting dates.
+ */
+export function parseHanzili(markdown: string, source = 'hanzili Canada list'): FeedJob[] {
+  const jobs: FeedJob[] = [];
+  let section = '';
+  for (const raw of markdown.split('\n')) {
+    const line = raw.trim();
+    const heading = /^##\s+(.+)$/.exec(line);
+    if (heading) section = heading[1].trim();
+    if (!line.startsWith('|') || /^\|\s*:?-/.test(line) || /^\|\s*Title\s*\|/.test(line)) continue;
+    const cells = rowCells(line);
+    if (cells.length < 7) continue;
+    const id = /<!--\s*id:(\w+)\s*-->/.exec(cells[0])?.[1];
+    const link = /\]\(<([^>]+)>\)|\]\((https?:[^\s)]+)\)/.exec(cells[6]);
+    const url = link?.[1] ?? link?.[2];
+    const role = cellText(cells[0]).replace(/^[\s🆕🔥💤]+/u, '');
+    // "EQ Bank | Canada's Challenger Bank": the name, then a tagline.
+    const company = cellText(cells[1]).split(' | ')[0].trim();
+    if (!id || !url || !role || !company) continue;
+    const details = cellText(cells[4]).split('·').map((d) => d.trim());
+    const salary = details.find((d) => /\$|\d\s*k\b/i.test(d));
+    const terms = termsIn(`${role} ${cells[4]}`);
+    jobs.push({
+      source,
+      sourceId: `hanzili:${id}`,
+      company,
+      role,
+      url,
+      locations: [cellText(cells[5])].filter(Boolean),
+      category: HANZILI_CATEGORIES[section] ?? section,
+      ...(salary ? { salary } : {}),
+      ...(terms ? { terms } : {}),
+      ...(cells[0].includes('🔥') ? { tier: 'hot' as const } : {}),
+    });
+  }
+  return jobs;
+}
+
+/** Cells of a markdown table row; "\\|" inside a cell is a literal bar. */
+function rowCells(line: string): string[] {
+  return line
+    .replace(/^\|/, '')
+    .replace(/(?<!\\)\|\s*$/, '')
+    .split(/(?<!\\)\|/)
+    .map((c) => c.trim().replace(/\\\|/g, '|'));
+}
+
+/** "Winter 2027", "Summer 2027"… named anywhere in the text, or undefined when none is. */
+function termsIn(text: string): string[] | undefined {
+  const found = [...text.matchAll(/\b(winter|spring|summer|fall)\s*(20\d\d)\b/gi)].map(
+    (m) => `${m[1][0].toUpperCase()}${m[1].slice(1).toLowerCase()} ${m[2]}`,
+  );
+  return found.length ? [...new Set(found)] : undefined;
+}
+
 /** "3d", "5h", "2w", "1mo" as days. */
 function parseAge(s: string): number | null {
   const m = /^(\d+)\s*(h|d|w|mo)$/i.exec(s.trim());
@@ -174,14 +295,14 @@ const words = (s: string) =>
     .map((w) => w.trim().toLowerCase())
     .filter(Boolean);
 
-/** The jobs that match the settings. Simplify-only filters don't apply to SpeedyApply jobs. */
+/** The jobs that match the settings. A filter skips jobs whose list doesn't give what it checks. */
 export function filterJobs(jobs: FeedJob[], s: FeedSettings, now = Date.now()): FeedJob[] {
   const include = words(s.include);
   const exclude = words(s.exclude);
   const places = words(s.locations);
   const categories = new Set(s.categories.flatMap((c) => CATEGORIES[c] ?? [c]));
   return jobs.filter((j) => {
-    if (now - j.postedAt > s.maxAgeDays * DAY) return false;
+    if (j.postedAt !== undefined && now - j.postedAt > s.maxAgeDays * DAY) return false;
     const title = j.role.toLowerCase();
     if (include.length && !include.some((w) => title.includes(w))) return false;
     if (exclude.some((w) => title.includes(w))) return false;
@@ -195,7 +316,7 @@ export function filterJobs(jobs: FeedJob[], s: FeedSettings, now = Date.now()): 
 /** Same job, whichever list it came from: company and title without punctuation or case. */
 const jobKey = (company: string, role: string) => `${company}|${role}`.toLowerCase().replace(/[^a-z0-9|]+/g, '');
 
-/** What SpeedyApply says about companies, from every job fetched (before filtering), to lend to other lists. */
+/** What lists say about companies, from every job fetched (before filtering), to lend to other lists. */
 export interface CompanyFacts {
   tiers: Map<string, LeadTier>;
   sites: Map<string, string>;
@@ -204,7 +325,8 @@ export interface CompanyFacts {
 export function companyFacts(jobs: FeedJob[]): CompanyFacts {
   const facts: CompanyFacts = { tiers: new Map(), sites: new Map() };
   for (const j of jobs) {
-    if (j.tier) facts.tiers.set(companyKey(j.company), j.tier);
+    const had = facts.tiers.get(companyKey(j.company));
+    if (j.tier && (!had || TIER_RANK[j.tier] > TIER_RANK[had])) facts.tiers.set(companyKey(j.company), j.tier);
     if (j.companySite) facts.sites.set(companyKey(j.company), j.companySite);
   }
   return facts;
@@ -234,7 +356,7 @@ export function planImport(
   const keys = new Set([...existing.leads, ...existing.applications].map((x) => jobKey(x.company, x.role)));
   const leads: Lead[] = [];
   let known = 0;
-  for (const j of [...jobs].sort((a, b) => b.postedAt - a.postedAt)) {
+  for (const j of [...jobs].sort((a, b) => (b.postedAt ?? 0) - (a.postedAt ?? 0))) {
     const url = urlKey(j.url);
     const key = jobKey(j.company, j.role);
     if (ids.has(j.sourceId) || (url && urls.has(url)) || keys.has(key)) {
@@ -255,7 +377,7 @@ export function planImport(
       ...((j.companySite ?? sites.get(companyKey(j.company))) ? { companySite: j.companySite ?? sites.get(companyKey(j.company)) } : {}),
       source: j.source,
       sourceId: j.sourceId,
-      postedAt: j.postedAt,
+      ...(j.postedAt !== undefined ? { postedAt: j.postedAt } : {}),
       addedAt: now,
       status: 'new',
     });
@@ -274,7 +396,9 @@ export function planImport(
 export async function fetchFeed(feed: Feed, now = Date.now()): Promise<FeedJob[]> {
   const res = await fetch(feed.url, { cache: 'no-cache' });
   if (!res.ok) throw new Error(`${feed.label}: ${res.status} ${res.statusText}`);
-  return feed.kind === 'simplify'
-    ? parseSimplify((await res.json()) as SimplifyListing[], feed.source)
-    : parseSpeedyApply(await res.text(), now, feed.source);
+  if (feed.kind === 'simplify') return parseSimplify((await res.json()) as SimplifyListing[], feed.source);
+  const text = await res.text();
+  if (feed.kind === 'negarprh') return parseNegarprh(text, feed.source);
+  if (feed.kind === 'hanzili') return parseHanzili(text, feed.source);
+  return parseSpeedyApply(text, now, feed.source);
 }

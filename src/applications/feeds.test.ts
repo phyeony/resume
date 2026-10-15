@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import type { Lead } from '../model/types';
 import { newApplication } from './model';
-import { DEFAULT_FEED_SETTINGS, filterJobs, parseSimplify, parseSpeedyApply, planImport, companyFacts, type FeedJob } from './feeds';
+import {
+  DEFAULT_FEED_SETTINGS,
+  filterJobs,
+  parseHanzili,
+  parseNegarprh,
+  parseSimplify,
+  parseSpeedyApply,
+  planImport,
+  companyFacts,
+  type FeedJob,
+} from './feeds';
 
 const DAY = 86_400_000;
 const NOW = Date.UTC(2026, 9, 15);
@@ -34,7 +44,7 @@ describe('parseSpeedyApply', () => {
 
   it('reads both table shapes', () => {
     const jobs = parseSpeedyApply(md, NOW);
-    expect(jobs.map((j) => [j.company, j.role, j.locations[0], j.salary, j.url, (NOW - j.postedAt) / DAY])).toEqual([
+    expect(jobs.map((j) => [j.company, j.role, j.locations[0], j.salary, j.url, (NOW - j.postedAt!) / DAY])).toEqual([
       ['Figma', 'PhD Intern - Graphics', 'San Francisco, CA +1', '$60/hr', 'https://boards.greenhouse.io/figma/jobs/62?gh_jid=62&x=1', 1],
       ['Life Fitness', 'Android Software Intern', 'Schaumburg, IL', undefined, 'https://lf.wd1.myworkdayjobs.com/job/1', 2],
       ['AT&T', 'Intern', 'Dallas, TX', undefined, 'https://att.jobs/2', 21],
@@ -46,6 +56,66 @@ describe('parseSpeedyApply', () => {
 function job(p: Partial<FeedJob>): FeedJob {
   return { source: 'Simplify', sourceId: `s:${Math.random()}`, company: 'Acme', role: 'Software Engineer Intern', url: `https://acme.com/${Math.random()}`, locations: ['New York, NY'], postedAt: NOW - DAY, ...p };
 }
+
+describe('parseNegarprh', () => {
+  const badge = '[![Apply](https://img.shields.io/badge/-Apply-blue?style=for-the-badge)]';
+  const md = [
+    '| Company | Role | Location | Apply | Date Posted |',
+    '|--------|------|----------|:-----:|--------------|',
+    `| Electronic Arts | Software Engineer Intern (Summer 2027) | Vancouver, BC | ${badge}(https://jobs.ea.com/1) | Oct 9, 2026 | `,
+    ` | ↳ | Product Intern (Winter 2027/ Summer 2027) | Toronto, ON / Remote | ${badge}(https://jobs.ea.com/2) | Oct 8, 2026 |`,
+    '| Varian | Co-op | Ottawa, ON | Closed🔒 | Oct 9, 2026 |',
+    `| ↳ | Developer Co-op | Ottawa, ON | ${badge}(https://jobs.l3harris.com/job/Co-Op-(Waterdown,-CAN)/14/?ats=sf) | Sep 15, 2026 |`,
+  ].join('\n');
+
+  it('repeats the company for ↳, skips closed jobs and reads terms from the title', () => {
+    const jobs = parseNegarprh(md);
+    expect(jobs.map((j) => [j.company, j.role, j.locations, j.url, j.terms])).toEqual([
+      ['Electronic Arts', 'Software Engineer Intern (Summer 2027)', ['Vancouver, BC'], 'https://jobs.ea.com/1', ['Summer 2027']],
+      ['Electronic Arts', 'Product Intern (Winter 2027/ Summer 2027)', ['Toronto, ON', 'Remote'], 'https://jobs.ea.com/2', ['Winter 2027', 'Summer 2027']],
+      ['Varian', 'Developer Co-op', ['Ottawa, ON'], 'https://jobs.l3harris.com/job/Co-Op-(Waterdown,-CAN)/14/?ats=sf', undefined],
+    ]);
+    expect(new Date(jobs[0].postedAt!).getDate()).toBe(9);
+  });
+});
+
+describe('parseHanzili', () => {
+  const md = [
+    '## Software Engineering',
+    '| Title | Company | Role | Company Info | Details | Location | Apply |',
+    '|-------|---------|------|--------------|---------|----------|:-----:|',
+    "| 🆕 🔥 Intern - Software Engineer <!--id:874195771--> | EQ Bank \\| Canada's Challenger Bank | Build APIs | Bank | Intern · 8mo · $67K CAD · Hiver/Winter 2027 | Toronto, ON (Hybrid) | [Apply](<https://jobs.lever.co/eqbank/c9?lever-source=Indeed>) |",
+    '## Data / ML',
+    '| Title | Company | Role | Company Info | Details | Location | Apply |',
+    '|-------|---------|------|--------------|---------|----------|:-----:|',
+    '| 🆕 ML Intern <!--id:12--> | Cohere | Train | AI | Intern | Remote | [Apply](<https://jobs.ashbyhq.com/cohere/1>) |',
+    '## Startup / VC / Ops',
+    '_No roles currently_',
+  ].join('\n');
+
+  it('reads the section as category, 🔥 as tier, salary and term from the details', () => {
+    expect(parseHanzili(md)).toEqual([
+      {
+        source: 'hanzili Canada list',
+        sourceId: 'hanzili:874195771',
+        company: 'EQ Bank',
+        role: 'Intern - Software Engineer',
+        url: 'https://jobs.lever.co/eqbank/c9?lever-source=Indeed',
+        locations: ['Toronto, ON (Hybrid)'],
+        category: 'Software',
+        salary: '$67K CAD',
+        terms: ['Winter 2027'],
+        tier: 'hot',
+      },
+      { source: 'hanzili Canada list', sourceId: 'hanzili:12', company: 'Cohere', role: 'ML Intern', url: 'https://jobs.ashbyhq.com/cohere/1', locations: ['Remote'], category: 'AI/ML/Data' },
+    ]);
+  });
+
+  it('passes the age filter without a posting date', () => {
+    const jobs = parseHanzili(md);
+    expect(filterJobs(jobs, { ...DEFAULT_FEED_SETTINGS, categories: [], terms: [] }, NOW)).toHaveLength(2);
+  });
+});
 
 describe('filterJobs', () => {
   const s = { ...DEFAULT_FEED_SETTINGS };
