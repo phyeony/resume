@@ -88,6 +88,11 @@ export function nextStage(s: Stage): Stage {
   return i >= 0 && i < flow.length - 1 ? flow[i + 1] : s;
 }
 
+/** Moves the application on to a stage, from now. */
+export function withStage(a: Application, stage: Stage, now = Date.now()): Application {
+  return { ...a, history: [...a.history, { stage, at: now }], updatedAt: now };
+}
+
 /** Records a follow-up: the current stage again, so the wait starts over. */
 export function withFollowUp(a: Application, now = Date.now()): Application {
   return { ...a, history: [...a.history, { stage: currentStage(a), at: now, note: 'Followed up' }], updatedAt: now };

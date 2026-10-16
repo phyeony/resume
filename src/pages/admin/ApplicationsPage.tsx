@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { STAGES, STAGE_LABELS, type Application, type Stage } from '../../model/types';
-import { appliedAt, currentStage, isClosed, lastEventAt, waitingDays, withFollowUp } from '../../applications/model';
+import { appliedAt, currentStage, isClosed, lastEventAt, waitingDays, withFollowUp, withStage } from '../../applications/model';
 import { saveApplication, viewStats, type ViewStats } from './store';
 import { useOwnerData } from './Admin';
 import { fmtDate } from './format';
@@ -15,9 +15,29 @@ const WORK_MODE: Record<string, string> = { remote: 'Remote', hybrid: 'Hybrid', 
 
 /** Every job applied to (or saved to apply to), with where each one stands. */
 export function ApplicationsPage() {
-  const { applications } = useOwnerData();
+  const { applications, reloadApplications } = useOwnerData();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<Filter>('active');
+  const [sure, setSure] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  useEffect(() => setSure(false), [filter]);
+
+  async function markAllApplied(saved: Application[]) {
+    setBusy(true);
+    setError('');
+    try {
+      const now = Date.now();
+      await Promise.all(saved.map((a) => saveApplication(withStage(a, 'applied', now))));
+      await reloadApplications();
+      setFilter('applied');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+      setSure(false);
+    }
+  }
 
   const counts = useMemo(() => {
     const c = new Map<Stage, number>();
@@ -66,6 +86,25 @@ export function ApplicationsPage() {
           <FilterChip key={s} on={filter === s} onClick={() => setFilter(s)} label={STAGE_LABELS[s]} count={counts.get(s)!} />
         ))}
       </div>
+
+      {filter === 'saved' && shown.length > 0 && (
+        <div className="btn-row">
+          {sure ? (
+            <>
+              <span className="muted small">Mark {shown.length} saved as applied today?</span>
+              <button className="primary" disabled={busy} onClick={() => void markAllApplied(shown)}>
+                {busy ? 'Saving…' : `Yes, mark ${shown.length} applied`}
+              </button>
+              <button disabled={busy} onClick={() => setSure(false)}>
+                Cancel
+              </button>
+            </>
+          ) : (
+            <button onClick={() => setSure(true)}>Mark all {shown.length} as applied</button>
+          )}
+          {error && <span className="error small">{error}</span>}
+        </div>
+      )}
 
       {applications.length === 0 && (
         <p className="muted">No applications yet. Add one when you find a job you like, before you apply.</p>
