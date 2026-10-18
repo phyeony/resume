@@ -130,6 +130,9 @@
     return [a.city, a.region, a.country].filter(Boolean).join(', ');
   }
 
+  /** The job you're in now, else the most recent one (the resume lists them newest first). */
+  const latestJob = (a) => (a.experience || []).find((j) => j.current) || (a.experience || [])[0];
+
   // Order matters: the first rule whose pattern matches answers. Specific before general.
   const RULES = [
     { key: 'sponsorship', test: /sponsor|visa\b|work permit sponsorship/, value: (a, q) => workAuthFor(q, a.workAuth)?.sponsorship },
@@ -138,6 +141,8 @@
       test: /(authori[sz]ed|eligible|legally (able|permitted|entitled)|right) to work|work authori[sz]ation|employment eligibility/,
       value: (a, q) => workAuthFor(q, a.workAuth)?.authorized,
     },
+    { key: 'currentCompany', test: /(current|most recent|present|latest) (company|employer|organi[sz]ation)/, value: (a) => latestJob(a)?.company },
+    { key: 'currentTitle', test: /(current|most recent|present|latest) (job |position |role )?title|(current|most recent) (position|role)\b/, value: (a) => latestJob(a)?.title },
     { key: 'preferredName', test: /preferred (first )?name|nickname|name you go by/, value: (a) => a.preferredName || a.firstName },
     { key: 'firstName', test: /first name|given name|forename/, value: (a) => a.firstName },
     { key: 'lastName', test: /last name|surname|family name/, value: (a) => a.lastName },
@@ -368,9 +373,184 @@
     return removed.length ? `replaced ${removed.length} Workday entries (${removed.join('; ')}) with your ${added} jobs` : `added your ${added} jobs`;
   }
 
+  // ---- Work experience on other sites ------------------------------------------------
+  // Best effort: find blocks with a job title and a company field (one block per job), fill the blank ones with
+  // the kit's jobs in order, and click the site's "Add" for the rest. Never touches a block that has anything in
+  // it. What it can't place is left amber.
+
+  const JOB = {
+    title: /job title|position title|role title|^(job |position |role )?title$|^position$|^role$|\btitle\b/,
+    company: /company|employer|organi[sz]ation|business name/,
+    location: /location|\bcity\b/,
+    current: /current|present|still (work|employed)|i work here/,
+    start: /start|from|began|begin/,
+    end: /end|\bto\b|until|finish|left/,
+    description: /description|responsibilit|duties|summary|achievements|what did you do/,
+  };
+  const MONTH_NAMES = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
+
+  const formFields = (root) =>
+    [...root.querySelectorAll('input, select, textarea')].filter(
+      (el) => !el.disabled && !el.readOnly && !/^(hidden|submit|button|reset|image|search|password|file|radio)$/.test(el.type) && visible(el),
+    );
+  // Tests a field's question, then its name/id, so "experience[0][company]" counts even with a vague label.
+  const has = (el, re) => re.test(norm(questionOf(el, [el]))) || re.test(norm(`${nameHint(el.name)} ${nameHint(el.id)}`));
+  const isTitleField = (el) => el.type !== 'checkbox' && has(el, JOB.title) && !has(el, /name|first|last|prefix/);
+  const isCompanyField = (el) => el.type !== 'checkbox' && has(el, JOB.company);
+
+  const dateish = (f) =>
+    f.type !== 'checkbox' &&
+    (has(f, /date|month|year|\bmm\b|yyyy/) || MONTH_SELECT(f) || YEAR_SELECT(f) || /^(month|date)$/.test(f.type) || /\bmm\b|yyyy/i.test(f.getAttribute('placeholder') || ''));
+  // Contact and reference fields mean the container is the whole form or a references entry, not a job.
+  const NOT_A_JOB = /e-?mail|phone|first name|last name|full name|reference|referee/;
+
+  /** One element per job entry: the smallest container holding a title field and a company field, and no other title. */
+  function jobBlocks(root = document) {
+    const blocks = [];
+    for (const t of formFields(root).filter(isTitleField)) {
+      for (let n = t.parentElement, depth = 0; n && n !== document.body && depth < 8; n = n.parentElement, depth++) {
+        const inside = formFields(n);
+        if (inside.filter(isTitleField).length > 1) break;
+        if (inside.some(isCompanyField)) {
+          const jobLike = inside.some((f) => dateish(f) || f instanceof HTMLTextAreaElement) && !inside.some((f) => has(f, NOT_A_JOB));
+          if (jobLike && !blocks.includes(n)) blocks.push(n);
+          break;
+        }
+      }
+    }
+    return blocks;
+  }
+
+  const MONTH_SELECT = (el) => el instanceof HTMLSelectElement && [...el.options].filter((o) => MONTH_NAMES.some((m) => norm(o.textContent).startsWith(m.slice(0, 3)))).length >= 12;
+  const YEAR_SELECT = (el) => el instanceof HTMLSelectElement && [...el.options].filter((o) => /^(19|20)\d\d$/.test(clean(o.textContent))).length >= 5;
+
+  /** Writes a month/year into one date field: picks the format from its type and placeholder. */
+  function dateText(el, m, y) {
+    const mm = String(m || 1).padStart(2, '0');
+    if (el.type === 'month') return `${y}-${mm}`;
+    if (el.type === 'date') return `${y}-${mm}-01`;
+    const ph = norm(el.getAttribute('placeholder'));
+    if (/yyyy.?mm/.test(ph)) return `${y}-${mm}`;
+    if (/^yyyy$/.test(ph)) return String(y);
+    if (/mm.?dd.?yyyy/.test(ph)) return `${mm}/01/${y}`;
+    return m ? `${mm}/${y}` : String(y);
+  }
+
+  /** Fills a start or end date: one field, or a month and a year (selects or boxes). True when done. */
+  function fillDate(els, m, y) {
+    if (!els.length || !y) return false;
+    const month = els.find((el) => MONTH_SELECT(el) || has(el, /\bmonth\b|\bmm\b/));
+    const year = els.find((el) => el !== month && (YEAR_SELECT(el) || has(el, /\byear\b|yyyy/) && !has(el, /month/)));
+    const put = (el, v, labels) => {
+      if (el instanceof HTMLSelectElement) {
+        const i = pickOption([...el.options].map((o) => o.textContent), labels);
+        if (i < 0) return false;
+        setValue(el, el.options[i].value);
+      } else setValue(el, v);
+      mark(el, GREEN);
+      return true;
+    };
+    if (month && year) {
+      if (!m) return false;
+      const okM = MONTH_SELECT(month) ? put(month, '', MONTH_NAMES[m - 1]) : put(month, String(m).padStart(2, '0'));
+      return put(year, String(y), String(y)) && okM;
+    }
+    const one = year || els[0];
+    return put(one, dateText(one, m, y), String(y));
+  }
+
+  /** Fills an empty job block; returns what it couldn't place. */
+  async function fillJobBlock(b, job) {
+    const left = [];
+    const fs = formFields(b);
+    const used = new Set();
+    const take = (pred) => {
+      const el = fs.find((f) => !used.has(f) && pred(f));
+      if (el) used.add(el);
+      return el;
+    };
+    const title = take(isTitleField);
+    const company = take(isCompanyField);
+    const cur = take((f) => f.type === 'checkbox' && has(f, JOB.current));
+    const desc = take((f) => f instanceof HTMLTextAreaElement || has(f, JOB.description));
+    const location = take((f) => has(f, JOB.location));
+    const starts = fs.filter((f) => !used.has(f) && dateish(f) && has(f, JOB.start));
+    starts.forEach((f) => used.add(f));
+    // Ends: labelled as such, or the date fields left once the start ones are taken.
+    const ends = fs.filter((f) => !used.has(f) && dateish(f) && (has(f, JOB.end) || starts.length));
+
+    const text = async (el, v) => {
+      if (!el || !v) return;
+      if (isCombobox(el) ? await fillCombobox(el, v) : (setValue(el, v), true)) mark(el, GREEN);
+      else left.push(el);
+    };
+    await text(title, job.title);
+    await text(company, job.company);
+    await text(location, job.location);
+    if (job.current && cur && !cur.checked) {
+      cur.click();
+      mark(cur, GREEN);
+    }
+    if (!fillDate(starts, job.startMonth, job.startYear) && starts.length) left.push(...starts);
+    if (!job.current && !fillDate(ends, job.endMonth, job.endYear) && ends.length) left.push(...ends);
+    if (job.current && !cur && ends.length === 1 && ends[0] instanceof HTMLInputElement && ends[0].type === 'text') setValue(ends[0], 'Present');
+    await text(desc, job.description);
+    left.forEach((el) => mark(el, AMBER));
+    return left;
+  }
+
+  /** The site's "Add another job" button next to the job blocks. */
+  function addJobButton(blocks) {
+    const last = blocks[blocks.length - 1];
+    for (let n = last.parentElement, depth = 0; n && depth < 4; n = n.parentElement, depth++) {
+      const b = [...n.querySelectorAll('button, a, [role="button"]')].find(
+        (x) => !last.contains(x) && visible(x) && /^\+?\s*add\b/i.test(clean(x.textContent || x.getAttribute('aria-label'))) && !/education|school|language|skill|reference|certif/i.test(clean(x.textContent)),
+      );
+      if (b) return b;
+    }
+    return null;
+  }
+
+  async function fillOtherExperience(jobs, report) {
+    let blocks = jobBlocks();
+    if (!blocks.length) return null;
+    if (!jobs || !jobs.length) {
+      report.left.push({ question: 'Work experience', required: false, why: 'no work experience in the kit: download a new kit from Profile' });
+      return { blocks, summary: null };
+    }
+    const value = (b, pred) => clean(formFields(b).find(pred)?.value);
+    const isBlank = (b) => formFields(b).every((f) => (f.type === 'checkbox' ? !f.checked : f instanceof HTMLSelectElement ? f.selectedIndex <= 0 : !clean(f.value)));
+    // Jobs already on the form (typed by you or the site's resume parser) aren't added again.
+    const there = blocks.filter((b) => !isBlank(b)).map((b) => norm(value(b, isCompanyField) + ' ' + value(b, isTitleField)));
+    const todo = jobs.filter((j) => !there.includes(norm(`${j.company} ${j.title}`)));
+    let filled = 0;
+    for (const job of todo) {
+      let b = blocks.find((x) => isBlank(x));
+      if (!b) {
+        const add = addJobButton(blocks);
+        if (!add) break;
+        const before = blocks.length;
+        add.click();
+        if (!(await until(() => jobBlocks().length > before))) break;
+        blocks = jobBlocks();
+        b = blocks.find((x) => isBlank(x));
+        if (!b) break;
+      }
+      const missed = await fillJobBlock(b, job);
+      report.filled.push({ question: 'Work experience', answer: `${job.title} at ${job.company}` });
+      missed.forEach((el) => report.left.push({ question: `${job.title} at ${job.company}: ${questionOf(el, [el])}`, required: isRequired(el, ''), why: 'job detail it could not fill' }));
+      filled++;
+    }
+    if (filled < todo.length) {
+      report.left.push({ question: 'Work experience', required: false, why: `filled ${filled} of ${todo.length} jobs; add the rest yourself` });
+    }
+    const summary = `filled ${filled} job${filled === 1 ? '' : 's'} into the form${there.length ? ` (${there.length} already there)` : ''}`;
+    return { blocks: jobBlocks(), summary };
+  }
+
   /** opts.keepExperience: leave Workday's work experience entries as they are. */
   async function fill(kit, opts = {}) {
-    const answers = kit.answers;
+    const answers = { ...kit.answers, experience: kit.experience };
     const report = { url: window.location.href, filled: [], left: [], already: 0, resume: 'no upload field', transcript: 'no upload field' };
     const fields = [...document.querySelectorAll('input, select, textarea')].filter(
       (el) => !el.disabled && !el.readOnly && !/^(hidden|submit|button|reset|image|search|password)$/.test(el.type),
@@ -383,6 +563,12 @@
     if (sec) {
       report.experience = opts.keepExperience ? "kept Workday's entries" : await fillWorkdayExperience(sec, kit.experience, report);
       sec.querySelectorAll('input, select, textarea').forEach((el) => seen.add(el));
+    } else {
+      const other = await fillOtherExperience(kit.experience, report);
+      if (other) {
+        if (other.summary) report.experience = other.summary;
+        other.blocks.forEach((b) => b.querySelectorAll('input, select, textarea').forEach((el) => seen.add(el)));
+      }
     }
 
     for (const el of fields) {

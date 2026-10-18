@@ -111,7 +111,7 @@ Tests (`tools/autofill/fill.test.ts`, happy-dom): a fixture built from the phase
 button that appends an entry; check removed/added entries, the current-job checkbox, dates, description
 cut, and that non-Workday pages are untouched.
 
-## Phase 3 — other sites (later)
+## Phase 3 — other sites (built 2026-10-18, best effort, untested on live sites)
 
 Detect a repeated employment block anywhere: a container whose fields ask job title + company + dates,
 with an "Add" button next to it. Fill the first blank block, click Add for the rest. Worth it mainly for
@@ -123,3 +123,9 @@ unless a site shows the same problem.
 
 On two different Workday tenants, after the resume parse step, Fill this page leaves My Experience with
 exactly the resume's jobs, correct dates and descriptions, and nothing else changed; tests pass.
+
+As built: `fillOtherExperience` in `fill.js` treats the smallest container holding one job-title field and a
+company field as a job entry, if it also has a date field or a textarea and no email/phone/name/reference
+field. It fills blank entries in order, skips jobs already present (same company and title), clicks a nearby
+"+ Add…" button for more, and reports what it couldn't place. "Current company"/"Current title" questions
+outside entries get the latest job. Tune the patterns on real forms as they come up.

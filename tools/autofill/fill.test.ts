@@ -154,7 +154,7 @@ describe('fill', () => {
     expect(val('input[name="name"]')).toBe('Ada Lovelace');
     expect(val('input[name="location"]')).toBe('Vancouver, BC, Canada');
     expect(val('input[name="urls[LinkedIn]"]')).toBe('https://linkedin.com/in/ada');
-    expect(r.left).toEqual([{ question: 'Current company', required: false, why: 'unknown question' }]);
+    expect(r.left).toEqual([{ question: 'Current company', required: false, why: 'no answer saved for currentCompany' }]);
     expect(filler().findSubmit()?.id).toBe('btn-submit');
   });
 
@@ -283,5 +283,98 @@ describe('Workday work experience', () => {
     const r = await filler().fill({ ...kit(), experience: [{ title: 'Intern', company: 'Acme', location: '', current: false, description: '' }] });
     expect(entries()).toEqual([['Intern', 'Acme', '', false, '', '', '', '', '']]);
     expect(r.left.map((x) => x.question)).toEqual(['Intern at Acme: From', 'Intern at Acme: To']);
+  });
+});
+
+describe('work experience on other sites', () => {
+  const jobs: NonNullable<ApplyKit['experience']> = [
+    { title: 'Software Developer', company: 'Korea Air Force', location: 'Daejeon, Korea', startMonth: 11, startYear: 2024, endMonth: 8, endYear: 2026, current: false, description: '• Cut latency by 90%' },
+    { title: 'Application Developer', company: 'Cambian', location: 'BC', startMonth: 11, startYear: 2022, endMonth: 7, endYear: 2024, current: false, description: '• Built Lambdas' },
+    { title: 'DevOps Intern', company: 'Scotiabank', location: 'ON', startMonth: 9, startYear: 2021, endMonth: 6, endYear: 2022, current: false, description: '• Built CI/CD' },
+  ];
+  const withJobs = () => ({ ...kit(), experience: jobs });
+
+  // iCIMS/SuccessFactors-style: labelled fields per entry, month/year selects, and an "Add" that appends one.
+  function jobHtml(i: number) {
+    const months = ['Month', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+      .map((m, k) => `<option value="${k || ''}">${m}</option>`).join('');
+    const years = ['Year', ...Array.from({ length: 10 }, (_, k) => String(2018 + k))].map((y) => `<option value="${y === 'Year' ? '' : y}">${y}</option>`).join('');
+    return `<div class="job">
+      <label for="t${i}">Job Title</label><input id="t${i}" name="experience[${i}][title]">
+      <label for="c${i}">Employer</label><input id="c${i}" name="experience[${i}][company]">
+      <label for="l${i}">City</label><input id="l${i}">
+      <label for="sm${i}">Start Month</label><select id="sm${i}">${months}</select>
+      <label for="sy${i}">Start Year</label><select id="sy${i}">${years}</select>
+      <label for="em${i}">End Month</label><select id="em${i}">${months}</select>
+      <label for="ey${i}">End Year</label><select id="ey${i}">${years}</select>
+      <label for="d${i}">Responsibilities</label><textarea id="d${i}"></textarea>
+    </div>`;
+  }
+
+  function form(entries: number, opts: { add?: boolean; firstTitle?: string; firstCompany?: string } = {}) {
+    document.body.innerHTML = `<form>
+      <label for="fn">First name</label><input id="fn">
+      <section id="exp"><h3>Work History</h3>${Array.from({ length: entries }, (_, i) => jobHtml(i)).join('')}
+        ${opts.add ? '<button type="button" id="add">+ Add another</button>' : ''}</section>
+      <label for="avail">Available start date</label><input id="avail">
+    </form>`;
+    if (opts.firstTitle) (document.querySelector('#t0') as HTMLInputElement).value = opts.firstTitle;
+    if (opts.firstCompany) (document.querySelector('#c0') as HTMLInputElement).value = opts.firstCompany;
+    const exp = document.querySelector('#exp')!;
+    document.querySelector('#add')?.addEventListener('click', () =>
+      setTimeout(() => document.querySelector('#add')!.insertAdjacentHTML('beforebegin', jobHtml(exp.querySelectorAll('.job').length)), 30),
+    );
+  }
+
+  const job = (i: number) => ['t', 'c', 'l', 'sm', 'sy', 'em', 'ey', 'd'].map((k) => val(`#${k}${i}`));
+
+  it('fills the blank entry, clicks Add for the rest, and leaves other questions to the usual rules', async () => {
+    form(1, { add: true });
+    const r = await filler().fill(withJobs());
+    expect([job(0), job(1), job(2)]).toEqual([
+      ['Software Developer', 'Korea Air Force', 'Daejeon, Korea', '11', '2024', '8', '2026', '• Cut latency by 90%'],
+      ['Application Developer', 'Cambian', 'BC', '11', '2022', '7', '2024', '• Built Lambdas'],
+      ['DevOps Intern', 'Scotiabank', 'ON', '9', '2021', '6', '2022', '• Built CI/CD'],
+    ]);
+    expect((r as Report & { experience: string }).experience).toBe('filled 3 jobs into the form');
+    expect(val('#fn')).toBe('Ada');
+    // The job start dates aren't mistaken for "available start date", and vice versa.
+    expect(val('#avail')).toBe('');
+  });
+
+  it("skips a job that's already there and says when it runs out of entries", async () => {
+    form(2, { firstTitle: 'Software Developer', firstCompany: 'Korea Air Force' });
+    const r = await filler().fill(withJobs());
+    expect(val('#t0')).toBe('Software Developer');
+    expect(val('#sy0')).toBe('');
+    expect(job(1).slice(0, 2)).toEqual(['Application Developer', 'Cambian']);
+    expect(r.left).toContainEqual({ question: 'Work experience', required: false, why: 'filled 1 of 2 jobs; add the rest yourself' });
+  });
+
+  it('writes single date fields in the format they ask for', async () => {
+    document.body.innerHTML = `<div class="job">
+      <label for="t">Position</label><input id="t"><label for="c">Company name</label><input id="c">
+      <label for="s">From</label><input id="s" type="month"><label for="e">To</label><input id="e" placeholder="MM/YYYY">
+      <label><input type="checkbox" id="cur"> I currently work here</label></div>`;
+    await filler().fill({ ...kit(), experience: [jobs[1]] });
+    expect([val('#t'), val('#c'), val('#s'), val('#e')]).toEqual(['Application Developer', 'Cambian', '2022-11', '07/2024']);
+    expect((document.querySelector('#cur') as HTMLInputElement).checked).toBe(false);
+  });
+
+  it("leaves a references entry and a form's single job questions out of it", async () => {
+    document.body.innerHTML = `<form>
+      <div class="ref"><label for="rn">Reference name</label><input id="rn"><label for="rt">Title</label><input id="rt">
+        <label for="rc">Company</label><input id="rc"><label for="re">Email</label><input id="re"></div>
+      <label for="em">Email</label><input id="em"><label for="pt">Position title</label><input id="pt">
+      <label for="co">Company</label><input id="co"><label for="cl">Cover letter</label><textarea id="cl"></textarea></form>`;
+    const r = await filler().fill(withJobs());
+    expect([val('#rt'), val('#rc'), val('#pt'), val('#co'), val('#cl')]).toEqual(['', '', '', '', '']);
+    expect((r as Report & { experience?: string }).experience).toBeUndefined();
+  });
+
+  it('answers "current company" and "current title" from the latest job', async () => {
+    document.body.innerHTML = `<label for="cc">Current company</label><input id="cc"><label for="ct">Current job title</label><input id="ct">`;
+    await filler().fill(withJobs());
+    expect([val('#cc'), val('#ct')]).toEqual(['Korea Air Force', 'Software Developer']);
   });
 });

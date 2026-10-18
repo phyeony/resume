@@ -49,6 +49,11 @@ Then: `s` submit, `r` fill again (next page of a multi-page form), `q` quit with
   the description). Run it again and it leaves matching entries alone. The extension's checkbox (or
   `fill(kit, { keepExperience: true })`) keeps Workday's entries instead. The jobs come from the kit's resume
   version, so download a new kit after editing them; Profile lists what goes in and flags dates it can't read.
+- Other sites, best effort: finds job entries (a job title and a company field together, with dates or a
+  description, and no email/phone, so references aren't taken for jobs), fills the blank ones with your jobs in
+  order and clicks the form's "Add" for more. Skips jobs already on the form; never changes a filled entry.
+  Date fields get month/year selects, `type=month`, or the format their placeholder asks for. "Current company"
+  and "Current title" questions get your latest job. What it can't place is outlined amber.
 - Doesn't click Submit. Multi-page forms (Workday): fill each page.
 
 Tests: `npx vitest run tools/autofill` from the repo root.
