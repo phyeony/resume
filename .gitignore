@@ -8,3 +8,7 @@ dist/
 
 # Apply kits hold personal details
 apply-kit*.json
+
+# Service account keys for the mail job
+*service-account*.json
+tools/mail/*key*.json

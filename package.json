@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc -b",
-    "local": "vite --mode preview-local --open /admin"
+    "local": "vite --mode preview-local --open /admin",
+    "mail:build": "node tools/mail/build.mjs"
   },
   "dependencies": {
     "@fontsource/caladea": "^5.1.0",

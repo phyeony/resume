@@ -10,6 +10,7 @@
 //   applications/{id}, postings/{id}    owner-only job applications and their captured postings
 //   leads/{id}                          owner-only jobs worth a look, before applying
 //   companies/{key}                     owner-only stars, hiding and Wikipedia fame per company
+//   mail/{gmailId}                      owner-only status emails found by the mail job (tools/mail)
 // Editor-only; visitors go through src/data/publicStore.ts.
 
 import {
@@ -28,7 +29,9 @@ import {
   type Timestamp,
 } from 'firebase/firestore';
 import { MAIN_SLUG } from '../../data/publicStore';
-import type { Application, ApplicationAnswers, CompanyInfo, ExportRecord, FeedSettings, Lead, Library, Posting, Profile, ShareLink, StoredPdf, Version } from '../../model/types';
+import type { Application, ApplicationAnswers, CompanyInfo, ExportRecord, FeedSettings, Lead, Library, MailUpdate, Posting, Profile, ShareLink, StoredPdf, Version } from '../../model/types';
+import { currentStage } from '../../applications/model';
+import { withMailEvent, withoutMailEvent } from '../../applications/mail';
 import { db } from './auth';
 import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
@@ -250,4 +253,35 @@ export async function saveCompanies(companies: CompanyInfo[]): Promise<void> {
     for (const c of companies.slice(i, i + 450)) batch.set(doc(db, 'companies', c.key), c);
     await batch.commit();
   }
+}
+
+// ---- status emails -------------------------------------------------------------------
+
+/** Emails not yet dismissed from the alerts. */
+export async function listUnseenMail(): Promise<MailUpdate[]> {
+  const snap = await getDocs(query(collection(db, 'mail'), where('seen', '==', false)));
+  return snap.docs.map((d) => d.data() as MailUpdate);
+}
+
+export async function dismissMail(ids: string[]): Promise<void> {
+  const batch = writeBatch(db);
+  for (const id of ids) batch.update(doc(db, 'mail', id), { seen: true });
+  await batch.commit();
+}
+
+/** Takes the email's step back out of the application. */
+export async function revertMail(m: MailUpdate, app: Application | undefined): Promise<void> {
+  const batch = writeBatch(db);
+  if (app) batch.set(doc(db, 'applications', app.id), withoutMailEvent(app, m.id));
+  batch.update(doc(db, 'mail', m.id), { status: 'reverted', seen: true });
+  await batch.commit();
+}
+
+/** Applies the email to the application you picked, moving it off the one it was guessed for. */
+export async function assignMail(m: MailUpdate, to: Application, from?: Application): Promise<void> {
+  const batch = writeBatch(db);
+  if (from) batch.set(doc(db, 'applications', from.id), withoutMailEvent(from, m.id));
+  batch.set(doc(db, 'applications', to.id), withMailEvent(to, m));
+  batch.update(doc(db, 'mail', m.id), { applicationId: to.id, fromStage: currentStage(to), status: 'applied', ambiguous: deleteField(), seen: true });
+  await batch.commit();
 }

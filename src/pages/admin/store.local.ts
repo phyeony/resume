@@ -3,7 +3,9 @@
 
 import { MAIN_SLUG } from '../../data/publicStore';
 import { clone, readDb, writeDb } from '../../data/localDb';
-import type { Application, ApplicationAnswers, CompanyInfo, ExportRecord, FeedSettings, Lead, Library, Posting, Profile, ShareLink, StoredPdf, Version } from '../../model/types';
+import type { Application, ApplicationAnswers, CompanyInfo, ExportRecord, FeedSettings, Lead, Library, MailUpdate, Posting, Profile, ShareLink, StoredPdf, Version } from '../../model/types';
+import { currentStage } from '../../applications/model';
+import { withMailEvent, withoutMailEvent } from '../../applications/mail';
 import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
 export { newId, makeSlug, slugProblem, type ViewStats } from './storeShared';
@@ -152,4 +154,28 @@ export const listCompanies = async (): Promise<CompanyInfo[]> => clone(Object.va
 
 export async function saveCompanies(companies: CompanyInfo[]): Promise<void> {
   writeDb((db) => companies.forEach((c) => (db.companies[c.key] = clone(c))));
+}
+
+// ---- status emails -------------------------------------------------------------------
+
+export const listUnseenMail = async (): Promise<MailUpdate[]> => clone(Object.values(readDb().mail).filter((m) => !m.seen));
+
+export async function dismissMail(ids: string[]): Promise<void> {
+  writeDb((db) => ids.forEach((id) => db.mail[id] && (db.mail[id].seen = true)));
+}
+
+export async function revertMail(m: MailUpdate, app: Application | undefined): Promise<void> {
+  writeDb((db) => {
+    if (app) db.applications[app.id] = clone(withoutMailEvent(app, m.id));
+    db.mail[m.id] = { ...db.mail[m.id], status: 'reverted', seen: true };
+  });
+}
+
+export async function assignMail(m: MailUpdate, to: Application, from?: Application): Promise<void> {
+  writeDb((db) => {
+    if (from) db.applications[from.id] = clone(withoutMailEvent(from, m.id));
+    db.applications[to.id] = clone(withMailEvent(to, m));
+    const { ambiguous: _, ...rest } = db.mail[m.id];
+    db.mail[m.id] = { ...rest, applicationId: to.id, fromStage: currentStage(to), status: 'applied', seen: true };
+  });
 }

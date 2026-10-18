@@ -43,6 +43,11 @@ service cloud.firestore {
       allow read, write: if isOwner();
     }
 
+    // written by the mail job's service account, which rules don't apply to
+    match /mail/{id} {
+      allow read, write: if isOwner();
+    }
+
     match /public/{slug} {
       // get only: no listing, so company links can't be enumerated
       allow get: if isOwner() || isLive(resource.data);

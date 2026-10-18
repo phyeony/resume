@@ -395,6 +395,11 @@ function StageSection({ app, onChange }: { app: Application; onChange(h: Applica
           <li key={`${e.at}-${i}`}>
             <StageBadge stage={e.stage} />
             <span className="small">{fmtDate(e.at)}</span>
+            {e.mailId && (
+              <span className="small muted" title="Set by the daily mail check">
+                ✉
+              </span>
+            )}
             {e.note && <span className="small">{e.note}</span>}
             <span className="spacer" />
             {history.length > 1 && (

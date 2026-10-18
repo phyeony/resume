@@ -1,7 +1,7 @@
 // Local preview backend (`npm run local`): the whole "database" is one JSON blob in
 // localStorage, so the editor and public pages work without Firebase. Never in a real build.
 
-import type { Application, ApplicationAnswers, CompanyInfo, FeedSettings, Lead, Library, Posting, Profile, PublicDoc, ShareLink, StoredPdf, Version, ViewRecord } from '../model/types';
+import type { Application, ApplicationAnswers, CompanyInfo, FeedSettings, Lead, Library, MailUpdate, Posting, Profile, PublicDoc, ShareLink, StoredPdf, Version, ViewRecord } from '../model/types';
 
 export interface LocalDb {
   profile: Profile | null;
@@ -17,6 +17,7 @@ export interface LocalDb {
   answers?: ApplicationAnswers;
   transcript?: StoredPdf;
   companies: Record<string, CompanyInfo>;
+  mail: Record<string, MailUpdate>;
 }
 
 const KEY = 'resume-studio:local-db';
@@ -31,6 +32,7 @@ export function readDb(): LocalDb {
       db.postings ??= {};
       db.leads ??= {};
       db.companies ??= {};
+      db.mail ??= {};
       // earlier previews stored bare timestamps
       for (const k of Object.keys(db.views)) {
         db.views[k] = db.views[k].map((v) => (typeof v === 'number' ? { at: v } : v));
@@ -40,7 +42,7 @@ export function readDb(): LocalDb {
   } catch {
     // fall through to an empty db
   }
-  return { profile: null, library: null, versions: {}, links: {}, public: {}, views: {}, applications: {}, postings: {}, leads: {}, companies: {} };
+  return { profile: null, library: null, versions: {}, links: {}, public: {}, views: {}, applications: {}, postings: {}, leads: {}, companies: {}, mail: {} };
 }
 
 /** Applies `fn` and saves. JSON round-trip drops undefined fields, like Firestore does. */

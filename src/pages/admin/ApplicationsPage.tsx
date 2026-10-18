@@ -6,6 +6,7 @@ import { groupByCompany } from '../../applications/leadSort';
 import { saveApplication, viewStats, type ViewStats } from './store';
 import { useOwnerData } from './Admin';
 import { fmtDate } from './format';
+import { MailAlerts } from './MailAlerts';
 import './applications.css';
 
 type Filter = 'active' | 'all' | 'follow-up' | Stage;
@@ -89,6 +90,8 @@ export function ApplicationsPage() {
       <p className="muted">
         Each application keeps an exact copy of its job posting, so it's still here if the company takes it down.
       </p>
+
+      <MailAlerts />
 
       <div className="chips stage-filter">
         <FilterChip on={filter === 'active'} onClick={() => setFilter('active')} label="Active" count={activeCount} />

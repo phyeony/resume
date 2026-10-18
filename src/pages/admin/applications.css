@@ -91,5 +91,24 @@
 .admin .fame-fix input { width: 300px !important; max-width: 100%; padding: 3px 6px; font-size: 12.5px; }
 .hidden-company { margin-left: 10px; }
 
+/* Status emails */
+.mail-alerts { margin: 12px 0 4px; }
+.mail-group { border-left-width: 4px; padding-top: 10px; }
+.mail-forward { border-left-color: var(--a-ok); }
+.mail-rejected { border-left-color: var(--a-danger); }
+.mail-unmatched { border-left-color: var(--a-line); }
+.mail-group-head { display: flex; align-items: center; gap: 8px; }
+.mail-group-head h2 { margin: 0; font-size: 15px; }
+.mail-forward h2 { color: var(--a-ok); }
+.mail-rejected h2 { color: var(--a-danger); }
+.mail-row { padding: 8px 0; border-top: 1px solid var(--a-line); }
+.mail-group-head + .mail-row { margin-top: 8px; }
+.mail-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.mail-line .grow-text { flex: 1; min-width: 220px; }
+.mail-line a { color: var(--a-text); font-weight: 600; text-decoration: none; }
+.mail-line a:hover { color: var(--a-accent); }
+.mail-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.admin .mail-actions select { width: auto; max-width: 240px; padding: 3px 6px; font-size: 12.5px; }
+.mail-excerpt { white-space: pre-wrap; font: 13px/1.5 inherit; font-family: inherit; background: var(--a-bg); border-radius: 6px; padding: 8px 10px; margin: 8px 0 0; max-height: 260px; overflow-y: auto; }
 .app-group { margin-bottom: 12px; }
 .app-group .card { margin-bottom: 6px; }

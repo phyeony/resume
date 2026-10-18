@@ -203,6 +203,38 @@ export interface StageEvent {
   stage: Stage;
   at: number; // epoch ms
   note?: string;
+  /** Set when an email moved the application here (mail/{id}), so the change can be reverted. */
+  mailId?: string;
+}
+
+/** What a status email says: turned down, moved on (assessment, interview, offer), or application received. */
+export type MailKind = 'rejected' | 'advanced' | 'applied';
+
+/**
+ * A status email the daily mail job found: mail/{gmail message id}. Only emails that read as a status
+ * change are kept, as a short excerpt. Written by tools/mail (Apps Script), reviewed in Applications.
+ */
+export interface MailUpdate {
+  id: string;
+  /** When the email was sent; for forwarded mail, the original's date. */
+  receivedAt: number;
+  /** Original sender, "Name <address>". */
+  from: string;
+  subject: string;
+  excerpt: string;
+  /** The inbox it came from: Gmail, or the school Outlook redirected into Gmail. */
+  via: 'gmail' | 'outlook';
+  kind: MailKind;
+  toStage: Stage;
+  /** The application it moved; absent when no tracked application matched. */
+  applicationId?: string;
+  fromStage?: Stage;
+  /** Several applications could fit; the most recent was picked. */
+  ambiguous?: boolean;
+  status: 'applied' | 'unmatched' | 'reverted';
+  /** Dismissed from the alerts. */
+  seen: boolean;
+  processedAt: number;
 }
 
 export type SalaryPeriod = 'hour' | 'day' | 'week' | 'month' | 'year';
