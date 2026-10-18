@@ -249,11 +249,12 @@
     return false;
   }
 
-  function attachResume(input, resume) {
-    if (!resume || !resume.pdfBase64) return false;
-    const bytes = Uint8Array.from(atob(resume.pdfBase64), (c) => c.charCodeAt(0));
+  /** Puts a kit PDF ({fileName, pdfBase64}) into a file input. */
+  function attachPdf(input, pdf) {
+    if (!pdf || !pdf.pdfBase64) return false;
+    const bytes = Uint8Array.from(atob(pdf.pdfBase64), (c) => c.charCodeAt(0));
     const dt = new DataTransfer();
-    dt.items.add(new File([bytes], resume.fileName, { type: 'application/pdf' }));
+    dt.items.add(new File([bytes], pdf.fileName, { type: 'application/pdf' }));
     input.files = dt.files;
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new Event('change', { bubbles: true }));
@@ -269,7 +270,7 @@
 
   async function fill(kit) {
     const answers = kit.answers;
-    const report = { url: window.location.href, filled: [], left: [], already: 0, resume: 'no upload field' };
+    const report = { url: window.location.href, filled: [], left: [], already: 0, resume: 'no upload field', transcript: 'no upload field' };
     const fields = [...document.querySelectorAll('input, select, textarea')].filter(
       (el) => !el.disabled && !el.readOnly && !/^(hidden|submit|button|reset|image|search|password)$/.test(el.type),
     );
@@ -336,18 +337,24 @@
       } else leave(`no option matches "${answer}"`);
     }
 
-    // Resume: the upload field that asks for a resume/CV, else the only one that isn't for a cover letter.
-    const resumeField =
-      files.find((f) => /resume|cv\b|curriculum/i.test(questionOf(f, [f]) + ' ' + (f.name || '') + ' ' + (f.id || ''))) ||
-      (files.filter((f) => !/cover/i.test(questionOf(f, [f]) + ' ' + (f.name || ''))).length === 1
-        ? files.find((f) => !/cover/i.test(questionOf(f, [f]) + ' ' + (f.name || '')))
-        : undefined);
-    if (resumeField) {
-      if (resumeField.files && resumeField.files.length) report.resume = 'already attached';
-      else report.resume = attachResume(resumeField, kit.resume) ? `attached ${kit.resume.fileName}` : 'could not attach';
-    }
+    // Transcript: the upload field that names it. Resume: the one that asks for a resume/CV, else the only one
+    // left that isn't for a cover letter or a transcript.
+    const fileText = (f) => questionOf(f, [f]) + ' ' + (f.name || '') + ' ' + (f.id || '');
+    const transcriptField = files.find((f) => /transcript/i.test(fileText(f)));
+    const others = files.filter((f) => f !== transcriptField && !/cover|transcript/i.test(fileText(f)));
+    const resumeField = files.find((f) => f !== transcriptField && /resume|cv\b|curriculum/i.test(fileText(f))) || (others.length === 1 ? others[0] : undefined);
+    const attach = (field, pdf) => {
+      if (!field) return 'no upload field';
+      if (field.files && field.files.length) return 'already attached';
+      if (!pdf) return 'none in the kit';
+      return attachPdf(field, pdf) ? `attached ${pdf.fileName}` : 'could not attach';
+    };
+    report.resume = attach(resumeField, kit.resume);
+    report.transcript = attach(transcriptField, kit.transcript);
     for (const f of files) {
-      if (f !== resumeField && !(f.files && f.files.length)) report.left.push({ question: questionOf(f, [f]), required: isRequired(f, questionOf(f, [f])), why: 'file upload' });
+      if (f === resumeField || (f.files && f.files.length)) continue;
+      const question = questionOf(f, [f]);
+      report.left.push({ question, required: isRequired(f, question), why: f === transcriptField ? `transcript: ${report.transcript}` : 'file upload' });
     }
     const submit = findSubmit();
     report.submit = submit ? clean(submit.textContent || submit.value) || 'Submit' : null;

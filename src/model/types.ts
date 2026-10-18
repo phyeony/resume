@@ -331,6 +331,15 @@ export interface ApplyKit {
   createdAt: number;
   answers: ApplicationAnswers;
   resume: { versionId: string; versionName: string; fileName: string; pdfBase64: string };
+  /** Absent in kits from before transcripts, and when none is uploaded. */
+  transcript?: { fileName: string; pdfBase64: string };
+}
+
+/** A PDF kept in Firestore itself (owner/transcript): the free plan has no file storage for new projects. */
+export interface StoredPdf {
+  fileName: string;
+  pdfBase64: string;
+  uploadedAt: number;
 }
 
 // ---- Leads ---------------------------------------------------------------------

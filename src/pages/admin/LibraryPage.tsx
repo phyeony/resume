@@ -179,7 +179,7 @@ function EntryEditor({
               </label>
             ) : (
               <label>
-                {e.section === 'work' ? 'Company, location' : 'School, location'}
+                {e.section === 'work' ? 'Company' : 'School, location'}
                 <input value={e.org ?? ''} onChange={(ev) => edit((x) => void (x.org = ev.target.value || undefined))} />
               </label>
             )}
@@ -194,9 +194,10 @@ function EntryEditor({
                 />
               </label>
             )}
-            {e.section === 'education' && (
+            {e.section !== 'projects' && (
               <label>
-                Right side <span className="muted small">(e.g. GPA)</span>
+                {e.section === 'work' ? 'Location' : 'Right side'}{' '}
+                <span className="muted small">{e.section === 'work' ? '(right side, e.g. Toronto, ON, Canada)' : '(e.g. GPA)'}</span>
                 <input
                   value={e.orgRight ?? ''}
                   onChange={(ev) => edit((x) => void (x.orgRight = ev.target.value || undefined))}

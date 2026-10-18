@@ -32,6 +32,10 @@ Then: `s` submit, `r` fill again (next page of a multi-page form), `q` quit with
 1. Chrome → `chrome://extensions` → turn on Developer mode → **Load unpacked** → pick `tools/autofill/extension`.
 2. Popup → **Import apply kit…** → the kit file (once per kit).
 3. On an application form: popup → **Fill this page**. Green = filled, amber = left for you.
+4. Resume row: **Download** saves the PDF the extension attaches; **Replace…** swaps in another PDF (max 5 MB,
+   sent under its own file name) and keeps your answers. Importing a kit again brings back the kit's resume.
+5. Transcript row: the same, for upload fields that ask for a transcript. The kit carries the one uploaded on
+   Profile in Resume Studio; one added here is sent as `First_Last_Transcript.pdf`.
 
 ## What the filler does
 

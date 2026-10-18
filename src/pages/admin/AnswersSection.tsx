@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
-import { kitProblems, makeKit, withAnswerDefaults } from '../../applications/applyKit';
-import type { ApplicationAnswers } from '../../model/types';
+import { useEffect, useRef, useState } from 'react';
+import { kitProblems, makeKit, toBase64, transcriptFileName, transcriptProblem, withAnswerDefaults } from '../../applications/applyKit';
+import type { ApplicationAnswers, StoredPdf } from '../../model/types';
 import { useOwnerData } from './Admin';
 import { download } from './exporting';
-import { loadAnswers, newId, saveAnswers } from './store';
+import { deleteTranscript, loadAnswers, loadTranscript, newId, saveAnswers, saveTranscript } from './store';
 
 type TextKey = { [K in keyof ApplicationAnswers]-?: ApplicationAnswers[K] extends string ? K : never }[keyof ApplicationAnswers];
 
@@ -70,6 +70,14 @@ export function AnswersSection() {
   const [error, setError] = useState('');
   const [kitVersion, setKitVersion] = useState('');
   const [building, setBuilding] = useState(false);
+  // undefined while loading, null when there is none
+  const [transcript, setTranscript] = useState<StoredPdf | null | undefined>(undefined);
+  const [transcriptBusy, setTranscriptBusy] = useState(false);
+  const transcriptInput = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    loadTranscript().then(setTranscript, (e) => setError(`Couldn't load your transcript: ${String(e)}`));
+  }, []);
 
   useEffect(() => {
     loadAnswers().then(
@@ -119,7 +127,7 @@ export function AnswersSection() {
     try {
       const { buildPdf } = await import('../../render/pdf');
       const pdf = new Uint8Array(await (await buildPdf(v.snapshot)).arrayBuffer());
-      const kit = makeKit(draft!, v, pdf);
+      const kit = makeKit(draft!, v, pdf, Date.now(), transcript);
       download(new Blob([JSON.stringify(kit)], { type: 'application/json' }), 'apply-kit.json');
       // Remember the version, so "Applied" on a lead records what was sent.
       setDraft(kit.answers);
@@ -130,6 +138,44 @@ export function AnswersSection() {
       setBuilding(false);
     }
   }
+
+  async function uploadTranscript(f: File | undefined) {
+    if (!f) return;
+    setError('');
+    const bytes = new Uint8Array(await f.arrayBuffer());
+    const problem = transcriptProblem(bytes, f.name);
+    if (problem) return setError(problem);
+    setTranscriptBusy(true);
+    try {
+      const t: StoredPdf = { fileName: transcriptFileName(draft!), pdfBase64: toBase64(bytes), uploadedAt: Date.now() };
+      await saveTranscript(t);
+      setTranscript(t);
+    } catch (e) {
+      setError(`Couldn't save the transcript: ${String(e)}`);
+    } finally {
+      setTranscriptBusy(false);
+    }
+  }
+
+  function downloadTranscript() {
+    const bytes = Uint8Array.from(atob(transcript!.pdfBase64), (c) => c.charCodeAt(0));
+    download(new Blob([bytes], { type: 'application/pdf' }), transcript!.fileName);
+  }
+
+  async function removeTranscript() {
+    setTranscriptBusy(true);
+    setError('');
+    try {
+      await deleteTranscript();
+      setTranscript(null);
+    } catch (e) {
+      setError(`Couldn't remove the transcript: ${String(e)}`);
+    } finally {
+      setTranscriptBusy(false);
+    }
+  }
+
+  const transcriptKb = transcript ? Math.round((transcript.pdfBase64.length * 3) / 4 / 1024) : 0;
 
   const otherVersions = [...versions].sort((a, b) => Number(b.isMain) - Number(a.isMain) || b.updatedAt - a.updatedAt);
 
@@ -166,8 +212,48 @@ export function AnswersSection() {
             {building ? 'Building…' : 'Download apply kit'}
           </button>
         </div>
+        <div className="kit-row transcript-row">
+          <span>
+            Transcript{' '}
+            <span className="muted small">
+              {transcript === undefined
+                ? 'loading…'
+                : transcript
+                  ? `${transcript.fileName} (${transcriptKb} KB) · uploaded ${new Date(transcript.uploadedAt).toLocaleDateString()}`
+                  : 'none yet · PDF, up to 700 KB'}
+            </span>
+          </span>
+          <input
+            ref={transcriptInput}
+            type="file"
+            accept=".pdf,application/pdf"
+            hidden
+            onChange={(e) => {
+              void uploadTranscript(e.target.files?.[0]);
+              e.target.value = '';
+            }}
+          />
+          {transcript ? (
+            <>
+              <button className="small-btn" onClick={downloadTranscript}>
+                Download
+              </button>
+              <button className="small-btn" disabled={transcriptBusy} onClick={() => transcriptInput.current?.click()}>
+                Replace…
+              </button>
+              <button className="small-btn danger-text" disabled={transcriptBusy} onClick={() => void removeTranscript()}>
+                Remove
+              </button>
+            </>
+          ) : (
+            <button className="small-btn" disabled={transcriptBusy || transcript === undefined} onClick={() => transcriptInput.current?.click()}>
+              {transcriptBusy ? 'Uploading…' : 'Upload PDF'}
+            </button>
+          )}
+        </div>
         <p className="muted small">
-          Saves <code>apply-kit.json</code> to Downloads: these answers plus the resume as a PDF. The autofill script reads
+          Saves <code>apply-kit.json</code> to Downloads: these answers plus the resume as a PDF, and the transcript if you
+          uploaded one (sent as <code>{transcriptFileName(draft)}</code>). The autofill script reads
           it from there; the extension imports it. Download again after changing answers. Holds personal details, so
           don't commit or share it.
         </p>

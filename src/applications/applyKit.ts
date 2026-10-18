@@ -1,6 +1,6 @@
 // The answer bank and the apply kit: what the autofill tools (tools/autofill/) fill application forms with.
 
-import type { ApplicationAnswers, ApplyKit, Contact, Profile, Version } from '../model/types';
+import type { ApplicationAnswers, ApplyKit, Contact, Profile, StoredPdf, Version } from '../model/types';
 
 const DECLINE = 'Decline to self-identify';
 
@@ -90,7 +90,24 @@ export function kitFileBase(name: string): string {
   return name.trim().replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'Resume';
 }
 
-export function makeKit(answers: ApplicationAnswers, v: Version, pdf: Uint8Array, now = Date.now()): ApplyKit {
+/** Firestore documents hold 1 MiB, and base64 makes a file a third bigger. */
+export const MAX_TRANSCRIPT_BYTES = 700 * 1024;
+
+/** Why this file can't be the transcript, or null when it can. */
+export function transcriptProblem(bytes: Uint8Array, name: string): string | null {
+  // Every PDF starts with "%PDF"
+  if (String.fromCharCode(...bytes.subarray(0, 4)) !== '%PDF') return `${name} isn't a PDF.`;
+  if (bytes.length > MAX_TRANSCRIPT_BYTES) return `${name} is ${Math.round(bytes.length / 1024)} KB; the limit is 700 KB. Export or print a smaller PDF.`;
+  return null;
+}
+
+/** Recruiters see this name, whatever the uploaded file was called. */
+export function transcriptFileName(a: Pick<ApplicationAnswers, 'firstName' | 'lastName'>): string {
+  const name = `${a.firstName} ${a.lastName}`.trim();
+  return name ? `${kitFileBase(name)}_Transcript.pdf` : 'Transcript.pdf';
+}
+
+export function makeKit(answers: ApplicationAnswers, v: Version, pdf: Uint8Array, now = Date.now(), transcript?: StoredPdf | null): ApplyKit {
   return {
     kind: 'resume-studio-apply-kit',
     format: 1,
@@ -103,5 +120,6 @@ export function makeKit(answers: ApplicationAnswers, v: Version, pdf: Uint8Array
       fileName: `${kitFileBase(v.snapshot.name)}_Resume.pdf`,
       pdfBase64: toBase64(pdf),
     },
+    ...(transcript ? { transcript: { fileName: transcriptFileName(answers), pdfBase64: transcript.pdfBase64 } } : {}),
   };
 }

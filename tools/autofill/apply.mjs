@@ -82,7 +82,7 @@ function print(reports) {
     for (const f of r.filled) console.log(`  ✓ ${f.question} → ${f.answer}`);
     console.log(`Left for you ${r.left.length}:`);
     for (const f of r.left) console.log(`  ${f.required ? '!' : '·'} ${f.question || '(unlabelled)'} (${f.why})`);
-    console.log(`Resume: ${r.resume}${r.already ? ` · ${r.already} already filled` : ''}`);
+    console.log(`Resume: ${r.resume}${r.transcript !== 'no upload field' ? ` · Transcript: ${r.transcript}` : ''}${r.already ? ` · ${r.already} already filled` : ''}`);
     console.log(`Submit button: ${r.submit ?? 'not found'}`);
   }
   if (reports.some((r) => r.left.some((f) => f.required))) console.log('\n! = required: fill these in the window before submitting.');

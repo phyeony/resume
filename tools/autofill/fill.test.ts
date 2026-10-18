@@ -8,6 +8,7 @@ interface Report {
   left: { question: string; required: boolean; why: string }[];
   already: number;
   resume: string;
+  transcript: string;
   submit: string | null;
 }
 interface Filler {
@@ -40,13 +41,16 @@ function answers(): ApplicationAnswers {
   };
 }
 
-const kit = (a = answers()): ApplyKit => ({
+const kit = (a = answers(), withTranscript = false): ApplyKit => ({
   kind: 'resume-studio-apply-kit',
   format: 1,
   createdAt: 0,
   answers: a,
   resume: { versionId: 'v', versionName: 'Main', fileName: 'Ada_Lovelace_Resume.pdf', pdfBase64: 'JVBERg==' },
+  ...(withTranscript ? { transcript: { fileName: 'Ada_Lovelace_Transcript.pdf', pdfBase64: 'JVBERi0=' } } : {}),
 });
+
+const fileName = (sel: string) => (document.querySelector(sel) as HTMLInputElement).files?.[0]?.name;
 
 const val = (sel: string) => (document.querySelector(sel) as HTMLInputElement).value;
 
@@ -152,6 +156,26 @@ describe('fill', () => {
     expect(val('input[name="urls[LinkedIn]"]')).toBe('https://linkedin.com/in/ada');
     expect(r.left).toEqual([{ question: 'Current company', required: false, why: 'unknown question' }]);
     expect(filler().findSubmit()?.id).toBe('btn-submit');
+  });
+
+  it('attaches the transcript and the resume to their own fields', async () => {
+    document.body.innerHTML = `
+      <div class="field"><label for="cv">Resume/CV *</label><input type="file" id="cv"></div>
+      <div class="field"><label for="tr">Unofficial transcript *</label><input type="file" id="tr"></div>
+      <div class="field"><label for="cl">Cover letter</label><input type="file" id="cl"></div>`;
+    const r = await filler().fill(kit(answers(), true));
+    if (r.resume === 'could not attach') return; // happy-dom without DataTransfer
+    expect([fileName('#cv'), fileName('#tr'), fileName('#cl')]).toEqual(['Ada_Lovelace_Resume.pdf', 'Ada_Lovelace_Transcript.pdf', undefined]);
+    expect(r.transcript).toBe('attached Ada_Lovelace_Transcript.pdf');
+    expect(r.left).toEqual([{ question: 'Cover letter', required: false, why: 'file upload' }]);
+  });
+
+  it("never puts the resume in a form's only upload when that one asks for a transcript", async () => {
+    document.body.innerHTML = `<div class="field"><label for="tr">Transcript</label><input type="file" id="tr"></div>`;
+    const r = await filler().fill(kit());
+    expect(fileName('#tr')).toBeUndefined();
+    expect(r.resume).toBe('no upload field');
+    expect(r.left).toEqual([{ question: 'Transcript', required: false, why: 'transcript: none in the kit' }]);
   });
 
   it('finds the question for an unlabelled radio group from its container', async () => {

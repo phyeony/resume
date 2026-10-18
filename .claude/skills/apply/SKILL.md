@@ -30,6 +30,8 @@ never carries over to the next.
    `node tools/autofill/kit.mjs pdf <session outputs folder>/<fileName>` and use `file_upload` on the
    resume input. If the upload tool rejects the path, rerun the filler with the full kit
    (`JSON.parse` of the kit file, pdfBase64 included) so it attaches the PDF itself.
+   Transcript upload fields work the same way: `node tools/autofill/kit.mjs transcript <folder>/<transcript fileName>`.
+   If the kit has none (`kit.mjs info` says "no transcript"), leave the field for the user.
 4. Handle what the filler left (amber outlines; `left` in the report):
    - Custom dropdowns and comboboxes: pick the option matching the answer bank, with `form_input` or clicks.
    - Free-text questions ("Why do you want to work here?"): draft a short, specific answer from the

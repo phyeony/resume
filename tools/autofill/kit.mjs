@@ -2,8 +2,9 @@
 // Reads your apply kit (newest ~/Downloads/apply-kit*.json, or --kit <path>) for the Claude-driven apply flow.
 //
 //   node kit.mjs info           version, date and file name of the kit
-//   node kit.mjs answers        the kit without the PDF, as one line of JSON (small enough to pass to fill.js)
+//   node kit.mjs answers        the kit without the PDFs, as one line of JSON (small enough to pass to fill.js)
 //   node kit.mjs pdf <out.pdf>  writes the resume PDF
+//   node kit.mjs transcript <out.pdf>  writes the transcript PDF, if the kit has one
 
 import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
@@ -35,16 +36,29 @@ if (kit.kind !== 'resume-studio-apply-kit') throw new Error(`${path} isn't an ap
 switch (a[0]) {
   case 'info':
     console.log(`${path}\nresume "${kit.resume.versionName}" (${kit.resume.fileName}), kit from ${new Date(kit.createdAt).toLocaleString()}`);
+    console.log(kit.transcript ? `transcript ${kit.transcript.fileName}` : 'no transcript');
     break;
   case 'answers':
-    console.log(JSON.stringify({ ...kit, resume: { ...kit.resume, pdfBase64: '' } }));
+    console.log(
+      JSON.stringify({
+        ...kit,
+        resume: { ...kit.resume, pdfBase64: '' },
+        ...(kit.transcript ? { transcript: { ...kit.transcript, pdfBase64: '' } } : {}),
+      }),
+    );
     break;
   case 'pdf':
     if (!a[1]) throw new Error('Usage: node kit.mjs pdf <out.pdf>');
     writeFileSync(a[1], Buffer.from(kit.resume.pdfBase64, 'base64'));
     console.log(a[1]);
     break;
+  case 'transcript':
+    if (!a[1]) throw new Error('Usage: node kit.mjs transcript <out.pdf>');
+    if (!kit.transcript) throw new Error('This kit has no transcript. Upload one on Profile in Resume Studio, then download the kit again.');
+    writeFileSync(a[1], Buffer.from(kit.transcript.pdfBase64, 'base64'));
+    console.log(a[1]);
+    break;
   default:
-    console.error('Usage: node kit.mjs info | answers | pdf <out.pdf>  [--kit path]');
+    console.error('Usage: node kit.mjs info | answers | pdf <out.pdf> | transcript <out.pdf>  [--kit path]');
     process.exit(1);
 }

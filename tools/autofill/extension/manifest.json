@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Resume Studio Autofill",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "Fills job application forms from your Resume Studio apply kit. You review and submit.",
   "action": { "default_popup": "popup.html", "default_title": "Resume Studio Autofill" },
   "permissions": ["activeTab", "scripting", "storage"],

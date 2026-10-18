@@ -203,3 +203,4 @@
 .kit-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
 .kit-row label { margin: 0; }
 .kit-row select { display: block; margin-top: 3px; }
+.transcript-row { align-items: center; margin-top: 10px; }

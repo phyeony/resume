@@ -2,6 +2,7 @@
 //   owner/profile, owner/library        owner-only master data
 //   owner/leadFeeds                     owner-only lead import settings
 //   owner/answers                       owner-only answer bank for application forms
+//   owner/transcript                    owner-only school transcript PDF, base64 in the doc
 //   versions/{id}                       owner-only tailored versions (frozen snapshots)
 //   links/{slug}                        owner-only company links, each pointing at a version
 //   public/main, public/{slug}          published copies visitors may `get`
@@ -14,6 +15,7 @@
 import {
   arrayUnion,
   collection,
+  deleteDoc,
   deleteField,
   doc,
   getDoc,
@@ -26,7 +28,7 @@ import {
   type Timestamp,
 } from 'firebase/firestore';
 import { MAIN_SLUG } from '../../data/publicStore';
-import type { Application, ApplicationAnswers, CompanyInfo, ExportRecord, FeedSettings, Lead, Library, Posting, Profile, ShareLink, Version } from '../../model/types';
+import type { Application, ApplicationAnswers, CompanyInfo, ExportRecord, FeedSettings, Lead, Library, Posting, Profile, ShareLink, StoredPdf, Version } from '../../model/types';
 import { db } from './auth';
 import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
@@ -47,6 +49,14 @@ export async function loadAnswers(): Promise<Partial<ApplicationAnswers> | null>
 }
 
 export const saveAnswers = (a: ApplicationAnswers) => setDoc(doc(db, 'owner', 'answers'), a);
+
+export async function loadTranscript(): Promise<StoredPdf | null> {
+  const snap = await getDoc(doc(db, 'owner', 'transcript'));
+  return snap.exists() ? (snap.data() as StoredPdf) : null;
+}
+
+export const saveTranscript = (t: StoredPdf) => setDoc(doc(db, 'owner', 'transcript'), t);
+export const deleteTranscript = () => deleteDoc(doc(db, 'owner', 'transcript'));
 
 export async function loadLibrary(): Promise<Library | null> {
   const snap = await getDoc(doc(db, 'owner', 'library'));

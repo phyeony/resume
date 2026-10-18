@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { answersFromProfile, emptyAnswers, kitProblems, makeKit, toBase64, withAnswerDefaults } from './applyKit';
+import { answersFromProfile, emptyAnswers, kitProblems, makeKit, MAX_TRANSCRIPT_BYTES, toBase64, transcriptFileName, transcriptProblem, withAnswerDefaults } from './applyKit';
 import { appliedFromLead, currentStage } from './model';
 import type { Lead, Profile, Version } from '../model/types';
 
@@ -57,9 +57,31 @@ describe('makeKit', () => {
     expect(kit.answers.kitVersionId).toBe('v1');
   });
 
+  it('carries the transcript under a standard name, and leaves it out when there is none', () => {
+    const v = { id: 'v1', name: 'Backend', snapshot: { name: 'Ada Lovelace', contacts: [], sections: [] } } as unknown as Version;
+    const pdf = new Uint8Array([37, 80, 68, 70]);
+    const t = { fileName: 'SFU_unofficial(2).pdf', pdfBase64: 'JVBERi0=', uploadedAt: 1 };
+    expect(makeKit(answersFromProfile(profile), v, pdf, 5, t).transcript).toEqual({ fileName: 'Ada_Mary_Lovelace_Transcript.pdf', pdfBase64: 'JVBERi0=' });
+    expect('transcript' in makeKit(answersFromProfile(profile), v, pdf, 5, null)).toBe(false);
+  });
+
   it('base64-encodes large files', () => {
     const big = new Uint8Array(100_000).fill(65);
     expect(atob(toBase64(big))).toHaveLength(100_000);
+  });
+});
+
+describe('transcript', () => {
+  it('accepts a PDF up to the limit only', () => {
+    const pdf = (n: number) => Object.assign(new Uint8Array(n), { 0: 37, 1: 80, 2: 68, 3: 70 });
+    expect(transcriptProblem(pdf(1000), 't.pdf')).toBeNull();
+    expect(transcriptProblem(pdf(MAX_TRANSCRIPT_BYTES + 1), 't.pdf')).toMatch(/limit is 700 KB/);
+    expect(transcriptProblem(new TextEncoder().encode('hello'), 't.docx')).toBe("t.docx isn't a PDF.");
+  });
+
+  it('names the file after the applicant', () => {
+    expect(transcriptFileName({ firstName: 'Hyeonyoung', lastName: 'Park' })).toBe('Hyeonyoung_Park_Transcript.pdf');
+    expect(transcriptFileName({ firstName: '', lastName: '' })).toBe('Transcript.pdf');
   });
 });
 

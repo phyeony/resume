@@ -16,12 +16,31 @@
       .ok { color: #1e8e3e; }
       .left { color: #b06000; }
       h2 { font-size: 12.5px; margin: 10px 0 2px; }
-      #file { display: none; }
+      #file, #pdf, #tpdf, [hidden] { display: none; }
+      .filerow { justify-content: space-between; margin: 4px 0; }
+      .filerow .row { margin: 0; }
+      #resumeName, #transcriptName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     </style>
   </head>
   <body>
     <h1>Resume Studio Autofill</h1>
     <div id="kit" class="muted">No apply kit yet.</div>
+    <div id="resume" class="row filerow" hidden>
+      <span id="resumeName" class="muted"></span>
+      <span class="row">
+        <button id="download">Download</button>
+        <button id="replace">Replace…</button>
+        <input id="pdf" type="file" accept=".pdf,application/pdf" />
+      </span>
+    </div>
+    <div id="transcript" class="row filerow" hidden>
+      <span id="transcriptName" class="muted"></span>
+      <span class="row">
+        <button id="tdownload">Download</button>
+        <button id="treplace">Replace…</button>
+        <input id="tpdf" type="file" accept=".pdf,application/pdf" />
+      </span>
+    </div>
     <div class="row">
       <button id="import">Import apply kit…</button>
       <input id="file" type="file" accept=".json,application/json" />
