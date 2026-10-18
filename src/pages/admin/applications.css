@@ -90,3 +90,6 @@
 .fame-fix { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .admin .fame-fix input { width: 300px !important; max-width: 100%; padding: 3px 6px; font-size: 12.5px; }
 .hidden-company { margin-left: 10px; }
+
+.app-group { margin-bottom: 12px; }
+.app-group .card { margin-bottom: 6px; }

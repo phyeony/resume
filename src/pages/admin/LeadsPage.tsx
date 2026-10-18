@@ -209,7 +209,7 @@ export function LeadsPage() {
       {leads.length > 0 && shown.length === 0 && <p className="muted">Nothing here.</p>}
       <div className="version-list">
         {groups
-          ? groups.map((g) => <CompanyGroup key={g.company} company={g.company} leads={g.leads} prefs={prefs} />)
+          ? groups.map((g) => <CompanyGroup key={g.company} company={g.company} leads={g.items} prefs={prefs} />)
           : sorted.map((l) => <LeadRow key={l.id} lead={l} prefs={prefs} />)}
       </div>
     </div>

@@ -39,7 +39,7 @@ describe('sortLeads', () => {
   it('groups by company in sorted order', () => {
     const x = lead({ company: 'Amazon', postedAt: 9 });
     const y = lead({ company: 'amazon ', postedAt: 1 });
-    expect(groupByCompany(sortLeads([y, b, x], 'newest', p)).map((g) => [g.company, g.leads.length])).toEqual([
+    expect(groupByCompany(sortLeads([y, b, x], 'newest', p)).map((g) => [g.company, g.items.length])).toEqual([
       ['Amazon', 2],
       ['Alpha', 1],
     ]);

@@ -136,14 +136,14 @@ export function sortLeads(leads: Lead[], sort: LeadSort, p: MatchPrefs): Lead[] 
   return [...leads].sort((a, b) => score.get(b)! - score.get(a)! || byNewest(a, b));
 }
 
-/** Sorted leads grouped by company, groups in the order of their first (best) lead. */
-export function groupByCompany(sorted: Lead[]): { company: string; leads: Lead[] }[] {
-  const groups = new Map<string, { company: string; leads: Lead[] }>();
-  for (const l of sorted) {
-    const key = l.company.toLowerCase().replace(/[^a-z0-9]+/g, '');
-    const g = groups.get(key) ?? { company: l.company, leads: [] };
+/** Sorted leads (or applications) grouped by company, groups in the order of their first item. */
+export function groupByCompany<T extends { company: string }>(sorted: T[]): { company: string; items: T[] }[] {
+  const groups = new Map<string, { company: string; items: T[] }>();
+  for (const x of sorted) {
+    const key = x.company.toLowerCase().replace(/[^a-z0-9]+/g, '');
+    const g = groups.get(key) ?? { company: x.company, items: [] };
     groups.set(key, g);
-    g.leads.push(l);
+    g.items.push(x);
   }
   return [...groups.values()];
 }

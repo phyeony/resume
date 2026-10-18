@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { STAGES, STAGE_LABELS, type Application, type Stage } from '../../model/types';
 import { appliedAt, currentStage, isClosed, lastEventAt, waitingDays, withFollowUp, withStage } from '../../applications/model';
+import { groupByCompany } from '../../applications/leadSort';
 import { saveApplication, viewStats, type ViewStats } from './store';
 import { useOwnerData } from './Admin';
 import { fmtDate } from './format';
@@ -11,6 +12,14 @@ type Filter = 'active' | 'all' | 'follow-up' | Stage;
 
 const needsFollowUp = (a: Application) => !isClosed(currentStage(a)) && waitingDays(a) !== null;
 
+/** Every word of the query appears somewhere in the application: "shopify backend" finds that one. */
+function matchesSearch(a: Application, query: string): boolean {
+  const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return true;
+  const hay = [a.company, a.role, a.summary.location, a.summary.salary?.text, a.source, a.notes, STAGE_LABELS[currentStage(a)]].join(' ').toLowerCase();
+  return words.every((w) => hay.includes(w));
+}
+
 const WORK_MODE: Record<string, string> = { remote: 'Remote', hybrid: 'Hybrid', onsite: 'On-site' };
 
 /** Every job applied to (or saved to apply to), with where each one stands. */
@@ -18,6 +27,9 @@ export function ApplicationsPage() {
   const { applications, reloadApplications } = useOwnerData();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<Filter>('active');
+  const [search, setSearch] = useState('');
+  const [grouped, setGrouped] = useState(() => remembered('grouped') === '1');
+  useEffect(() => remember('grouped', grouped ? '1' : '0'), [grouped]);
   const [sure, setSure] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -55,9 +67,11 @@ export function ApplicationsPage() {
           if (filter === 'follow-up') return needsFollowUp(a);
           return s === filter;
         })
+        .filter((a) => matchesSearch(a, search))
         .sort((a, b) => lastEventAt(b) - lastEventAt(a)),
-    [applications, filter],
+    [applications, filter, search],
   );
+  const groups = useMemo(() => (grouped ? groupByCompany(shown) : null), [grouped, shown]);
 
   const activeCount = applications.filter((a) => !isClosed(currentStage(a))).length;
   const followUpCount = applications.filter(needsFollowUp).length;
@@ -86,6 +100,13 @@ export function ApplicationsPage() {
           <FilterChip key={s} on={filter === s} onClick={() => setFilter(s)} label={STAGE_LABELS[s]} count={counts.get(s)!} />
         ))}
       </div>
+      <div className="lead-toolbar">
+        <input className="lead-search" type="search" value={search} placeholder="Search applications…" title="Company, role, place, salary, source, notes or stage" onChange={(e) => setSearch(e.target.value)} />
+        <label className="check small">
+          <input type="checkbox" checked={grouped} onChange={(e) => setGrouped(e.target.checked)} />
+          Group by company
+        </label>
+      </div>
 
       {filter === 'saved' && shown.length > 0 && (
         <div className="btn-row">
@@ -111,9 +132,22 @@ export function ApplicationsPage() {
       )}
       {applications.length > 0 && shown.length === 0 && <p className="muted">Nothing here.</p>}
       <div className="version-list">
-        {shown.map((a) => (
-          <ApplicationRow key={a.id} app={a} />
-        ))}
+        {groups
+          ? groups.map((g) =>
+              g.items.length === 1 ? (
+                <ApplicationRow key={g.items[0].id} app={g.items[0]} />
+              ) : (
+                <div key={g.company} className="lead-group app-group">
+                  <div className="lead-group-head small">
+                    <strong>{g.company}</strong> <span className="muted">· {g.items.length} applications</span>
+                  </div>
+                  {g.items.map((a) => (
+                    <ApplicationRow key={a.id} app={a} />
+                  ))}
+                </div>
+              ),
+            )
+          : shown.map((a) => <ApplicationRow key={a.id} app={a} />)}
       </div>
     </div>
   );
@@ -192,4 +226,23 @@ function ApplicationRow({ app }: { app: Application }) {
       </div>
     </article>
   );
+}
+
+// Grouping is a per-browser convenience; storage may be unavailable.
+const STORE_KEY = 'resume-studio:applications:';
+
+function remembered(key: string): string | null {
+  try {
+    return localStorage.getItem(STORE_KEY + key);
+  } catch {
+    return null;
+  }
+}
+
+function remember(key: string, value: string): void {
+  try {
+    localStorage.setItem(STORE_KEY + key, value);
+  } catch {
+    // not remembered; fine
+  }
 }
