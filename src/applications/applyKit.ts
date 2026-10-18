@@ -1,5 +1,6 @@
 // The answer bank and the apply kit: what the autofill tools (tools/autofill/) fill application forms with.
 
+import { jobsFromSnapshot } from './experience';
 import type { ApplicationAnswers, ApplyKit, Contact, Profile, StoredPdf, Version } from '../model/types';
 
 const DECLINE = 'Decline to self-identify';
@@ -121,5 +122,6 @@ export function makeKit(answers: ApplicationAnswers, v: Version, pdf: Uint8Array
       pdfBase64: toBase64(pdf),
     },
     ...(transcript ? { transcript: { fileName: transcriptFileName(answers), pdfBase64: transcript.pdfBase64 } } : {}),
+    experience: jobsFromSnapshot(v.snapshot),
   };
 }

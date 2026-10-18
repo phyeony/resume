@@ -55,6 +55,7 @@ describe('makeKit', () => {
     const kit = makeKit(answersFromProfile(profile), v, new Uint8Array([37, 80, 68, 70]), 5);
     expect(kit.resume).toEqual({ versionId: 'v1', versionName: 'Backend', fileName: 'Ada_Lovelace_Resume.pdf', pdfBase64: 'JVBERg==' });
     expect(kit.answers.kitVersionId).toBe('v1');
+    expect(kit.experience).toEqual([]);
   });
 
   it('carries the transcript under a standard name, and leaves it out when there is none', () => {

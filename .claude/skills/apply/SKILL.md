@@ -55,6 +55,9 @@ never carries over to the next.
 
 - Workday and other multi-page forms: run the filler on each page; "Next"/"Continue" between pages is
   fine to click, the final "Submit" is not without approval.
+- Workday's My Experience page: the filler replaces Workday's parsed work experience with the kit's jobs
+  (`experience` in the report says what it did). Don't re-type those entries by hand; if the report says the
+  kit has no work experience, ask the user to download a new kit.
 - Don't apply through LinkedIn Easy Apply or Indeed Apply; their terms forbid automation. Use the
   company's own application page instead, or leave it to the user.
 - Suggest new entries for the answer bank (Profile → Other questions) when the same question keeps

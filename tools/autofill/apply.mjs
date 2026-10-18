@@ -51,7 +51,7 @@ async function fillAll(page, kit) {
     try {
       await frame.evaluate(FILL);
       const r = await frame.evaluate((k) => window.__resumeStudio.fill(k), kit);
-      if (r.filled.length || r.left.length || r.already) reports.push({ frame, ...r });
+      if (r.filled.length || r.left.length || r.already || r.experience) reports.push({ frame, ...r });
     } catch {
       // detached or cross-origin frame we can't reach; skip it
     }
@@ -78,6 +78,7 @@ function print(reports) {
   }
   for (const r of reports) {
     console.log(`\n── ${new URL(r.url).host}`);
+    if (r.experience) console.log(`Work experience: ${r.experience}`);
     console.log(`Filled ${r.filled.length}:`);
     for (const f of r.filled) console.log(`  ✓ ${f.question} → ${f.answer}`);
     console.log(`Left for you ${r.left.length}:`);

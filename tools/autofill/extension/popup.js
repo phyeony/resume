@@ -90,6 +90,10 @@ $('tpdf').onchange = (e) =>
     kit.transcript = { fileName: who ? `${who}_Transcript.pdf` : 'Transcript.pdf', pdfBase64 };
   });
 
+// Remembered between popups; on by default.
+chrome.storage.local.get('keepExperience').then(({ keepExperience }) => ($('replaceExperience').checked = !keepExperience));
+$('replaceExperience').onchange = (e) => chrome.storage.local.set({ keepExperience: !e.target.checked });
+
 $('import').onclick = () => $('file').click();
 
 $('file').onchange = async (e) => {
@@ -114,8 +118,9 @@ $('fill').onclick = async () => {
     // Every frame: some company sites embed the application form (e.g. Greenhouse) in an iframe.
     const target = { tabId: tab.id, allFrames: true };
     await chrome.scripting.executeScript({ target, files: ['fill.js'] });
-    const results = await chrome.scripting.executeScript({ target, func: (k) => window.__resumeStudio.fill(k), args: [kit] });
-    render(results.map((r) => r.result).filter((r) => r && (r.filled.length || r.left.length || r.already)));
+    const opts = { keepExperience: !$('replaceExperience').checked };
+    const results = await chrome.scripting.executeScript({ target, func: (k, o) => window.__resumeStudio.fill(k, o), args: [kit, opts] });
+    render(results.map((r) => r.result).filter((r) => r && (r.filled.length || r.left.length || r.already || r.experience)));
   } catch (err) {
     $('report').textContent = '';
     $('error').textContent = err.message || String(err);
@@ -133,6 +138,7 @@ function render(reports) {
   }
   for (const r of reports) {
     if (reports.length > 1) out.append(el('div', new URL(r.url).host, 'muted'));
+    if (r.experience) out.append(el('div', `Work experience: ${r.experience}`, 'muted'));
     out.append(el('h2', `Filled ${r.filled.length}`, 'ok'));
     const ok = el('ul', '');
     r.filled.forEach((f) => ok.append(el('li', `${f.question} → ${f.answer}`)));

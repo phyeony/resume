@@ -1,9 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { kitProblems, makeKit, toBase64, transcriptFileName, transcriptProblem, withAnswerDefaults } from '../../applications/applyKit';
-import type { ApplicationAnswers, StoredPdf } from '../../model/types';
+import { jobsWithChecks } from '../../applications/experience';
+import type { ApplicationAnswers, KitJob, StoredPdf } from '../../model/types';
 import { useOwnerData } from './Admin';
 import { download } from './exporting';
 import { deleteTranscript, loadAnswers, loadTranscript, newId, saveAnswers, saveTranscript } from './store';
+
+const monthYear = (m?: number, y?: number) => (y ? (m ? `${m}/${y}` : String(y)) : '?');
+
+function jobDates(j: KitJob): string {
+  return `${monthYear(j.startMonth, j.startYear)} – ${j.current ? 'present' : monthYear(j.endMonth, j.endYear)}`;
+}
 
 type TextKey = { [K in keyof ApplicationAnswers]-?: ApplicationAnswers[K] extends string ? K : never }[keyof ApplicationAnswers];
 
@@ -177,6 +184,8 @@ export function AnswersSection() {
 
   const transcriptKb = transcript ? Math.round((transcript.pdfBase64.length * 3) / 4 / 1024) : 0;
 
+  const kitJobs = jobsWithChecks(versions.find((x) => x.id === kitVersion)?.snapshot ?? { name: '', contacts: [], sections: [] });
+
   const otherVersions = [...versions].sort((a, b) => Number(b.isMain) - Number(a.isMain) || b.updatedAt - a.updatedAt);
 
   return (
@@ -251,6 +260,20 @@ export function AnswersSection() {
             </button>
           )}
         </div>
+        {kitJobs.length > 0 && (
+          <div className="kit-jobs">
+            <span className="muted small">Work experience the autofill types into forms that ask for each job (Workday):</span>
+            <ul className="small">
+              {kitJobs.map((j, i) => (
+                <li key={i}>
+                  {j.title} · {j.company}
+                  {j.location ? ` · ${j.location}` : ''} · {jobDates(j)}
+                  {!j.datesOk && <span className="error"> dates not understood, left for you to fill</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <p className="muted small">
           Saves <code>apply-kit.json</code> to Downloads: these answers plus the resume as a PDF, and the transcript if you
           uploaded one (sent as <code>{transcriptFileName(draft)}</code>). The autofill script reads

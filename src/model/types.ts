@@ -365,6 +365,23 @@ export interface ApplyKit {
   resume: { versionId: string; versionName: string; fileName: string; pdfBase64: string };
   /** Absent in kits from before transcripts, and when none is uploaded. */
   transcript?: { fileName: string; pdfBase64: string };
+  /** The version's work entries, for forms that ask for each job (Workday). Absent in older kits. */
+  experience?: KitJob[];
+}
+
+/** A work entry the way application forms ask for it. Months are 1–12; a date that didn't parse is left out. */
+export interface KitJob {
+  title: string;
+  company: string;
+  location: string;
+  startMonth?: number;
+  startYear?: number;
+  endMonth?: number;
+  endYear?: number;
+  /** "– Present": no end date, and "I currently work here" ticked. */
+  current: boolean;
+  /** The bullets, one "• " line each, without markdown. */
+  description: string;
 }
 
 /** A PDF kept in Firestore itself (owner/transcript): the free plan has no file storage for new projects. */

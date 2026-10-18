@@ -268,7 +268,108 @@
     return !!clean(el.value);
   }
 
-  async function fill(kit) {
+
+  // ---- Workday work experience ------------------------------------------------------
+  // Workday parses the resume into "Work Experience N" entries and often gets them wrong. Replace them with the
+  // kit's jobs: delete each entry, then Add one per job and fill it. Selectors checked on a live tenant
+  // (docs/superpowers/specs/2026-10-18-workday-experience-design.md).
+
+  const workdaySection = () => document.querySelector('[role="group"][aria-labelledby="Work-Experience-section"]');
+
+  /** Polls until test() is truthy (and returns it), or gives up after ~3 s. */
+  async function until(test) {
+    for (let t = 0; t < 30; t++) {
+      const v = test();
+      if (v) return v;
+      await sleep(100);
+    }
+    return null;
+  }
+
+  async function fillWorkdayExperience(sec, jobs, report) {
+    const panels = () => [...sec.querySelectorAll('[role="group"][aria-labelledby$="-panel"]')];
+    // Field ids are "workExperience-<n>--jobTitle"; <n> isn't the entry number, so match the end.
+    const field = (p, name) => p.querySelector(`[id$="--${name}"]`);
+    const describe = (p) => [field(p, 'jobTitle')?.value, field(p, 'companyName')?.value].map(clean).filter(Boolean).join(' at ') || '(blank)';
+    const stop = (why) => {
+      report.left.push({ question: 'Work experience', required: true, why });
+      mark(sec, AMBER);
+      return why;
+    };
+    if (!jobs || !jobs.length) return stop('no work experience in the kit: download a new kit from Profile');
+
+    const same = (a, b) => norm(a) === norm(b);
+    const existing = panels();
+    if (
+      existing.length === jobs.length &&
+      existing.every((p, i) => same(field(p, 'jobTitle')?.value, jobs[i].title) && same(field(p, 'companyName')?.value, jobs[i].company))
+    ) {
+      return 'already matches your resume';
+    }
+
+    const removed = [];
+    for (const p of existing) {
+      const del = [...p.querySelectorAll('button')].find((b) => /^delete$/i.test(clean(b.textContent)));
+      const what = describe(p);
+      if (!del) return stop(`couldn't find Delete on "${what}"; nothing added`);
+      del.click();
+      if (!(await until(() => !p.isConnected))) return stop(`"${what}" didn't delete; nothing added`);
+      removed.push(what);
+    }
+
+    const left = (p, label, why) => {
+      report.left.push({ question: label, required: true, why });
+      if (p) mark(p, AMBER);
+    };
+    let added = 0;
+    for (const job of jobs) {
+      const add = [...sec.querySelectorAll('button')].find((b) => b.getAttribute('data-automation-id') === 'add-button' || /^add( another)?$/i.test(clean(b.textContent)));
+      if (!add) return stop(`no Add button; added ${added} of ${jobs.length} jobs`);
+      const before = panels().length;
+      add.click();
+      const p = await until(() => panels().length > before && panels()[panels().length - 1]);
+      if (!p || !(await until(() => field(p, 'jobTitle')))) return stop(`Add didn't open a new entry; added ${added} of ${jobs.length} jobs`);
+      const label = `${job.title} at ${job.company}`;
+
+      const text = async (name, value) => {
+        const el = field(p, name);
+        if (!el || !value) return;
+        if (isCombobox(el) && !(await fillCombobox(el, value))) return left(el, `${label}: ${name}`, `no option matches "${value}"`);
+        if (!isCombobox(el)) setValue(el, value);
+        mark(el, GREEN);
+      };
+      await text('jobTitle', job.title);
+      await text('companyName', job.company);
+      await text('location', job.location);
+      const cur = field(p, 'currentlyWorkHere');
+      if (job.current && cur && !cur.checked) cur.click();
+      // Month and year are separate spin boxes; Workday shows months without a leading zero.
+      const date = async (which, m, y) => {
+        const any = await until(() => field(p, `${which}-dateSectionMonth-input`) || field(p, `${which}-dateSectionYear-input`));
+        const monthEl = field(p, `${which}-dateSectionMonth-input`);
+        const yearEl = field(p, `${which}-dateSectionYear-input`);
+        if (!any || !y || (monthEl && !m)) return left(p, `${label}: ${which === 'startDate' ? 'From' : 'To'}`, 'date not in the kit');
+        for (const [el, v] of [
+          [monthEl, m],
+          [yearEl, y],
+        ]) {
+          if (!el) continue;
+          el.focus();
+          setValue(el, String(v));
+          mark(el, GREEN);
+        }
+      };
+      await date('startDate', job.startMonth, job.startYear);
+      if (!job.current) await date('endDate', job.endMonth, job.endYear);
+      await text('roleDescription', job.description);
+      report.filled.push({ question: 'Work experience', answer: label });
+      added++;
+    }
+    return removed.length ? `replaced ${removed.length} Workday entries (${removed.join('; ')}) with your ${added} jobs` : `added your ${added} jobs`;
+  }
+
+  /** opts.keepExperience: leave Workday's work experience entries as they are. */
+  async function fill(kit, opts = {}) {
     const answers = kit.answers;
     const report = { url: window.location.href, filled: [], left: [], already: 0, resume: 'no upload field', transcript: 'no upload field' };
     const fields = [...document.querySelectorAll('input, select, textarea')].filter(
@@ -277,8 +378,16 @@
     const seen = new Set();
     const files = [];
 
+    // Workday's work experience is filled entry by entry (or kept), never field by field.
+    const sec = workdaySection();
+    if (sec) {
+      report.experience = opts.keepExperience ? "kept Workday's entries" : await fillWorkdayExperience(sec, kit.experience, report);
+      sec.querySelectorAll('input, select, textarea').forEach((el) => seen.add(el));
+    }
+
     for (const el of fields) {
-      if (seen.has(el)) continue;
+      // Workday entries deleted above are gone from the page.
+      if (seen.has(el) || !el.isConnected) continue;
       const group = groupOf(el);
       group.forEach((g) => seen.add(g));
       if (el.type === 'file') {

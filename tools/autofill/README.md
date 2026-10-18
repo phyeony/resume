@@ -44,6 +44,11 @@ Then: `s` submit, `r` fill again (next page of a multi-page form), `q` quit with
 - Fills text fields, dropdowns, radio buttons and searchable dropdowns; attaches the resume to the resume
   upload field. Never overwrites what's already filled.
 - Leaves for you: free-text questions, consent checkboxes, questions it doesn't know, other uploads.
+- Workday's **My Experience** page: deletes the work experience entries Workday parsed from your resume and adds
+  your jobs from the kit (title, company, location, "I currently work here", from/to month and year, bullets as
+  the description). Run it again and it leaves matching entries alone. The extension's checkbox (or
+  `fill(kit, { keepExperience: true })`) keeps Workday's entries instead. The jobs come from the kit's resume
+  version, so download a new kit after editing them; Profile lists what goes in and flags dates it can't read.
 - Doesn't click Submit. Multi-page forms (Workday): fill each page.
 
 Tests: `npx vitest run tools/autofill` from the repo root.

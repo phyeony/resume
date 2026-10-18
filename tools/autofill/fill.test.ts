@@ -12,7 +12,7 @@ interface Report {
   submit: string | null;
 }
 interface Filler {
-  fill(kit: ApplyKit): Promise<Report>;
+  fill(kit: ApplyKit, opts?: { keepExperience?: boolean }): Promise<Report>;
   findSubmit(): HTMLElement | null;
   answerFor(q: string, a: ApplicationAnswers): [string, string | null] | null;
   pickOption(labels: string[], answer: string): number;
@@ -186,5 +186,102 @@ describe('fill', () => {
     const r = await filler().fill(kit());
     expect((document.querySelector('input[value="n"]') as HTMLInputElement).checked).toBe(true);
     expect(r.left).toEqual([{ question: 'Pronouns', required: false, why: 'no answer saved for pronouns' }]);
+  });
+});
+
+describe('Workday work experience', () => {
+  const jobs: NonNullable<ApplyKit['experience']> = [
+    { title: 'Software Developer', company: 'Korea Air Force', location: 'Daejeon, Korea', startMonth: 11, startYear: 2024, current: true, description: '• Cut latency by 90%' },
+    { title: 'DevOps Intern', company: 'Scotiabank', location: 'ON', startMonth: 9, startYear: 2021, endMonth: 6, endYear: 2022, current: false, description: '• Built CI/CD' },
+  ];
+
+  // A stand-in for Workday's My Experience page, with the ids and roles seen on a live tenant.
+  let next = 5;
+  function panelHtml(n: number, title = '', company = '') {
+    const id = `workExperience-${next++}`;
+    return `<div role="group" aria-labelledby="Work-Experience-${n}-panel"><h4 id="Work-Experience-${n}-panel">Work Experience ${n}</h4>
+      <button type="button" class="del">Delete</button>
+      <div data-automation-id="formField-jobTitle"><label for="${id}--jobTitle">Job Title*</label><input id="${id}--jobTitle" value="${title}"></div>
+      <div data-automation-id="formField-companyName"><label for="${id}--companyName">Company*</label><input id="${id}--companyName" value="${company}"></div>
+      <div data-automation-id="formField-location"><label for="${id}--location">Location</label><input id="${id}--location"></div>
+      <div data-automation-id="formField-currentlyWorkHere"><label for="${id}--currentlyWorkHere">I currently work here</label><input type="checkbox" id="${id}--currentlyWorkHere"></div>
+      <div data-automation-id="formField-startDate"><input id="${id}--startDate-dateSectionMonth-input" role="spinbutton" aria-label="Month"><input id="${id}--startDate-dateSectionYear-input" role="spinbutton" aria-label="Year"></div>
+      <div data-automation-id="formField-endDate"><input id="${id}--endDate-dateSectionMonth-input" role="spinbutton" aria-label="Month"><input id="${id}--endDate-dateSectionYear-input" role="spinbutton" aria-label="Year"></div>
+      <div data-automation-id="formField-roleDescription"><label for="${id}--roleDescription">Role Description</label><textarea id="${id}--roleDescription"></textarea></div>
+    </div>`;
+  }
+
+  function workday(parsed: [string, string][]) {
+    document.body.innerHTML = `<div data-automation-id="applyFlowMyExpPage">
+      <div role="group" aria-labelledby="Work-Experience-section"><h3 id="Work-Experience-section">Work Experience</h3>
+        <div class="panels">${parsed.map(([t, c], i) => panelHtml(i + 1, t, c)).join('')}</div>
+        <button type="button" data-automation-id="add-button">Add Another</button></div>
+      <div role="group" aria-labelledby="Education-section"><h3 id="Education-section">Education</h3>
+        <label for="school">School or University</label><input id="school"></div>
+    </div>`;
+    const panels = document.querySelector('.panels')!;
+    document.querySelector('[data-automation-id="add-button"]')!.addEventListener('click', () =>
+      setTimeout(() => panels.insertAdjacentHTML('beforeend', panelHtml(panels.children.length + 1)), 50),
+    );
+    panels.addEventListener('click', (e) => {
+      const b = e.target as HTMLElement;
+      if (b.classList.contains('del')) setTimeout(() => b.parentElement!.remove(), 50);
+    });
+    // Ticking "I currently work here" removes the To date, like Workday.
+    panels.addEventListener('change', (e) => {
+      const c = e.target as HTMLInputElement;
+      if (c.id.endsWith('--currentlyWorkHere') && c.checked) c.closest('[role="group"]')!.querySelector('[data-automation-id="formField-endDate"]')!.remove();
+    });
+  }
+
+  const entries = () =>
+    [...document.querySelectorAll('[aria-labelledby$="-panel"]')].map((p) => {
+      const f = (n: string) => (p.querySelector(`[id$="--${n}"]`) as HTMLInputElement | null)?.value ?? null;
+      const cur = (p.querySelector('[id$="--currentlyWorkHere"]') as HTMLInputElement).checked;
+      return [f('jobTitle'), f('companyName'), f('location'), cur, f('startDate-dateSectionMonth-input'), f('startDate-dateSectionYear-input'), f('endDate-dateSectionMonth-input'), f('endDate-dateSectionYear-input'), f('roleDescription')];
+    });
+
+  it("replaces Workday's parsed entries with the kit's jobs", async () => {
+    workday([
+      ['Developer Korea', 'Air Force Daejeon'],
+      ['Intern', ''],
+      ['', 'Scotiabank, ON'],
+    ]);
+    const r = await filler().fill({ ...kit(), experience: jobs });
+    expect(entries()).toEqual([
+      ['Software Developer', 'Korea Air Force', 'Daejeon, Korea', true, '11', '2024', null, null, '• Cut latency by 90%'],
+      ['DevOps Intern', 'Scotiabank', 'ON', false, '9', '2021', '6', '2022', '• Built CI/CD'],
+    ]);
+    expect((r as Report & { experience: string }).experience).toBe(
+      'replaced 3 Workday entries (Developer Korea at Air Force Daejeon; Intern; Scotiabank, ON) with your 2 jobs',
+    );
+    // The rest of the page still gets the usual filling.
+    expect(val('#school')).toBe('University of Example');
+    expect(r.left.filter((x) => x.question.includes('Job Title'))).toEqual([]);
+  });
+
+  it('adds the jobs when Workday has none, and leaves a matching page alone on a second run', async () => {
+    workday([]);
+    await filler().fill({ ...kit(), experience: jobs });
+    expect(entries().map((e) => e[0])).toEqual(['Software Developer', 'DevOps Intern']);
+    const r = await filler().fill({ ...kit(), experience: jobs });
+    expect((r as Report & { experience: string }).experience).toBe('already matches your resume');
+    expect(entries()).toHaveLength(2);
+  });
+
+  it('keeps the entries when asked, and with an old kit says to download a new one', async () => {
+    workday([['Intern', 'Acme']]);
+    const kept = await filler().fill({ ...kit(), experience: jobs }, { keepExperience: true });
+    expect((kept as Report & { experience: string }).experience).toBe("kept Workday's entries");
+    const old = await filler().fill(kit());
+    expect(old.left).toContainEqual({ question: 'Work experience', required: true, why: 'no work experience in the kit: download a new kit from Profile' });
+    expect(entries().map((e) => e[0])).toEqual(['Intern']);
+  });
+
+  it('leaves dates the kit lacks for you', async () => {
+    workday([]);
+    const r = await filler().fill({ ...kit(), experience: [{ title: 'Intern', company: 'Acme', location: '', current: false, description: '' }] });
+    expect(entries()).toEqual([['Intern', 'Acme', '', false, '', '', '', '', '']]);
+    expect(r.left.map((x) => x.question)).toEqual(['Intern at Acme: From', 'Intern at Acme: To']);
   });
 });
