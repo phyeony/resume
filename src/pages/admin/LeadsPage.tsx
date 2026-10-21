@@ -8,6 +8,9 @@ import { SORT_LABELS, groupByCompany, matchPrefs, scoreLead, sortLeads, type Lea
 import { appliedFromLead, urlKey } from '../../applications/model';
 import { knownSources } from '../../applications/stats';
 import { companyFromUrl } from '../../applications/summarize';
+import { GmailAuthExpired, fetchLinkedInAlerts } from '../../applications/gmail';
+import { withoutKnownLinkedIn } from '../../applications/linkedin';
+import { forgetGmailToken, gmailToken } from './auth';
 import { listCompanies, loadAnswers, loadFeedSettings, newId, saveApplication, saveCompanies, saveFeedSettings, saveLead, saveLeads } from './store';
 import { useOwnerData } from './Admin';
 import { fmtDate, fmtDateTime } from './format';
@@ -339,12 +342,15 @@ function ImportPanel({
     setErrors([]);
     try {
       const now = Date.now();
-      const fetched = await Promise.allSettled(enabled.map((f) => fetchFeed(f, now)));
+      const fetched = await Promise.allSettled(
+        enabled.map((f) => (f.kind === 'linkedin' ? gmailToken().then((t) => fetchLinkedInAlerts(t, s.maxAgeDays)) : fetchFeed(f, now))),
+      );
+      if (fetched.some((r) => r.status === 'rejected' && r.reason instanceof GmailAuthExpired)) forgetGmailToken();
       const failed = fetched.flatMap((r, i) => (r.status === 'rejected' ? [`${enabled[i].label}: ${String(r.reason)}`] : []));
       const jobs = fetched.flatMap((r) => (r.status === 'fulfilled' ? r.value : []));
       setErrors(failed);
       if (failed.length === enabled.length) return;
-      const wanted = filterJobs(jobs, s, now).filter((j) => !hidden(j.company));
+      const wanted = withoutKnownLinkedIn(filterJobs(jobs, s, now), { leads, applications }).filter((j) => !hidden(j.company));
       const plan = planImport(wanted, { leads, applications }, () => newId('l'), now, companyFacts(jobs));
       setBusy(`Saving ${plan.leads.length} leads…`);
       await saveLeads([...plan.leads, ...plan.updated]);

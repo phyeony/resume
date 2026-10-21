@@ -13,3 +13,7 @@ export function watchUser(cb: (u: SessionUser | null) => void): () => void {
 }
 export const signIn = async () => {};
 export const signOutUser = async () => {};
+export const gmailToken = async (): Promise<string> => {
+  throw new Error("Gmail isn't available in local preview.");
+};
+export const forgetGmailToken = () => {};

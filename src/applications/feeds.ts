@@ -1,5 +1,6 @@
-// Public job lists that "Import" turns into leads. All live on GitHub, whose raw files any page may
-// fetch: SimplifyJobs keeps a JSON file, the others only markdown tables.
+// Job lists that "Import" turns into leads. The public ones live on GitHub, whose raw files any page may
+// fetch: SimplifyJobs keeps a JSON file, the others only markdown tables. LinkedIn's come from the job
+// alert emails in your own Gmail (gmail.ts).
 
 import type { Application, FeedSettings, Lead, LeadTier } from '../model/types';
 import { TIER_RANK } from '../model/types';
@@ -14,7 +15,7 @@ export interface Feed {
   /** Becomes the lead's source. */
   source: string;
   url: string;
-  kind: 'simplify' | 'speedyapply' | 'negarprh' | 'hanzili';
+  kind: 'simplify' | 'speedyapply' | 'negarprh' | 'hanzili' | 'linkedin';
 }
 
 const SPEEDY = 'https://raw.githubusercontent.com/speedyapply/2027-SWE-College-Jobs/main';
@@ -45,6 +46,7 @@ export const FEEDS: Feed[] = [
     url: 'https://raw.githubusercontent.com/hanzili/canada_sde_intern_position/main/README.md',
     kind: 'hanzili',
   },
+  { id: 'linkedin-alerts', label: 'LinkedIn job alerts (your Gmail)', source: 'LinkedIn', url: '', kind: 'linkedin' },
 ];
 
 /** Simplify's categories, with the older spellings some listings still use. */
@@ -395,7 +397,9 @@ export function planImport(
 
 // ---- fetching --------------------------------------------------------------------
 
+/** A public list; LinkedIn alerts need a Gmail token, so they're read by fetchLinkedInAlerts instead. */
 export async function fetchFeed(feed: Feed, now = Date.now()): Promise<FeedJob[]> {
+  if (feed.kind === 'linkedin') throw new Error(`${feed.label}: read with fetchLinkedInAlerts`);
   const res = await fetch(feed.url, { cache: 'no-cache' });
   if (!res.ok) throw new Error(`${feed.label}: ${res.status} ${res.statusText}`);
   if (feed.kind === 'simplify') return parseSimplify((await res.json()) as SimplifyListing[], feed.source);
