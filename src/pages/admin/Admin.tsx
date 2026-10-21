@@ -9,6 +9,7 @@ import { ApplicationEditor } from './ApplicationEditor';
 import { ApplicationsPage } from './ApplicationsPage';
 import { ApplicationStats } from './ApplicationStats';
 import { LeadsPage } from './LeadsPage';
+import { OpeningsPage } from './OpeningsPage';
 import { currentStage, isClosed, waitingDays } from '../../applications/model';
 import { LinksPage } from './LinksPage';
 import { LibraryPage } from './LibraryPage';
@@ -147,6 +148,7 @@ function OwnerArea({ user }: { user: SessionUser }) {
               Leads
               <NavCount n={leads.filter((l) => l.status === 'new').length} title="new" />
             </NavLink>
+            <NavLink to="/admin/openings">Openings</NavLink>
             <NavLink to="/admin/applications">
               Applications
               <NavCount
@@ -186,6 +188,7 @@ function OwnerArea({ user }: { user: SessionUser }) {
             <Route path="versions/:id" element={<KeyedBuilder />} />
             <Route path="links" element={<LinksPage />} />
             <Route path="leads" element={<LeadsPage />} />
+            <Route path="openings" element={<OpeningsPage />} />
             <Route path="applications" element={<ApplicationsPage />} />
             <Route path="applications/stats" element={<ApplicationStats />} />
             <Route path="applications/:id" element={<KeyedApplication />} />
