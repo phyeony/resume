@@ -11,6 +11,7 @@ import { createLink, deleteApplication, getPosting, makeSlug, newId, saveApplica
 import { useOwnerData } from './Admin';
 import { StageBadge } from './ApplicationsPage';
 import { DuplicateNote, SourceField } from './LeadsPage';
+import { CopyButton, copyText, linkUrl } from './LinksPage';
 import { fmtDate, fmtDateTime, fromDateInput, toDateInput } from './format';
 import './applications.css';
 
@@ -476,6 +477,8 @@ function ResumeSection({ app, onChange }: { app: Application; onChange(p: Partia
   const [creating, setCreating] = useState(false);
   const [versionId, setVersionId] = useState(() => (versions.find((v) => v.isMain) ?? versions[0])?.id ?? '');
   const [error, setError] = useState('');
+  /** The link this section just created, already copied. */
+  const [justCopied, setJustCopied] = useState('');
 
   useEffect(() => {
     setStats(null);
@@ -491,6 +494,7 @@ function ResumeSection({ app, onChange }: { app: Application; onChange(p: Partia
     try {
       const slug = makeSlug(app.company);
       await createLink({ slug, company: app.company.trim(), ...(app.role ? { note: app.role } : {}), versionId: v.id, createdAt: Date.now(), enabled: true, expiresAt: null }, v);
+      if (await copyText(linkUrl(slug))) setJustCopied(slug);
       await reloadVersions();
       onChange({ linkSlug: slug, versionId: undefined });
     } catch (e) {
@@ -522,17 +526,21 @@ function ResumeSection({ app, onChange }: { app: Application; onChange(p: Partia
         </select>
       </label>
       {link && (
-        <p className="small">
-          <a href={`${location.origin}/${link.slug}`} target="_blank" rel="noopener">
-            {location.host}/{link.slug}
-          </a>{' '}
-          · shows {linkedVersion?.name ?? '(deleted version)'} ·{' '}
-          {stats === null
-            ? 'views …'
-            : stats.views
-              ? `${stats.views} view${stats.views === 1 ? '' : 's'}, last ${fmtDateTime(stats.lastAt)}`
-              : 'not opened yet'}
-        </p>
+        <div className="link-row small">
+          <span>
+            <a href={linkUrl(link.slug)} target="_blank" rel="noopener">
+              {location.host}/{link.slug}
+            </a>{' '}
+            · shows {linkedVersion?.name ?? '(deleted version)'} ·{' '}
+            {stats === null
+              ? 'views …'
+              : stats.views
+                ? `${stats.views} view${stats.views === 1 ? '' : 's'}, last ${fmtDateTime(stats.lastAt)}`
+                : 'not opened yet'}
+          </span>
+          <span className="spacer" />
+          <CopyButton key={link.slug} text={linkUrl(link.slug)} copied={link.slug === justCopied} />
+        </div>
       )}
       {!app.linkSlug && (
         <>

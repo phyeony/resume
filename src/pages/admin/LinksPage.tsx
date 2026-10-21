@@ -13,6 +13,8 @@ export function LinksPage() {
   const [search, setSearch] = useSearchParams();
   const preselect = search.get('new');
   const [creating, setCreating] = useState(!!preselect);
+  /** The link just created, copied for pasting into an application. */
+  const [justCopied, setJustCopied] = useState('');
 
   const sorted = useMemo(() => [...links].sort((a, b) => b.createdAt - a.createdAt), [links]);
   const byId = useMemo(() => new Map(versions.map((v) => [v.id, v])), [versions]);
@@ -37,8 +39,9 @@ export function LinksPage() {
         <NewLinkForm
           versions={versions}
           initialVersionId={preselect}
-          onDone={() => {
+          onDone={(slug) => {
             setCreating(false);
+            if (slug) setJustCopied(slug);
             if (preselect) setSearch({}, { replace: true });
             void reloadVersions();
           }}
@@ -48,7 +51,7 @@ export function LinksPage() {
       {sorted.length === 0 && !creating && <p className="muted">No links yet.</p>}
       <div className="version-list">
         {sorted.map((l) => (
-          <LinkCard key={l.slug} link={l} version={byId.get(l.versionId)} versions={versions} reload={reloadVersions} />
+          <LinkCard key={l.slug} link={l} copied={l.slug === justCopied} version={byId.get(l.versionId)} versions={versions} reload={reloadVersions} />
         ))}
       </div>
     </div>
@@ -62,7 +65,7 @@ function NewLinkForm({
 }: {
   versions: Version[];
   initialVersionId: string | null;
-  onDone(): void;
+  onDone(createdSlug?: string): void;
 }) {
   const fallback = versions.find((v) => v.isMain) ?? versions[0];
   const [versionId, setVersionId] = useState(
@@ -103,7 +106,8 @@ function NewLinkForm({
         },
         v,
       );
-      onDone();
+      await copyText(linkUrl(slug));
+      onDone(slug);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -164,7 +168,7 @@ function NewLinkForm({
         <button className="primary" disabled={saving} onClick={() => void create()}>
           {saving ? 'Creating…' : 'Create link'}
         </button>
-        <button className="link" onClick={onDone}>
+        <button className="link" onClick={() => onDone()}>
           Cancel
         </button>
       </div>
@@ -172,13 +176,42 @@ function NewLinkForm({
   );
 }
 
+export const linkUrl = (slug: string) => `${location.origin}/${slug}`;
+
+/** Copies, and says so; the clipboard can refuse (e.g. the tab lost focus), which isn't worth an error. */
+export async function copyText(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** "Copy", then "Copied" for a moment. Starts as "Copied" when the text was just copied for you. */
+export function CopyButton({ text, copied: initially = false }: { text: string; copied?: boolean }) {
+  const [copied, setCopied] = useState(initially);
+  useEffect(() => {
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(false), initially ? 2500 : 1500);
+    return () => clearTimeout(t);
+  }, [copied, initially]);
+  return (
+    <button className="small-btn" title="Copy the link" onClick={() => void copyText(text).then(setCopied)}>
+      {copied ? 'Copied' : 'Copy'}
+    </button>
+  );
+}
+
 function LinkCard({
   link,
+  copied,
   version,
   versions,
   reload,
 }: {
   link: ShareLink;
+  copied: boolean;
   version: Version | undefined;
   versions: Version[];
   reload(): Promise<void>;
@@ -186,11 +219,10 @@ function LinkCard({
   const { applications } = useOwnerData();
   const apps = applications.filter((a) => a.linkSlug === link.slug);
   const [stats, setStats] = useState<ViewStats | null>(null);
-  const [copied, setCopied] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const url = `${location.origin}/${link.slug}`;
+  const url = linkUrl(link.slug);
   const expired = link.expiresAt != null && link.expiresAt < Date.now();
   const live = link.enabled && !expired;
 
@@ -266,16 +298,7 @@ function LinkCard({
         <a href={url} target="_blank" rel="noopener" className={live ? '' : 'strike'}>
           {url.replace(/^https?:\/\//, '')}
         </a>
-        <button
-          className="small-btn"
-          onClick={() => {
-            void navigator.clipboard.writeText(url);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
-          }}
-        >
-          {copied ? 'Copied' : 'Copy'}
-        </button>
+        <CopyButton text={url} copied={copied} />
       </div>
 
       <div className="link-row controls">
