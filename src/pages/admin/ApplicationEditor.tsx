@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ClipboardEvent } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { STAGES, STAGE_LABELS, type Application, type Posting, type PostingSummary, type Stage, type WorkMode } from '../../model/types';
 import { capturePosting, sanitize, type Capture } from '../../applications/capture';
+import { canFetchPages, fetchPage, holdsPosting } from '../../applications/pageFetch';
 import { companyFromUrl, summarize } from '../../applications/summarize';
 import { parseSalary } from '../../applications/salary';
 import { currentStage, fromLead, isSummaryEmpty, newApplication, nextStage, sortHistory, urlKey } from '../../applications/model';
@@ -42,6 +43,15 @@ export function ApplicationEditor() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
+  /** Fetching the posting from its address through the extension, instead of a paste. */
+  const [fetching, setFetching] = useState(false);
+  const [fetchProblem, setFetchProblem] = useState('');
+  const [fetched, setFetched] = useState(false);
+
+  // Tracking a lead: fetch its posting straight away, so there's nothing to paste.
+  useEffect(() => {
+    if (lead && canFetchPages()) void fetchPosting();
+  }, []);
 
   useEffect(() => {
     if (isNew || !stored?.hasPosting) return;
@@ -87,9 +97,30 @@ export function ApplicationEditor() {
     const c = capturePosting({ html: e.clipboardData.getData('text/html'), text: e.clipboardData.getData('text/plain') });
     if (!c) return setError('Nothing to read in what was pasted.');
     setError('');
+    setFetched(false);
     setCapture(c);
     setRecapturing(false);
     void pickBlock(c, 0, isSummaryEmpty(app.summary) || app.summary.filledBy === 'rules');
+  }
+
+  async function fetchPosting() {
+    const url = app.url?.trim();
+    if (!url || !/^https?:\/\//i.test(url)) return setFetchProblem('Add the posting address (https://…) first.');
+    setFetching(true);
+    setFetchProblem('');
+    try {
+      const c = capturePosting({ html: await fetchPage(url) });
+      if (!holdsPosting(c)) throw new Error('the page only shows the posting in a browser');
+      setError('');
+      setCapture(c);
+      setFetched(true);
+      setRecapturing(false);
+      await pickBlock(c, 0, isSummaryEmpty(app.summary) || app.summary.filledBy === 'rules');
+    } catch (e) {
+      setFetchProblem(`Couldn't fetch the posting: ${e instanceof Error ? e.message : String(e)}. Paste it instead.`);
+    } finally {
+      setFetching(false);
+    }
   }
 
   async function refill() {
@@ -195,6 +226,18 @@ export function ApplicationEditor() {
                 page and copy that instead. Pasting the page source (<kbd>⌥⌘U</kbd>) also works and often fills in
                 more.
               </p>
+              {canFetchPages() ? (
+                <p className="small">
+                  <button disabled={fetching || !app.url} onClick={() => void fetchPosting()}>
+                    {fetching ? 'Fetching the posting…' : 'Fetch from the posting address'}
+                  </button>
+                </p>
+              ) : (
+                <p className="muted small">
+                  With the Resume Studio Autofill extension installed, the posting is fetched from its address for you.
+                </p>
+              )}
+              {fetchProblem && <p className="notice small">{fetchProblem}</p>}
               {recapturing && (
                 <button className="link small" onClick={() => setRecapturing(false)}>
                   Keep the current copy
@@ -207,7 +250,7 @@ export function ApplicationEditor() {
             <>
               <div className="posting-head">
                 <span className="muted small">
-                  {capture ? 'Captured just now · not saved yet' : `Captured ${fmtDateTime(posting.capturedAt)}`}
+                  {capture ? `${fetched ? 'Fetched from the posting address' : 'Captured just now'} · not saved yet` : `Captured ${fmtDateTime(posting.capturedAt)}`}
                 </span>
                 <span className="spacer" />
                 {capture && capture.blocks.length > 1 && (

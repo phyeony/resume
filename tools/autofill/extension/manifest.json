@@ -1,9 +1,17 @@
 {
   "manifest_version": 3,
   "name": "Resume Studio Autofill",
-  "version": "0.4.0",
-  "description": "Fills job application forms from your Resume Studio apply kit. You review and submit.",
+  "version": "0.5.0",
+  "description": "Fills job application forms from your Resume Studio apply kit, and fetches job postings into Resume Studio. You review and submit.",
   "action": { "default_popup": "popup.html", "default_title": "Resume Studio Autofill" },
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["https://hyeonyoung-park-resume.web.app/*", "https://hyeonyoung-park-resume.firebaseapp.com/*", "http://localhost/*", "http://127.0.0.1/*"],
+      "js": ["bridge.js"],
+      "run_at": "document_start"
+    }
+  ],
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["<all_urls>"]
 }

@@ -156,8 +156,8 @@ function readJobLd(doc: Document): { ld: JobLd; descriptionHtml?: string } | und
         }
       }
       let desc = str(o.description);
-      // Some sites store the description HTML entity-escaped ("&lt;p&gt;…").
-      if (desc && !/<\w/.test(desc) && /&lt;\w/.test(desc)) desc = parse(desc).body.textContent ?? desc;
+      // Some sites store the description HTML entity-escaped ("&lt;p&gt;…"), or as text with entities ("J&amp;J").
+      if (desc && !/<\w/.test(desc) && /&#?\w+;/.test(desc)) desc = parse(desc).body.textContent ?? desc;
       return { ld, descriptionHtml: desc && (/<\w/.test(desc) ? desc : textToHtml(desc)) };
     }
   }
@@ -312,7 +312,17 @@ export function capturePosting(input: PastedInput): Capture | null {
     }
   }
   add(body, 'page');
+  // Some sites (Workday) put the description in their JobPosting data as one run of text with the
+  // formatting stripped; the page's own block, when there is one, reads far better.
+  const first = capture.blocks[0];
+  const known = capture.blocks.findIndex((b) => b.method.startsWith('known:'));
+  if (first?.method === 'json-ld' && known > 0 && isFlat(first)) capture.blocks.unshift(...capture.blocks.splice(known, 1));
   return capture.blocks.length ? capture : null;
+}
+
+/** A long posting with no headings, lists or paragraph breaks. */
+function isFlat(b: Block): boolean {
+  return b.text.length > 600 && !/<(h\d|li)\b/.test(b.html) && (b.html.match(/<p>|<br>/g) ?? []).length <= 1;
 }
 
 // ---- sanitizing ------------------------------------------------------------------------

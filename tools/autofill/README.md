@@ -59,3 +59,13 @@ Then: `s` submit, `r` fill again (next page of a multi-page form), `q` quit with
 Tests: `npx vitest run tools/autofill` from the repo root.
 
 Avoid using these on LinkedIn Easy Apply or Indeed Apply: their terms forbid automated applying.
+
+## Fetching postings
+
+The extension also fetches job postings for Resume Studio, so there's nothing to paste. **Track** on a
+lead opens the new application and fetches the posting from the lead's address; for any other
+application, the editor shows **Fetch from the posting address**. A browser page can't read other sites,
+so `bridge.js` (which runs only on Resume Studio) passes the request to `background.js`, which fetches the
+page signed out and sends its HTML back. LinkedIn jobs are read from their public guest page. When a site
+only shows the posting once its JavaScript runs, the editor says so and pasting works as before.
+Reload the extension in `chrome://extensions` after updating it.
