@@ -5,6 +5,7 @@
 import type { Application, FeedSettings, Lead, LeadTier } from '../model/types';
 import { TIER_RANK } from '../model/types';
 import { companyKey } from './fame';
+import { linkedInJobId } from './linkedin';
 import { urlKey } from './model';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -317,8 +318,50 @@ export function filterJobs(jobs: FeedJob[], s: FeedSettings, now = Date.now()): 
   });
 }
 
-/** Same job, whichever list it came from: company and title without punctuation or case. */
-const jobKey = (company: string, role: string) => `${company}|${role}`.toLowerCase().replace(/[^a-z0-9|]+/g, '');
+/**
+ * Same job, whichever list it came from: company and title without punctuation, case or the term the
+ * lists append ("- Summer 2027", "(Winter 2027)"), with "Internship" read as "Intern".
+ */
+export const jobKey = (company: string, role: string) =>
+  `${companyKey(company)}|${role
+    .toLowerCase()
+    .replace(/\b(?:winter|spring|summer|fall|autumn)?\s*20\d\d\b/g, ' ')
+    .replace(/\binternship\b/g, 'intern')
+    .replace(/[^a-z0-9]+/g, '')}`;
+
+/** Every way a posting can be recognised: its LinkedIn job number, its address, its company and title. */
+function jobKeys(x: { company: string; role: string; url?: string }): string[] {
+  const li = linkedInJobId(x.url);
+  const url = urlKey(x.url);
+  return [...(li ? [`li:${li}`] : []), ...(url ? [`url:${url}`] : []), `job:${jobKey(x.company, x.role)}`];
+}
+
+/**
+ * New leads that turn out to be known already, with what they should become: tracked when an
+ * application is for the same posting (applied from its page, not from the lead), or the status of the
+ * lead they repeat (another list's copy, imported before the rules caught it), dismissed when both are
+ * still new so only the older one stays.
+ */
+export function reconcileLeads(leads: Lead[], applications: Application[]): Lead[] {
+  const apps = new Map<string, Application>();
+  for (const a of applications) for (const k of jobKeys(a)) if (!apps.has(k)) apps.set(k, a);
+  const seen = new Map<string, Lead>();
+  const updates: Lead[] = [];
+  // Decisions first (tracked, dismissed), then new leads oldest first.
+  const order = [...leads].sort((a, b) => Number(a.status === 'new') - Number(b.status === 'new') || a.addedAt - b.addedAt);
+  for (const l of order) {
+    const keys = jobKeys(l);
+    if (l.status === 'new') {
+      const app = keys.map((k) => apps.get(k)).find(Boolean);
+      const prev = keys.map((k) => seen.get(k)).find(Boolean);
+      if (app) updates.push({ ...l, status: 'tracked', applicationId: app.id });
+      else if (prev) updates.push({ ...l, status: prev.status === 'new' ? 'dismissed' : prev.status, ...(prev.applicationId ? { applicationId: prev.applicationId } : {}) });
+      if (app || prev) continue;
+    }
+    for (const k of keys) if (!seen.has(k)) seen.set(k, l);
+  }
+  return updates;
+}
 
 /** What lists say about companies, from every job fetched (before filtering), to lend to other lists. */
 export interface CompanyFacts {
@@ -356,20 +399,17 @@ export function planImport(
 ): ImportPlan {
   const { tiers, sites } = facts;
   const ids = new Set(existing.leads.map((l) => l.sourceId).filter(Boolean));
-  const urls = new Set([...existing.leads, ...existing.applications].map((x) => urlKey(x.url)).filter(Boolean));
-  const keys = new Set([...existing.leads, ...existing.applications].map((x) => jobKey(x.company, x.role)));
+  const keys = new Set([...existing.leads, ...existing.applications].flatMap(jobKeys));
   const leads: Lead[] = [];
   let known = 0;
   for (const j of [...jobs].sort((a, b) => (b.postedAt ?? 0) - (a.postedAt ?? 0))) {
-    const url = urlKey(j.url);
-    const key = jobKey(j.company, j.role);
-    if (ids.has(j.sourceId) || (url && urls.has(url)) || keys.has(key)) {
+    const its = jobKeys(j);
+    if (ids.has(j.sourceId) || its.some((k) => keys.has(k))) {
       known++;
       continue;
     }
     ids.add(j.sourceId);
-    if (url) urls.add(url);
-    keys.add(key);
+    for (const k of its) keys.add(k);
     leads.push({
       id: makeId(),
       company: j.company,

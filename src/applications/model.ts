@@ -99,11 +99,13 @@ export function withFollowUp(a: Application, now = Date.now()): Application {
 }
 
 // Query parameters that only say how you got to a page, not which page it is.
-const TRACKING_PARAM = /^(utm_.*|st_source|ref|refs|source|src|gh_src|lever-source|lever-origin|trk|trackingid|embed|iis|iisn)$/i;
+const TRACKING_PARAM = /^(utm_.*|st_source|ref|refs|source|src|gh_src|lever-source|lever-origin|trk|trackingid|embed|iis|iisn|ats)$/i;
+const WORKDAY_HOST = /\.myworkday(?:jobs|site)\.com$/i;
 
 /**
  * The same posting gives the same key however it was reached: no tracking parameters, no "www.", no
- * fragment, and the apply page counts as the posting (…/apply, …/application).
+ * fragment, and the apply page counts as the posting (…/apply, …/application). Workday also ignores
+ * case and the language in its paths (/en-US/acme/job/… is /Acme/job/…).
  */
 export function urlKey(raw: string | undefined): string | null {
   if (!raw?.trim()) return null;
@@ -114,7 +116,8 @@ export function urlKey(raw: string | undefined): string | null {
     return null;
   }
   const params = [...u.searchParams].filter(([k]) => !TRACKING_PARAM.test(k)).sort(([a], [b]) => a.localeCompare(b));
-  const path = u.pathname.replace(/\/(apply|application)\/?$/i, '').replace(/\/+$/, '');
+  let path = u.pathname.replace(/\/(apply|application)\/?$/i, '').replace(/\/+$/, '');
+  if (WORKDAY_HOST.test(u.hostname)) path = path.replace(/^\/[a-z]{2}-[a-z]{2}(?=\/)/i, '').toLowerCase();
   const query = params.length ? '?' + new URLSearchParams(params).toString() : '';
   return u.hostname.toLowerCase().replace(/^www\./, '') + path + query;
 }

@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { Link, useNavigate } from 'react-router-dom';
 import type { CompanyInfo, FeedSettings, Lead, LeadStatus } from '../../model/types';
 import { TIER_LABELS } from '../../model/types';
-import { CATEGORIES, DEFAULT_FEED_SETTINGS, FEEDS, fetchFeed, filterJobs, planImport, companyFacts } from '../../applications/feeds';
+import { CATEGORIES, DEFAULT_FEED_SETTINGS, FEEDS, fetchFeed, filterJobs, planImport, companyFacts, reconcileLeads } from '../../applications/feeds';
 import { RateLimited, articleFromUrl, articleUrl, companyKey, domainHints, fameLabel, findArticles, lastMonth, monthlyViews } from '../../applications/fame';
 import { SORT_LABELS, groupByCompany, matchPrefs, scoreLead, sortLeads, type LeadSort, type MatchPrefs } from '../../applications/leadSort';
 import { appliedFromLead, urlKey } from '../../applications/model';
@@ -34,8 +34,22 @@ function useCompanies(): Companies {
 
 /** Jobs worth a look, before deciding to apply. Track one to start an application; dismiss the rest. */
 export function LeadsPage() {
-  const { leads, library, reloadLeads } = useOwnerData();
+  const { leads, applications, library, reloadLeads } = useOwnerData();
   const [filter, setFilter] = useState<LeadStatus>('new');
+
+  // New leads already applied to, or repeating another lead, move out of New by themselves.
+  const reconciling = useRef(false);
+  useEffect(() => {
+    const updates = reconcileLeads(leads, applications);
+    if (!updates.length || reconciling.current) return;
+    reconciling.current = true;
+    saveLeads(updates)
+      .then(reloadLeads)
+      .catch((e: unknown) => console.error("Couldn't tidy leads", e))
+      .finally(() => {
+        reconciling.current = false;
+      });
+  }, [leads, applications, reloadLeads]);
   const [search, setSearch] = useState('');
   const [settings, setSettings] = useState<FeedSettings | null>(null);
   const [sort, setSort] = useState<LeadSort>(() => (remembered('sort') as LeadSort | null) ?? 'match');
