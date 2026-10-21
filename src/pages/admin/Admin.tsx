@@ -15,6 +15,7 @@ import { LinksPage } from './LinksPage';
 import { LibraryPage } from './LibraryPage';
 import { ProfilePage } from './ProfilePage';
 import { Setup } from './Setup';
+import { StudyPage } from './StudyPage';
 import { VersionBuilder } from './VersionBuilder';
 import { VersionsPage } from './VersionsPage';
 import './admin.css';
@@ -159,6 +160,7 @@ function OwnerArea({ user }: { user: SessionUser }) {
             </NavLink>
             <NavLink to="/admin/library">Experience &amp; skills</NavLink>
             <NavLink to="/admin/profile">Profile</NavLink>
+            <NavLink to="/admin/study">Study</NavLink>
           </nav>
         )}
         <span className="spacer" />
@@ -194,6 +196,7 @@ function OwnerArea({ user }: { user: SessionUser }) {
             <Route path="applications/:id" element={<KeyedApplication />} />
             <Route path="library" element={<LibraryPage />} />
             <Route path="profile" element={<ProfilePage />} />
+            <Route path="study" element={<StudyPage />} />
             <Route path="*" element={<Navigate to="versions" replace />} />
           </Routes>
         </Ctx.Provider>

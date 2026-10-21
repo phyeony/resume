@@ -1,6 +1,7 @@
 // Local preview backend (`npm run local`): the whole "database" is one JSON blob in
 // localStorage, so the editor and public pages work without Firebase. Never in a real build.
 
+import type { StudyProgress } from '../study/patterns';
 import type { Application, ApplicationAnswers, CompanyInfo, FeedSettings, Lead, Library, MailUpdate, Posting, Profile, PublicDoc, ShareLink, StoredPdf, Version, ViewRecord } from '../model/types';
 
 export interface LocalDb {
@@ -16,6 +17,7 @@ export interface LocalDb {
   feedSettings?: FeedSettings;
   answers?: ApplicationAnswers;
   transcript?: StoredPdf;
+  study?: StudyProgress;
   companies: Record<string, CompanyInfo>;
   mail: Record<string, MailUpdate>;
 }

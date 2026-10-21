@@ -196,6 +196,14 @@
   .pad { padding: 16px 16px 40px; }
 }
 
+@media (max-width: 700px) {
+  /* phones: header scrolls away, sections sit in one swipeable row */
+  .topbar { position: static; }
+  .page-head.sticky { top: 0; }
+  .topbar nav { order: 10; width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .topbar nav a { white-space: nowrap; }
+}
+
 /* Application answers (Profile) */
 .answers-head { margin-top: 28px; }
 .answers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0 12px; }

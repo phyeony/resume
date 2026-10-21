@@ -6,6 +6,7 @@ import { clone, readDb, writeDb } from '../../data/localDb';
 import type { Application, ApplicationAnswers, CompanyInfo, ExportRecord, FeedSettings, Lead, Library, MailUpdate, Posting, Profile, ShareLink, StoredPdf, Version } from '../../model/types';
 import { currentStage } from '../../applications/model';
 import { withMailEvent, withoutMailEvent } from '../../applications/mail';
+import type { StudyProgress } from '../../study/patterns';
 import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
 export { newId, makeSlug, slugProblem, type ViewStats } from './storeShared';
@@ -19,6 +20,8 @@ export const saveTranscript = async (t: StoredPdf) => writeDb((db) => void (db.t
 export const deleteTranscript = async () => writeDb((db) => void delete db.transcript);
 export const loadLibrary = async (): Promise<Library | null> => clone(readDb().library);
 export const saveLibrary = async (l: Library) => writeDb((db) => void (db.library = clone(l)));
+export const loadStudy = async (): Promise<StudyProgress | null> => clone(readDb().study ?? null);
+export const saveStudy = async (s: StudyProgress) => writeDb((db) => void (db.study = clone(s)));
 
 // ---- versions --------------------------------------------------------------
 

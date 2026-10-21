@@ -3,6 +3,7 @@
 //   owner/leadFeeds                     owner-only lead import settings
 //   owner/answers                       owner-only answer bank for application forms
 //   owner/transcript                    owner-only school transcript PDF, base64 in the doc
+//   owner/study                         owner-only coding interview practice progress
 //   versions/{id}                       owner-only tailored versions (frozen snapshots)
 //   links/{slug}                        owner-only company links, each pointing at a version
 //   public/main, public/{slug}          published copies visitors may `get`
@@ -32,6 +33,7 @@ import { MAIN_SLUG } from '../../data/publicStore';
 import type { Application, ApplicationAnswers, CompanyInfo, ExportRecord, FeedSettings, Lead, Library, MailUpdate, Posting, Profile, ShareLink, StoredPdf, Version } from '../../model/types';
 import { currentStage } from '../../applications/model';
 import { withMailEvent, withoutMailEvent } from '../../applications/mail';
+import type { StudyProgress } from '../../study/patterns';
 import { db } from './auth';
 import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
@@ -67,6 +69,13 @@ export async function loadLibrary(): Promise<Library | null> {
 }
 
 export const saveLibrary = (l: Library) => setDoc(doc(db, 'owner', 'library'), l);
+
+export async function loadStudy(): Promise<StudyProgress | null> {
+  const snap = await getDoc(doc(db, 'owner', 'study'));
+  return snap.exists() ? (snap.data() as StudyProgress) : null;
+}
+
+export const saveStudy = (s: StudyProgress) => setDoc(doc(db, 'owner', 'study'), s);
 
 // ---- versions --------------------------------------------------------------
 
