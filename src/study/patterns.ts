@@ -5,6 +5,8 @@
 export interface StudyProgress {
   /** Problem numbers checked off as solved. */
   solved: number[];
+  /** Problems to redo cold (got it wrong or read the solution), keyed by number, valued by when they were marked. */
+  retry?: Record<string, number>;
   updatedAt: number;
 }
 
@@ -466,4 +468,25 @@ export function nextProblem(solved: ReadonlySet<number>): { pattern: Pattern; pr
     if (problem) return { pattern, problem };
   }
   return null;
+}
+
+/** Wait this long after marking before a retry is worth doing cold (the plan's "after 3 days"). */
+export const RETRY_WAIT_MS = 3 * 24 * 60 * 60 * 1000;
+
+export interface RetryItem {
+  pattern: Pattern;
+  problem: Problem;
+  markedAt: number;
+  ready: boolean;
+}
+
+/** Problems marked for retry, oldest mark first. Unknown ids (problems removed from the plan) are skipped. */
+export function retryQueue(retry: Readonly<Record<string, number>>, now: number): RetryItem[] {
+  const items: RetryItem[] = [];
+  for (const pattern of PATTERNS)
+    for (const problem of pattern.problems) {
+      const markedAt = retry[problem.id];
+      if (markedAt !== undefined) items.push({ pattern, problem, markedAt, ready: now - markedAt >= RETRY_WAIT_MS });
+    }
+  return items.sort((a, b) => a.markedAt - b.markedAt);
 }

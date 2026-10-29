@@ -49,6 +49,15 @@
 .study-diff.H { background: #fce8e6; color: var(--a-danger); }
 .study-tip { margin: 10px 0 0; }
 
+.study-retry-count { color: var(--a-warn); font-weight: 600; }
+.study-tab-count { margin-left: 6px; padding: 0 6px; border-radius: 99px; background: #fef7e0; color: var(--a-warn); font-size: 12px; font-weight: 700; }
+.admin button.study-retry-btn { margin-left: auto; flex: none; padding: 2px 8px; border-color: transparent; background: none; color: var(--a-muted); font-size: 13px; }
+.admin button.study-retry-btn:hover { border-color: var(--a-line); }
+.admin button.study-retry-btn.on { background: #fef7e0; border-color: transparent; color: var(--a-warn); font-weight: 600; }
+.study-retry-list { padding: 4px 16px; }
+.study-retry-main { display: grid; gap: 0; min-width: 0; }
+.admin .study-retry-main button.link { padding: 0; }
+
 .study-cues { display: grid; gap: 6px; }
 .admin button.study-cue { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; text-align: left; padding: 10px 12px; }
 .study-cue strong { color: var(--a-accent); white-space: nowrap; font-size: 13.5px; }

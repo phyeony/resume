@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ALL_PROBLEMS, CHEAT_SHEET, PATTERNS, WEEKS, nextProblem, problemUrl } from './patterns';
+import { ALL_PROBLEMS, CHEAT_SHEET, PATTERNS, WEEKS, RETRY_WAIT_MS, nextProblem, problemUrl, retryQueue } from './patterns';
 
 describe('study plan', () => {
   it('lists each problem once', () => {
@@ -23,5 +23,13 @@ describe('study plan', () => {
 
   it('builds LeetCode links from slugs', () => {
     expect(problemUrl(ALL_PROBLEMS[0])).toBe('https://leetcode.com/problems/contains-duplicate/');
+  });
+
+  it('lists retries oldest first and flags the ones old enough to redo', () => {
+    const now = 10 * RETRY_WAIT_MS;
+    const q = retryQueue({ 1: now - 1000, 217: now - RETRY_WAIT_MS, 99999: 0 }, now);
+    expect(q.map((r) => r.problem.id)).toEqual([217, 1]);
+    expect(q.map((r) => r.ready)).toEqual([true, false]);
+    expect(q[0].pattern.key).toBe('hash');
   });
 });
