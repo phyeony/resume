@@ -7,6 +7,7 @@ import type { Application, ApplicationAnswers, CompanyInfo, ExportRecord, FeedSe
 import { currentStage } from '../../applications/model';
 import { withMailEvent, withoutMailEvent } from '../../applications/mail';
 import type { StudyProgress } from '../../study/patterns';
+import type { InterviewProgress } from '../../interview/prep';
 import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
 export { newId, makeSlug, slugProblem, type ViewStats } from './storeShared';
@@ -22,6 +23,8 @@ export const loadLibrary = async (): Promise<Library | null> => clone(readDb().l
 export const saveLibrary = async (l: Library) => writeDb((db) => void (db.library = clone(l)));
 export const loadStudy = async (): Promise<StudyProgress | null> => clone(readDb().study ?? null);
 export const saveStudy = async (s: StudyProgress) => writeDb((db) => void (db.study = clone(s)));
+export const loadInterview = async (): Promise<InterviewProgress | null> => clone(readDb().interview ?? null);
+export const saveInterview = async (p: InterviewProgress) => writeDb((db) => void (db.interview = clone(p)));
 
 // ---- versions --------------------------------------------------------------
 

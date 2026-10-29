@@ -4,6 +4,7 @@
 //   owner/answers                       owner-only answer bank for application forms
 //   owner/transcript                    owner-only school transcript PDF, base64 in the doc
 //   owner/study                         owner-only coding interview practice progress
+//   owner/interview                     owner-only behavioural/system design notes and practice
 //   versions/{id}                       owner-only tailored versions (frozen snapshots)
 //   links/{slug}                        owner-only company links, each pointing at a version
 //   public/main, public/{slug}          published copies visitors may `get`
@@ -34,6 +35,7 @@ import type { Application, ApplicationAnswers, CompanyInfo, ExportRecord, FeedSe
 import { currentStage } from '../../applications/model';
 import { withMailEvent, withoutMailEvent } from '../../applications/mail';
 import type { StudyProgress } from '../../study/patterns';
+import type { InterviewProgress } from '../../interview/prep';
 import { db } from './auth';
 import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
@@ -76,6 +78,13 @@ export async function loadStudy(): Promise<StudyProgress | null> {
 }
 
 export const saveStudy = (s: StudyProgress) => setDoc(doc(db, 'owner', 'study'), s);
+
+export async function loadInterview(): Promise<InterviewProgress | null> {
+  const snap = await getDoc(doc(db, 'owner', 'interview'));
+  return snap.exists() ? (snap.data() as InterviewProgress) : null;
+}
+
+export const saveInterview = (p: InterviewProgress) => setDoc(doc(db, 'owner', 'interview'), p);
 
 // ---- versions --------------------------------------------------------------
 

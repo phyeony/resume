@@ -1,0 +1,33 @@
+/* Interview prep page. Builds on study.css: same cards, tabs and labels. */
+
+.interview mark.gap { background: #fff3c4; color: inherit; padding: 0 3px; border-radius: 3px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.interview-body { margin: 0 16px; padding-bottom: 16px; display: grid; gap: 10px; }
+.interview-body > * { margin: 0; }
+.interview-where { margin: 0; }
+.interview-star { display: grid; grid-template-columns: 92px 1fr; gap: 6px 12px; margin: 0; }
+.interview-star dt { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--a-muted); padding-top: 3px; }
+.interview-star dd { margin: 0; max-width: 70ch; }
+.interview-star ul, .interview-design { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.interview-prompt { font-style: italic; max-width: 70ch; }
+.interview-cols { margin: 0; padding: 0; }
+.interview-followups { display: grid; gap: 6px; }
+.interview-fu { border: 1px solid var(--a-line); border-radius: 8px; padding: 8px 12px; background: var(--a-bg); }
+.interview-fu > summary { cursor: pointer; font-weight: 600; }
+.interview-fu > p { margin: 6px 0 0; max-width: 70ch; }
+.interview-tie { border-left: 3px solid var(--a-accent); padding-left: 10px; }
+.interview-notes { display: grid; gap: 8px; border-top: 1px solid var(--a-line); padding-top: 10px; }
+.interview-notes label.study-label { display: grid; gap: 6px; margin: 0; }
+.admin .interview-notes textarea { width: 100%; box-sizing: border-box; font: inherit; font-size: 14px; text-transform: none; letter-spacing: normal; font-weight: 400; color: var(--a-text, inherit); resize: vertical; }
+.interview-check { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+.interview-check input { width: 18px; height: 18px; margin: 0; accent-color: var(--a-accent); }
+.interview-pitch { display: grid; gap: 8px; }
+.interview-pitch p { margin: 0; max-width: 70ch; }
+.interview-q { display: grid; gap: 8px; margin: 0; padding: 12px 14px; }
+.admin button.interview-q-btn { display: grid; gap: 6px; text-align: left; color: inherit; text-decoration: none; padding: 0; font: inherit; }
+.interview-q .study-a { display: grid; gap: 6px; }
+.interview-story-links { display: flex; flex-wrap: wrap; gap: 4px 12px; }
+
+@media (max-width: 700px) {
+  .interview-star { grid-template-columns: 1fr; gap: 2px; }
+  .interview-star dd { margin-bottom: 8px; }
+}

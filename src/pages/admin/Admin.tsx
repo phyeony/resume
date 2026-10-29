@@ -8,6 +8,7 @@ import type { Application, Lead, Library, Profile, ShareLink, Version } from '..
 import { ApplicationEditor } from './ApplicationEditor';
 import { ApplicationsPage } from './ApplicationsPage';
 import { ApplicationStats } from './ApplicationStats';
+import { InterviewPage } from './InterviewPage';
 import { LeadsPage } from './LeadsPage';
 import { OpeningsPage } from './OpeningsPage';
 import { currentStage, isClosed, waitingDays } from '../../applications/model';
@@ -161,6 +162,7 @@ function OwnerArea({ user }: { user: SessionUser }) {
             <NavLink to="/admin/library">Experience &amp; skills</NavLink>
             <NavLink to="/admin/profile">Profile</NavLink>
             <NavLink to="/admin/study">Study</NavLink>
+            <NavLink to="/admin/interview">Interview</NavLink>
           </nav>
         )}
         <span className="spacer" />
@@ -197,6 +199,7 @@ function OwnerArea({ user }: { user: SessionUser }) {
             <Route path="library" element={<LibraryPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="study" element={<StudyPage />} />
+            <Route path="interview" element={<InterviewPage />} />
             <Route path="*" element={<Navigate to="versions" replace />} />
           </Routes>
         </Ctx.Provider>
