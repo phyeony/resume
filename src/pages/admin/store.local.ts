@@ -8,6 +8,7 @@ import { currentStage } from '../../applications/model';
 import { withMailEvent, withoutMailEvent } from '../../applications/mail';
 import type { StudyProgress } from '../../study/patterns';
 import type { InterviewProgress } from '../../interview/prep';
+import type { CoursePlan } from '../../courses/catalog';
 import { LibraryConflict, RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
 export { newId, makeSlug, slugProblem, LibraryConflict, type ViewStats } from './storeShared';
@@ -32,6 +33,8 @@ export const loadStudy = async (): Promise<StudyProgress | null> => clone(readDb
 export const saveStudy = async (s: StudyProgress) => writeDb((db) => void (db.study = clone(s)));
 export const loadInterview = async (): Promise<InterviewProgress | null> => clone(readDb().interview ?? null);
 export const saveInterview = async (p: InterviewProgress) => writeDb((db) => void (db.interview = clone(p)));
+export const loadCoursePlan = async (): Promise<CoursePlan | null> => clone(readDb().courses ?? null);
+export const saveCoursePlan = async (p: CoursePlan) => writeDb((db) => void (db.courses = clone(p)));
 
 // ---- versions --------------------------------------------------------------
 

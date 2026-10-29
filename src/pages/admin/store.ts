@@ -5,6 +5,7 @@
 //   owner/transcript                    owner-only school transcript PDF, base64 in the doc
 //   owner/study                         owner-only coding interview practice progress
 //   owner/interview                     owner-only behavioural/system design notes and practice
+//   owner/courses                       owner-only SFU course plan
 //   versions/{id}                       owner-only tailored versions (frozen snapshots)
 //   links/{slug}                        owner-only company links, each pointing at a version
 //   public/main, public/{slug}          published copies visitors may `get`
@@ -37,6 +38,7 @@ import { currentStage } from '../../applications/model';
 import { withMailEvent, withoutMailEvent } from '../../applications/mail';
 import type { StudyProgress } from '../../study/patterns';
 import type { InterviewProgress } from '../../interview/prep';
+import type { CoursePlan } from '../../courses/catalog';
 import { db } from './auth';
 import { LibraryConflict, RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
@@ -97,6 +99,13 @@ export async function loadInterview(): Promise<InterviewProgress | null> {
 }
 
 export const saveInterview = (p: InterviewProgress) => setDoc(doc(db, 'owner', 'interview'), p);
+
+export async function loadCoursePlan(): Promise<CoursePlan | null> {
+  const snap = await getDoc(doc(db, 'owner', 'courses'));
+  return snap.exists() ? (snap.data() as CoursePlan) : null;
+}
+
+export const saveCoursePlan = (p: CoursePlan) => setDoc(doc(db, 'owner', 'courses'), p);
 
 // ---- versions --------------------------------------------------------------
 
