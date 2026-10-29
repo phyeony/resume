@@ -8,9 +8,9 @@ import { currentStage } from '../../applications/model';
 import { withMailEvent, withoutMailEvent } from '../../applications/mail';
 import type { StudyProgress } from '../../study/patterns';
 import type { InterviewProgress } from '../../interview/prep';
-import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
+import { LibraryConflict, RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
-export { newId, makeSlug, slugProblem, type ViewStats } from './storeShared';
+export { newId, makeSlug, slugProblem, LibraryConflict, type ViewStats } from './storeShared';
 
 export const loadProfile = async (): Promise<Profile | null> => clone(readDb().profile);
 export const saveProfile = async (p: Profile) => writeDb((db) => void (db.profile = clone(p)));
@@ -20,7 +20,14 @@ export const loadTranscript = async (): Promise<StoredPdf | null> => clone(readD
 export const saveTranscript = async (t: StoredPdf) => writeDb((db) => void (db.transcript = clone(t)));
 export const deleteTranscript = async () => writeDb((db) => void delete db.transcript);
 export const loadLibrary = async (): Promise<Library | null> => clone(readDb().library);
-export const saveLibrary = async (l: Library) => writeDb((db) => void (db.library = clone(l)));
+export async function saveLibrary(l: Library): Promise<Library> {
+  const cur = readDb().library;
+  const curRev = cur?.rev ?? 0;
+  if (cur && curRev !== (l.rev ?? 0)) throw new LibraryConflict();
+  const next = { ...clone(l), rev: curRev + 1 };
+  writeDb((db) => void (db.library = next));
+  return clone(next);
+}
 export const loadStudy = async (): Promise<StudyProgress | null> => clone(readDb().study ?? null);
 export const saveStudy = async (s: StudyProgress) => writeDb((db) => void (db.study = clone(s)));
 export const loadInterview = async (): Promise<InterviewProgress | null> => clone(readDb().interview ?? null);

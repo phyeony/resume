@@ -30,11 +30,12 @@ export function LibraryPage() {
     setSaving(true);
     setError('');
     try {
-      await saveLibrary(draft);
-      setLibrary(draft);
+      const saved = await saveLibrary(draft);
+      setLibrary(saved);
+      setDraft((d) => ({ ...d, rev: saved.rev }));
       setDirty(false);
     } catch (e) {
-      setError(String(e));
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setSaving(false);
     }

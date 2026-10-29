@@ -20,6 +20,16 @@ export function makeSlug(company: string): string {
   return `${base}-${suffix}`;
 }
 
+/** The library was saved elsewhere (usually another tab) after this page loaded it. */
+export class LibraryConflict extends Error {
+  constructor() {
+    super(
+      'Experience & skills was saved in another tab after you opened this page, so saving here would overwrite it. ' +
+        'Copy anything you still need, then reload the page to get the latest.',
+    );
+  }
+}
+
 /** Slugs that would collide with app routes. */
 export const RESERVED = new Set([MAIN_SLUG, 'admin', 'assets', 'index']);
 

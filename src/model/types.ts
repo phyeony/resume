@@ -78,6 +78,8 @@ export interface Library {
   skills: SkillCategory[];
   /** Ordered: the order here is the order on the resume within a section. */
   entries: Entry[];
+  /** Bumped on every save. A save from a page that loaded an older rev is refused (see saveLibrary). */
+  rev?: number;
 }
 
 export interface Layout {

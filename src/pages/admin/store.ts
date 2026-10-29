@@ -24,6 +24,7 @@ import {
   getDoc,
   getDocs,
   query,
+  runTransaction,
   setDoc,
   updateDoc,
   where,
@@ -37,9 +38,9 @@ import { withMailEvent, withoutMailEvent } from '../../applications/mail';
 import type { StudyProgress } from '../../study/patterns';
 import type { InterviewProgress } from '../../interview/prep';
 import { db } from './auth';
-import { RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
+import { LibraryConflict, RESERVED, linkPublicDoc, publicDoc, summarizeViews, type ViewStats } from './storeShared';
 
-export { newId, makeSlug, slugProblem, type ViewStats } from './storeShared';
+export { newId, makeSlug, slugProblem, LibraryConflict, type ViewStats } from './storeShared';
 
 // ---- master data -----------------------------------------------------------
 
@@ -70,7 +71,18 @@ export async function loadLibrary(): Promise<Library | null> {
   return snap.exists() ? (snap.data() as Library) : null;
 }
 
-export const saveLibrary = (l: Library) => setDoc(doc(db, 'owner', 'library'), l);
+/** Saves `l` only if the stored library is still at the rev it was loaded at; returns it with its new rev. */
+export async function saveLibrary(l: Library): Promise<Library> {
+  const ref = doc(db, 'owner', 'library');
+  return runTransaction(db, async (tx) => {
+    const cur = await tx.get(ref);
+    const curRev = cur.exists() ? ((cur.data() as Library).rev ?? 0) : 0;
+    if (cur.exists() && curRev !== (l.rev ?? 0)) throw new LibraryConflict();
+    const next = { ...l, rev: curRev + 1 };
+    tx.set(ref, next);
+    return next;
+  });
+}
 
 export async function loadStudy(): Promise<StudyProgress | null> {
   const snap = await getDoc(doc(db, 'owner', 'study'));
