@@ -260,8 +260,14 @@ export function VersionBuilder() {
 
       <section className="builder-preview">
         <div className="preview-bar">
-          <span className={pages === null ? 'muted' : pages > 1 ? 'warn-text' : 'ok-text'}>
-            {pages === null ? 'Measuring…' : pages > 1 ? `${pages} pages — trim to fit one` : '1 page ✓'}
+          <span className={pages === null ? 'muted' : pages === 'error' || pages > 1 ? 'warn-text' : 'ok-text'}>
+            {pages === null
+              ? 'Measuring…'
+              : pages === 'error'
+                ? "Couldn't build the PDF — check for odd characters in the text"
+                : pages > 1
+                  ? `${pages} pages — trim to fit one`
+                  : '1 page ✓'}
           </span>
           <span className="spacer" />
           <button onClick={() => void exportAs('pdf')}>Download PDF</button>
@@ -391,17 +397,25 @@ function pruneOverrides(overrides: Record<string, string>, sel: Selection): Reco
   return Object.fromEntries(Object.entries(overrides).filter(([id, text]) => on.has(id) && text.trim()));
 }
 
-/** Page count of the real PDF, re-measured shortly after edits stop. */
-function usePageCount(snapshot: ReturnType<typeof buildSnapshot>): number | null {
-  const [pages, setPages] = useState<number | null>(null);
+/**
+ * Page count of the real PDF, re-measured shortly after edits stop. 'error' when the PDF can't be built,
+ * so the badge says so instead of sitting on "Measuring…" forever.
+ */
+function usePageCount(snapshot: ReturnType<typeof buildSnapshot>): number | 'error' | null {
+  const [pages, setPages] = useState<number | 'error' | null>(null);
   const seq = useRef(0);
   useEffect(() => {
     const n = ++seq.current;
     setPages(null);
     const t = setTimeout(async () => {
-      const { buildPdf } = await import('../../render/pdf');
-      const text = await (await buildPdf(snapshot)).text();
-      if (n === seq.current) setPages((text.match(/\/Type\s*\/Page[^s]/g) ?? []).length);
+      try {
+        const { buildPdf } = await import('../../render/pdf');
+        const text = await (await buildPdf(snapshot)).text();
+        if (n === seq.current) setPages((text.match(/\/Type\s*\/Page[^s]/g) ?? []).length);
+      } catch (e) {
+        console.error('PDF measure failed', e);
+        if (n === seq.current) setPages('error');
+      }
     }, 700);
     return () => clearTimeout(t);
   }, [snapshot]);

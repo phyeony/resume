@@ -26,4 +26,12 @@ describe('ResumePdf', () => {
     const pages = buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g) ?? [];
     expect(pages).toHaveLength(1);
   }, 30000);
+
+  it('renders bullets that carry line breaks', async () => {
+    const { ResumePdf } = await import('./pdf');
+    const snap = buildSnapshot(seedProfile, seedLibrary, defaultSelection(seedLibrary), {}, defaultLayout(seedProfile));
+    snap.sections.find((s) => s.key === 'work')!.entries![0].bullets = ['Pasted with a break\n', 'Two\nlines'];
+    const buf = await renderToBuffer(<ResumePdf snapshot={snap} />);
+    expect(buf.subarray(0, 5).toString()).toBe('%PDF-');
+  }, 30000);
 });

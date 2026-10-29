@@ -98,9 +98,12 @@ function splitFallback(text: string): { text: string; fallback: boolean }[] {
 }
 
 function RichText({ text }: { text: string }) {
+  // A line break anywhere in a run crashes react-pdf's text layout (the PDF never finishes),
+  // and a pasted bullet can carry one; fold breaks into spaces.
+  const flat = text.replace(/\s*\n\s*/g, ' ').trim();
   return (
     <Text>
-      {parseRich(text).flatMap((r, i) =>
+      {parseRich(flat).flatMap((r, i) =>
         splitFallback(r.text).map((seg, j) => (
           <Text key={`${i}-${j}`} style={[r.bold ? s.bold : {}, seg.fallback ? s.fallback : {}]}>
             {seg.text}

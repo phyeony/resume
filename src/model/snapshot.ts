@@ -76,7 +76,7 @@ export function buildSnapshot(
         ...(e.org ? { org: e.org } : {}),
         ...(e.orgRight ? { orgRight: e.orgRight } : {}),
         dates: e.dates,
-        bullets: e.bullets.filter((b) => bulletOn.has(b.id)).map((b) => overrides[b.id] ?? b.text),
+        bullets: e.bullets.filter((b) => bulletOn.has(b.id)).map((b) => (overrides[b.id] ?? b.text).trim()),
       }));
     if (entries.length) sections.push({ key, title: SECTION_TITLES[key], entries });
   }
