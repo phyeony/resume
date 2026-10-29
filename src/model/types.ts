@@ -39,7 +39,7 @@ export type SectionKey = 'skills' | 'work' | 'projects' | 'education';
 export const SECTION_TITLES: Record<SectionKey, string> = {
   skills: 'Skills',
   work: 'Work Experience',
-  projects: 'Project',
+  projects: 'Projects',
   education: 'Education',
 };
 
