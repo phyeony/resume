@@ -172,7 +172,7 @@ export const SPRING_2027: Offering[] = [
       { section: 'D200', times: 'Mo 8:30–9:20, Th 8:30–10:20', campus: 'Surrey' },
     ],
   },
-  { code: 'CMPT 361', sections: [{ section: 'D100', instructor: 'Yasutaka Furukawa', times: 'We 15:30–16:20, Fr 14:30–16:20', campus: 'Burnaby' }] },
+  { code: 'CMPT 361', sections: [{ section: 'D100', instructor: 'Yasutaka Furukawa', times: 'We 16:30–17:20, Fr 14:30–16:20', campus: 'Burnaby' }] },
   { code: 'CMPT 363', sections: [{ section: 'D100', instructor: 'Parmit Chilana', times: 'Mo 12:30–13:20, Th 12:30–14:20', campus: 'Burnaby' }] },
   { code: 'CMPT 371', sections: [{ section: 'E100', times: 'Tu 17:30–18:20, Th 17:30–19:20', campus: 'Burnaby' }] },
   {
@@ -186,7 +186,6 @@ export const SPRING_2027: Offering[] = [
   { code: 'CMPT 405', sections: [{ section: 'D100', times: 'We 15:30–16:20, Fr 14:30–16:20', campus: 'Burnaby' }] },
   { code: 'CMPT 409', sections: [{ section: 'D100', instructor: 'Igor Shinkar', times: 'Tu 12:30–14:20, Fr 12:30–13:20', campus: 'Burnaby' }] },
   { code: 'CMPT 410', sections: [{ section: 'D100', instructor: 'Ke Li', times: 'Tu 12:30–14:20, Fr 12:30–13:20', campus: 'Burnaby' }] },
-  { code: 'CMPT 411', sections: [{ section: 'D100' }] },
   { code: 'CMPT 412', sections: [{ section: 'E100', instructor: 'Richard Zhang', times: 'Mo 17:30–20:20', campus: 'Burnaby' }] },
   { code: 'CMPT 417', sections: [{ section: 'D100', instructor: 'Hang Ma', times: 'Th 11:30–14:20', campus: 'Burnaby' }] },
   {
@@ -205,7 +204,7 @@ export const SPRING_2027: Offering[] = [
   { code: 'CMPT 471', sections: [{ section: 'D100', instructor: 'Mohamed Hefeeda', times: 'Tu 16:30–17:20, Th 15:30–17:20', campus: 'Burnaby' }] },
   { code: 'CMPT 478', sections: [{ section: 'D100', instructor: 'Matthew Amy', times: 'Mo 12:30–13:20, Th 12:30–14:20', campus: 'Burnaby', topic: 'Quantum Circuits and Compilation' }] },
   { code: 'CMPT 489', sections: [{ section: 'D100', instructor: 'Anders Miltner', times: 'Tu 14:30–16:20, Th 14:30–15:20', campus: 'Burnaby' }] },
-  { code: 'CMPT 494', sections: [{ section: 'D100', instructor: 'Ghassan Hamarneh' }, { section: 'D200' }, { section: 'D300' }] },
+  { code: 'CMPT 494', sections: [{ section: 'D100', instructor: 'Ghassan Hamarneh' }, { section: 'D200', instructor: 'Mohammad Tayebi' }, { section: 'D300', instructor: 'Ke Li' }] },
   { code: 'CMPT 495', sections: [{ section: 'D100' }, { section: 'D200' }, { section: 'D300' }] },
   { code: 'MACM 401', sections: [{ section: 'D100', instructor: 'Michael Monagan', times: 'Tu 14:30–16:20, Th 14:30–15:20' }] },
   { code: 'MACM 476', sections: [{ section: 'D100', instructor: 'Nadish de Silva', times: 'We 11:30–12:20, Fr 10:30–12:20', campus: 'Burnaby' }] },
@@ -216,6 +215,7 @@ export const SPRING_2027: Offering[] = [
   { code: 'IAT 355', sections: [{ section: 'E100', instructor: 'Christopher Shaw', times: 'Mo 16:30–17:50, We 16:30–17:50', campus: 'Surrey' }] },
   { code: 'IAT 359', sections: [{ section: 'D100', instructor: 'Helmine Serban', times: 'Tu 8:30–11:20', campus: 'Surrey' }] },
   { code: 'IAT 360', sections: [{ section: 'B100', instructor: 'Nilay Yalcin', times: 'Blended, mostly online', campus: 'Surrey' }] },
+  { code: 'IAT 438', sections: [{ section: 'E100', instructor: 'Paul Brokenshire', times: 'Mo 16:30–20:20', campus: 'Vancouver' }] },
   { code: 'IAT 459', sections: [{ section: 'D100', instructor: 'Helmine Serban', times: 'Fr 9:30–12:20', campus: 'Surrey' }] },
 ];
 

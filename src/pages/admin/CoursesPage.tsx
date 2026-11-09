@@ -328,7 +328,7 @@ function TermsTab({ ratings, planned, onAdd }: { ratings: Ratings; planned(term:
       </div>
       <p className="small muted">
         {t.published
-          ? "From SFU's published Spring 2027 outlines."
+          ? "From SFU's published Spring 2027 outlines, last checked Nov 9, 2026."
           : `Not published yet: courses that ran in ${t.key === 'summer' ? 'Summer' : 'Fall'} 2025 or 2026. "Likely" ran both years, "possible" one.`}
       </p>
 
