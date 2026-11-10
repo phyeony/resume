@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   ALTERNATES,
@@ -38,6 +38,7 @@ import {
 } from '../../courses/catalog';
 import { clip, lookup, ratingLine, ratingTone, rmpProfileUrl, rmpSearchUrl, type RmpSummary } from '../../courses/rmp';
 import { canFetchPages, fetchPage } from '../../applications/pageFetch';
+import { courseSeats, fetchSeats, seatLine, seatTone, type SeatMap, type Seats } from '../../courses/seats';
 import { loadCoursePlan, saveCoursePlan } from './store';
 import './courses.css';
 
@@ -61,6 +62,7 @@ export function CoursesPage() {
   const [plan, setPlan] = useState<Plan | null>(null);
   const [error, setError] = useState('');
   const ratings = useRatings();
+  const seats = useSeats();
 
   useEffect(() => {
     loadCoursePlan()
@@ -92,53 +94,56 @@ export function CoursesPage() {
   const units = plan ? planUnits(plan) : 0;
 
   return (
-    <div className="pad courses">
-      <div className="courses-head">
-        <h1>Course plan</h1>
-        <p className="muted">
-          Your last {UNITS_LEFT} units, for software internships. Spring 2027 is from SFU's published outlines; Summer and Fall 2027 aren't out yet, so
-          those are courses that ran in the same terms of 2025 and 2026.
-        </p>
-      </div>
-
-      <div className="card courses-summary">
-        <div className="courses-progress">
-          <span className="courses-bar" aria-hidden="true">
-            <span style={{ width: `${Math.min(100, (units / UNITS_LEFT) * 100)}%` }} className={units > UNITS_LEFT ? 'over' : ''} />
-          </span>
-          <span className={`small tabular ${units === UNITS_LEFT ? 'ok-text' : 'muted'}`}>
-            {units} of {UNITS_LEFT} units planned
-          </span>
+    <SeatsContext.Provider value={seats}>
+      <div className="pad courses">
+        <div className="courses-head">
+          <h1>Course plan</h1>
+          <p className="muted">
+            Your last {UNITS_LEFT} units, for software internships. Spring 2027 is from SFU's published outlines; Summer and Fall 2027 aren't out yet, so
+            those are courses that ran in the same terms of 2025 and 2026.
+          </p>
         </div>
-        <p className="small muted courses-legend">
-          <Value v={3} /> high value for software jobs · <Value v={2} /> some · <Value v={1} /> niche or research-leaning
-        </p>
-        {plan && <PlanWarnings plan={plan} />}
-        {error && <p className="error small">{error}</p>}
-      </div>
 
-      <div className="courses-tabs" role="tablist">
-        {TABS.map((t) => (
-          <button key={t.key} role="tab" aria-selected={tab === t.key} className={tab === t.key ? 'active' : ''} onClick={() => setParams({ tab: t.key })}>
-            {t.label}
-          </button>
-        ))}
-      </div>
+        <div className="card courses-summary">
+          <div className="courses-progress">
+            <span className="courses-bar" aria-hidden="true">
+              <span style={{ width: `${Math.min(100, (units / UNITS_LEFT) * 100)}%` }} className={units > UNITS_LEFT ? 'over' : ''} />
+            </span>
+            <span className={`small tabular ${units === UNITS_LEFT ? 'ok-text' : 'muted'}`}>
+              {units} of {UNITS_LEFT} units planned
+            </span>
+          </div>
+          <p className="small muted courses-legend">
+            <Value v={3} /> high value for software jobs · <Value v={2} /> some · <Value v={1} /> niche or research-leaning
+          </p>
+          <SeatsStatus />
+          {plan && <PlanWarnings plan={plan} />}
+          {error && <p className="error small">{error}</p>}
+        </div>
 
-      {!plan ? (
-        <p className="muted">Loading your plan…</p>
-      ) : (
-        <>
-          {tab === 'plan' && (
-            <PlanTab plan={plan} ratings={ratings} onRemove={remove} onAdd={add} onSection={setSection} onReset={() => update(RECOMMENDED)} onUse={update} />
-          )}
-          {tab === 'terms' && <TermsTab ratings={ratings} planned={planned} onAdd={add} />}
-          {tab === 'spring' && <SpringTab ratings={ratings} planned={(c) => planned('spring', c)} onAdd={(c) => add('spring', c)} />}
-          {tab === 'later' && <LaterTab ratings={ratings} planned={planned} onAdd={add} />}
-          {tab === 'history' && <HistoryTab />}
-        </>
-      )}
-    </div>
+        <div className="courses-tabs" role="tablist">
+          {TABS.map((t) => (
+            <button key={t.key} role="tab" aria-selected={tab === t.key} className={tab === t.key ? 'active' : ''} onClick={() => setParams({ tab: t.key })}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {!plan ? (
+          <p className="muted">Loading your plan…</p>
+        ) : (
+          <>
+            {tab === 'plan' && (
+              <PlanTab plan={plan} ratings={ratings} onRemove={remove} onAdd={add} onSection={setSection} onReset={() => update(RECOMMENDED)} onUse={update} />
+            )}
+            {tab === 'terms' && <TermsTab ratings={ratings} planned={planned} onAdd={add} />}
+            {tab === 'spring' && <SpringTab ratings={ratings} planned={(c) => planned('spring', c)} onAdd={(c) => add('spring', c)} />}
+            {tab === 'later' && <LaterTab ratings={ratings} planned={planned} onAdd={add} />}
+            {tab === 'history' && <HistoryTab />}
+          </>
+        )}
+      </div>
+    </SeatsContext.Provider>
   );
 }
 
@@ -291,6 +296,8 @@ function PlannedRow(props: { term: TermKey; item: PlanItem; ratings: Ratings; on
             </>
           )}
           {section.instructor ? <Prof name={section.instructor} ratings={ratings} compact /> : 'Instructor TBA'}
+          <SectionTopic code={c.code} topic={section.topic} />
+          <SeatBadge code={c.code} section={section.section} />
         </div>
       )}
     </li>
@@ -348,6 +355,7 @@ function TermsTab({ ratings, planned, onAdd }: { ratings: Ratings; planned(term:
                 </div>
                 <div className="small">{RECOMMENDATION_NOTES[code] ?? c.why}</div>
                 <div className="small muted">
+                  {term === 'spring' && <SeatBadge code={code} />}
                   {term === 'spring' ? (sections.map((s) => `${s.section} ${s.times ?? 'TBA'}`).join(' · ') || 'Times TBA') : 'Instructor not announced'}
                   {people.length > 0 && (
                     <>
@@ -356,6 +364,7 @@ function TermsTab({ ratings, planned, onAdd }: { ratings: Ratings; planned(term:
                         <span key={n}>
                           {j > 0 && ', '}
                           <Prof name={n} ratings={ratings} compact />
+                          <ProfTopic code={code} name={n} term={term} />
                         </span>
                       ))}
                     </>
@@ -403,8 +412,12 @@ function TermsTab({ ratings, planned, onAdd }: { ratings: Ratings; planned(term:
                 {likelihood(code) && <span className={`badge ${likelihood(code) === 'likely' ? '' : 'muted-badge'}`}>{likelihood(code)}</span>}
                 <UsualTag code={code} />
                 {[...new Set(people)].map((n) => (
-                  <Prof key={n} name={n} ratings={ratings} compact />
+                  <span key={n}>
+                    <Prof name={n} ratings={ratings} compact />
+                    <ProfTopic code={code} name={n} term={term} />
+                  </span>
                 ))}
+                {term === 'spring' && !blocked && <SeatBadge code={code} />}
                 {e.missing.length > 0 && <span className="danger-text">Needs {e.missing.join(' and ')}</span>}
                 {!blocked && (
                   <button className="link small" disabled={planned(term, code)} onClick={() => onAdd(term, code)}>
@@ -536,7 +549,8 @@ function CourseCard(props: { course: Course; sections?: Section[]; ratings?: Rat
                   {s.campus ? ` · ${s.campus}` : ''}
                 </span>
               </div>
-              {s.topic && <div className="small muted">Topic: {s.topic}</div>}
+              <SectionTopic code={c.code} topic={s.topic} block />
+              <SeatBadge code={c.code} section={s.section} block />
               <div className="small">{s.instructor ? <Prof name={s.instructor} ratings={ratings!} /> : <span className="muted">Instructor TBA</span>}</div>
             </li>
           ))}
@@ -637,7 +651,9 @@ function RatingsPlan({ plan, ratings, onUse, onAdd }: { plan: Plan; ratings: Rat
                             <span>
                               {o.expectedInstructor ? 'Likely ' : ''}
                               <Prof name={o.instructor} ratings={ratings} compact />
+                              <ProfTopic code={o.code} name={o.instructor} term={t.key} />
                               {o.section ? ` · ${o.section}` : ''}
+                              {t.key === 'spring' && o.section && <SeatBadge code={o.code} section={o.section} />}
                             </span>
                           ) : (
                             <span>No rated instructor</span>
@@ -693,17 +709,127 @@ function SwapPeople({ code, term, ratings }: { code: string; term: TermKey; rati
 function OtherProfs({ code, exclude, ratings }: { code: string; exclude: string[]; ratings: Ratings }) {
   const others = ranked(code, ratings).filter((t) => !exclude.includes(t.name));
   if (!others.length) return null;
+  const item = (t: Teacher, i: number) => (
+    <span key={t.name}>
+      {i > 0 && ', '}
+      <Prof name={t.name} ratings={ratings} compact />
+      <span className="muted"> ({t.offerings.map((o) => `${o.term.replace(/ 20(\d\d)$/, " '$1")}${o.topic ? `: ${o.topic}` : ''}`).join(', ')})</span>
+    </span>
+  );
+  // Special topics have long lists; the best-rated three show, the rest fold away.
+  const shown = others.slice(0, 3);
+  const rest = others.slice(3);
   return (
     <div className="courses-also">
       <span className="muted">Also taught by </span>
-      {others.map((t, i) => (
-        <span key={t.name}>
-          {i > 0 && ', '}
-          <Prof name={t.name} ratings={ratings} compact />
-          <span className="muted"> ({t.terms.map((x) => x.replace(/ 20(\d\d)$/, " '$1")).join(', ')})</span>
-        </span>
-      ))}
+      {shown.map(item)}
+      {rest.length > 0 && (
+        <details className="courses-also-more">
+          <summary className="muted">{rest.length} more</summary>
+          {rest.map(item)}
+        </details>
+      )}
     </div>
+  );
+}
+
+const isSpecialTopics = (code: string) => /^Special Topics/.test(COURSES[code]?.title ?? '');
+
+/** A special-topics section's topic, or that it isn't posted yet. */
+function SectionTopic({ code, topic, block }: { code: string; topic?: string; block?: boolean }) {
+  if (!topic && !isSpecialTopics(code)) return null;
+  const body = topic ? <>Topic: {topic}</> : <span className="muted">Topic not posted yet</span>;
+  return block ? <div className="small courses-topic">{body}</div> : <span className="courses-topic"> · {body}</span>;
+}
+
+/** What an instructor teaches in a special-topics course: their Spring 2027 topic, or the ones they taught before. */
+function ProfTopic({ code, name, term }: { code: string; name: string; term: TermKey }) {
+  if (!isSpecialTopics(code)) return null;
+  if (term === 'spring') {
+    const topic = springOffering(code)?.sections.find((s) => s.instructor === name)?.topic;
+    return <span className="courses-topic"> ({topic ?? 'topic not posted'})</span>;
+  }
+  const topics = teachersOf(code).find((t) => t.name === name)?.topics ?? [];
+  return topics.length ? <span className="courses-topic"> (before: {topics.join('; ')})</span> : null;
+}
+
+// ---- seats -------------------------------------------------------------------
+
+type SeatsState = { state: 'off' } | { state: 'loading' } | { state: 'ready'; seats: SeatMap; at: number } | { state: 'error'; error: string };
+const SeatsContext = createContext<SeatsState>({ state: 'off' });
+const SEATS_KEY = 'courses.seats';
+const SEATS_FRESH = 30 * 60 * 1000;
+
+/** Spring 2027 seats from CourSys, through the extension; kept for half an hour. */
+function useSeats(): SeatsState {
+  const [state, setState] = useState<SeatsState>(() => {
+    try {
+      const hit = JSON.parse(localStorage.getItem(SEATS_KEY) ?? 'null') as { seats: SeatMap; at: number } | null;
+      if (hit && Date.now() - hit.at < SEATS_FRESH) return { state: 'ready', ...hit };
+    } catch {
+      // No cache.
+    }
+    return { state: canFetchPages() ? 'loading' : 'off' };
+  });
+  useEffect(() => {
+    if (state.state !== 'loading') return;
+    let stopped = false;
+    fetchSeats((url) => fetchPage(url))
+      .then((seats) => {
+        const at = Date.now();
+        try {
+          localStorage.setItem(SEATS_KEY, JSON.stringify({ seats, at }));
+        } catch {
+          // Storage full or off; it just loads again next time.
+        }
+        if (!stopped) setState(Object.keys(seats).length ? { state: 'ready', seats, at } : { state: 'error', error: 'CourSys sent no Spring 2027 sections' });
+      })
+      .catch((e: unknown) => !stopped && setState({ state: 'error', error: e instanceof Error ? e.message : String(e) }));
+    return () => {
+      stopped = true;
+    };
+    // Once per visit.
+  }, []);
+  return state;
+}
+
+/** "42/60 seats" for a section, or the whole course when no section is given. */
+function SeatBadge({ code, section, block }: { code: string; section?: string; block?: boolean }) {
+  const st = useContext(SeatsContext);
+  if (st.state !== 'ready') return null;
+  const s: Seats | null = section ? (st.seats[`${code} ${section}`] ?? null) : courseSeats(st.seats, code);
+  if (!s) return null;
+  const badge = (
+    <span className={`courses-seats tone-${seatTone(s)}`} title={`${seatLine(s)} (CourSys)`}>
+      {s.taken}/{s.cap} seats{s.waitlist ? ` +${s.waitlist} wait` : ''}
+    </span>
+  );
+  return block ? <div className="small">{badge}</div> : <> {badge}</>;
+}
+
+/** Where the seat numbers came from, or why there aren't any. */
+function SeatsStatus() {
+  const st = useContext(SeatsContext);
+  if (st.state === 'off') return <p className="small muted">Seat counts load from CourSys through the Resume Studio Autofill extension.</p>;
+  if (st.state === 'loading') return <p className="small muted">Loading Spring 2027 seats from CourSys…</p>;
+  if (st.state === 'error') return <p className="small muted">Couldn't load seats from CourSys: {st.error}.</p>;
+  return (
+    <p className="small muted">
+      Spring 2027 seats from CourSys, as of {new Date(st.at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.{' '}
+      <button
+        className="link small"
+        onClick={() => {
+          try {
+            localStorage.removeItem(SEATS_KEY);
+          } catch {
+            // Nothing cached.
+          }
+          window.location.reload();
+        }}
+      >
+        Refresh
+      </button>
+    </p>
   );
 }
 
@@ -726,7 +852,6 @@ const ratingOf = (ratings: Ratings, name: string) => {
 
 /** Teachers best-rated first; unrated and not-yet-loaded ones after, in the order they taught it. */
 function ranked(code: string, ratings: Ratings): Teacher[] {
-  // 419's topic changes with the instructor, so its past instructors aren't collected.
   if (!(code in PAST_SECTIONS)) return [];
   return teachersOf(code)
     .map((t, i) => ({ t, i, r: ratingOf(ratings, t.name) }))
@@ -761,10 +886,10 @@ function PastTeachers({ code, ratings }: { code: string; ratings: Ratings }) {
                   <a href={coursysOfferingUrl(code, o.term, o.section)} target="_blank" rel="noopener" className="courses-term-link" title="CourSys">
                     {o.term}
                   </a>
+                  {o.topic && `: ${o.topic}`}
                 </span>
               ))}
             </span>
-            {t.topics.length > 0 && <div className="muted">Topics: {t.topics.join('; ')}</div>}
           </li>
         ))}
       </ul>

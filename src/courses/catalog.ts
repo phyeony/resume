@@ -191,7 +191,7 @@ export const SPRING_2027: Offering[] = [
   {
     code: 'CMPT 419',
     sections: [
-      { section: 'D100', instructor: 'Angelica Lim', times: 'Mo 14:30–16:20, We 14:30–15:20', campus: 'Burnaby' },
+      { section: 'D100', instructor: 'Angelica Lim', times: 'Mo 14:30–16:20, We 14:30–15:20', campus: 'Burnaby', topic: 'Affective Computing' },
       { section: 'D200', instructor: 'Nicholas Vincent', times: 'Mo 10:30–12:20, We 10:30–11:20', campus: 'Burnaby' },
       { section: 'E100', instructor: 'Marzena Karpinska', times: 'Mo 16:30–17:20, We 16:30–18:20', campus: 'Burnaby' },
     ],
@@ -203,7 +203,7 @@ export const SPRING_2027: Offering[] = [
   { code: 'CMPT 467', sections: [{ section: 'D100', times: 'We 11:30–12:20, Fr 10:30–12:20', campus: 'Burnaby' }] },
   { code: 'CMPT 471', sections: [{ section: 'D100', instructor: 'Mohamed Hefeeda', times: 'Tu 16:30–17:20, Th 15:30–17:20', campus: 'Burnaby' }] },
   { code: 'CMPT 478', sections: [{ section: 'D100', instructor: 'Matthew Amy', times: 'Mo 12:30–13:20, Th 12:30–14:20', campus: 'Burnaby', topic: 'Quantum Circuits and Compilation' }] },
-  { code: 'CMPT 489', sections: [{ section: 'D100', instructor: 'Anders Miltner', times: 'Tu 14:30–16:20, Th 14:30–15:20', campus: 'Burnaby' }] },
+  { code: 'CMPT 489', sections: [{ section: 'D100', instructor: 'Anders Miltner', times: 'Tu 14:30–16:20, Th 14:30–15:20', campus: 'Burnaby', topic: 'Semantics and Type Theory' }] },
   { code: 'CMPT 494', sections: [{ section: 'D100', instructor: 'Ghassan Hamarneh' }, { section: 'D200', instructor: 'Mohammad Tayebi' }, { section: 'D300', instructor: 'Ke Li' }] },
   { code: 'CMPT 495', sections: [{ section: 'D100' }, { section: 'D200' }, { section: 'D300' }] },
   { code: 'MACM 401', sections: [{ section: 'D100', instructor: 'Michael Monagan', times: 'Tu 14:30–16:20, Th 14:30–15:20' }] },
@@ -472,7 +472,7 @@ const P = (term: string, section: string, instructor?: string, campus = 'Burnaby
 
 /**
  * Who taught the courses in your plan and its swaps, 2024–2026, from SFU's outlines, so you can
- * pick the term with the instructor you want. 419 is left out: its topic changes with the instructor.
+ * pick the term with the instructor you want. Special topics (419, 479, 489) keep each section's topic.
  */
 export const PAST_SECTIONS: Record<string, PastSection[]> = {
   'CMPT 376W': [
@@ -510,6 +510,19 @@ export const PAST_SECTIONS: Record<string, PastSection[]> = {
   'CMPT 405': [P('Spring 2024', 'D100', 'Qianping Gu'), P('Fall 2024', 'D100', 'Qianping Gu'), P('Spring 2025', 'D100', 'Qianping Gu'), P('Fall 2025', 'D100')],
   'CMPT 362': [P('Fall 2024', 'D100', 'Xingdong Yang'), P('Fall 2025', 'D100', 'Xingdong Yang')],
   'CMPT 420': [P('Spring 2024', 'D100', 'Oliver Schulte'), P('Spring 2025', 'D100', 'Wuyang Chen'), P('Spring 2026', 'D100', 'Wuyang Chen')],
+  'CMPT 419': [
+    P('Spring 2024', 'D100', 'Angelica Lim', 'Burnaby', 'Affective Computing'), P('Spring 2024', 'E200', 'Nicholas Vincent', 'Burnaby', 'Human and Data-Centric AI'),
+    P('Spring 2025', 'D100', 'Angelica Lim', 'Burnaby', 'Affective Computing'), P('Spring 2025', 'D200', 'Nicholas Vincent', 'Burnaby', 'Human and Data-Centric AI'),
+    P('Spring 2025', 'D300', undefined, 'Burnaby', 'Transfer Learning and Causal Models'), P('Spring 2025', 'E300', 'Linyi Li', 'Burnaby', 'Trustworthy Deep Learning'),
+    P('Fall 2025', 'D100', 'Wuyang Chen', 'Burnaby', 'Fluid Simulation for Computer Graphics'), P('Fall 2025', 'D200', 'Nicholas Vincent', 'Burnaby', 'Collective Action and Public Interest AI'),
+    P('Fall 2025', 'D300', undefined, 'Burnaby', 'Fintech and AI in Finance'),
+    P('Spring 2026', 'D100', 'Mo Chen', 'Burnaby', 'Robotic Autonomy: Algorithms and Computation'), P('Spring 2026', 'D200', 'Martin Ester', 'Burnaby', 'Machine Learning'),
+    P('Spring 2026', 'D500', 'SiQi Zhou', 'Burnaby', 'Robot Learning and Decision-Making'), P('Spring 2026', 'E100', 'Marzena Karpinska', 'Burnaby', 'Advanced Methods in Natural Language Processing'),
+    P('Summer 2026', 'D100', 'Linyi Li', 'Burnaby', 'Trustworthy Deep Learning'),
+    P('Fall 2026', 'D100', 'SiQi Zhou', 'Burnaby', 'Robot Learning and Decision-Making'), P('Fall 2026', 'D200', 'Wuyang Chen', 'Burnaby', 'AI for PDEs: Simulation, Learning and Formal Verification'),
+    P('Fall 2026', 'D300', 'Oliver Schulte', 'Burnaby', 'Fintech and AI in Finance'), P('Fall 2026', 'D400', 'Frederick Popowich', 'Burnaby', 'Computational Humour'),
+    P('Fall 2026', 'D500', 'Ke Wang', 'Burnaby', 'Trustworthy Deep Learning'),
+  ],
   'CMPT 412': [P('Fall 2024', 'D100', 'Yagiz Aksoy'), P('Spring 2025', 'D100', 'Andrea Tagliasacchi'), P('Spring 2026', 'D100', 'Richard Zhang')],
   'CMPT 417': [P('Fall 2024', 'D100', 'Hang Ma'), P('Fall 2025', 'D100', 'Hang Ma')],
   'CMPT 467': [P('Spring 2026', 'D100', 'Sheelagh Carpendale')],
@@ -533,7 +546,7 @@ export interface Teacher {
   spring2027: boolean;
   topics: string[];
   /** Each section they taught, for CourSys links. */
-  offerings: { term: string; section: string }[];
+  offerings: { term: string; section: string; topic?: string }[];
 }
 
 function TERM_ORDER(t: string): number {
@@ -550,7 +563,7 @@ export function teachersOf(code: string): Teacher[] {
     const t = byName.get(s.instructor) ?? { name: s.instructor, terms: [], spring2027: false, topics: [], offerings: [] };
     if (!t.terms.includes(s.term)) {
       t.terms.push(s.term);
-      t.offerings.push({ term: s.term, section: s.section });
+      t.offerings.push({ term: s.term, section: s.section, topic: s.topic });
     }
     if (s.topic && !t.topics.includes(s.topic)) t.topics.push(s.topic);
     if (s.term === 'Spring 2027') t.spring2027 = true;

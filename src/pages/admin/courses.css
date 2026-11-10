@@ -134,3 +134,10 @@
   margin-top: 2px;
   line-height: 1.5;
 }
+
+.courses-topic { color: var(--a-muted); font-style: italic; }
+.courses-seats { display: inline-block; padding: 0 6px; border-radius: 999px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.courses-seats.tone-open { background: #e6f4ea; color: var(--a-ok); }
+.courses-seats.tone-almost { background: #fef7e0; color: var(--a-warn); }
+.courses-seats.tone-full { background: #fce8e6; color: var(--a-danger); }
+.courses-also-more summary { cursor: pointer; }
