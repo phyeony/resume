@@ -1,0 +1,2464 @@
+{
+"generatedAt": "2026-11-21T15:12:09+00:00",
+"capturedAt": "2026-11-21",
+"seoulUntil": "2026-12-25",
+"sources": [
+"Luma",
+"Meetup",
+"Eventbrite",
+"Dev-Event (github.com/brave-people/Dev-Event)"
+],
+"events": [
+{
+"title": "생산성부터 보안, AI 까지 다루는 12주 릴레이 웨비나!",
+"url": "https://www.rocketpunch.com/event?eventId=cZlwtO40G0",
+"tags": [
+"무료",
+"세미나",
+"AI",
+"클라우드"
+],
+"source": "Dev-Event",
+"host": "디모아 / Microsoft",
+"online": true,
+"start": "2026-09-10T14:00:00+09:00",
+"end": "2026-11-26T15:00:00+09:00",
+"region": "online",
+"audience": "kr",
+"id": "000"
+},
+{
+"title": "TripPups AI Game Hackathon 2026",
+"url": "https://hackon.kr/e/d0c8a7e5",
+"tags": [
+"무료",
+"대회",
+"AI"
+],
+"source": "Dev-Event",
+"host": "Trip-Pups",
+"online": true,
+"start": "2026-10-26T00:00:00+09:00",
+"end": "2026-12-12T23:59:00+09:00",
+"allDay": true,
+"region": "online",
+"audience": "kr",
+"id": "001"
+},
+{
+"title": "Notion AI Hackathon Seoul",
+"start": "2026-11-21T10:00:00+09:00",
+"end": "2026-11-21T19:00:00+09:00",
+"city": "Seoul (Seocho)",
+"region": "seoul",
+"url": "https://luma.com/vc6rmvaz",
+"host": "Team.HUMAN · Notion Korea",
+"source": "Luma",
+"tags": [
+"무료",
+"대회",
+"AI"
+],
+"id": "002"
+},
+{
+"title": "[2회차] 디노티시아 NIPA 오픈소스 해커톤",
+"start": "2026-11-21T13:00:00+09:00",
+"end": "2026-11-21T18:00:00+09:00",
+"city": "Seoul (Gangnam)",
+"region": "seoul",
+"url": "https://luma.com/z8hzosog",
+"host": "모두의연구소 · 디노티시아",
+"source": "Luma",
+"tags": [
+"무료",
+"대회",
+"AI"
+],
+"id": "003"
+},
+{
+"title": "2026 SSAFYnity 커리어파티",
+"url": "https://ssafynity.github.io/events/archive/2026-career-party/",
+"tags": [
+"유료",
+"모임",
+"기술일반"
+],
+"source": "Dev-Event",
+"host": "SSAFYnity (싸피니티)",
+"city": "Seoul (강남구)",
+"start": "2026-11-21T23:30:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "004"
+},
+{
+"title": "시민기술 실험실 민주주의편 실험공유회",
+"url": "https://event-us.kr/ka2rbGlwNKTD/event/140317",
+"tags": [
+"무료",
+"모임",
+"기술일반"
+],
+"source": "Dev-Event",
+"host": "빠띠",
+"city": "Seoul (성동구)",
+"start": "2026-11-21T23:30:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "005"
+},
+{
+"title": "PyTorch;DeepDive!",
+"url": "https://event-us.kr/pytorchkr/event/140260",
+"tags": [
+"무료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "파이토치 한국 사용자 모임(PyTorchKR) · 래블업",
+"city": "Seoul (강남구)",
+"start": "2026-11-21T23:30:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "006"
+},
+{
+"title": "Patch the System!!!",
+"start": "2026-11-21T08:00:00-07:00",
+"end": "2026-11-21T18:00:00-07:00",
+"city": "Burnaby (SFU, TASC 1)",
+"region": "van",
+"url": "https://luma.com/o2mu5wyl",
+"source": "Luma",
+"id": "007"
+},
+{
+"title": "Dataverse 2026: WiDS x USS Datathon",
+"start": "2026-11-21T09:00:00-07:00",
+"end": "2026-11-21T20:00:00-07:00",
+"city": "Vancouver (UBC, Henry Angus)",
+"region": "van",
+"url": "https://luma.com/wpidh2r6",
+"host": "WiDS x UBC Undergraduate Science Society",
+"source": "Luma",
+"id": "008"
+},
+{
+"title": "Surrey Tech Community Coffee Meetup",
+"start": "2026-11-21T09:00:00-07:00",
+"end": "2026-11-21T11:00:00-07:00",
+"city": "Surrey",
+"region": "van",
+"url": "https://luma.com/SurreyTechCoffee2026Nov21",
+"host": "Careerin Tech Society",
+"source": "Luma",
+"id": "009"
+},
+{
+"title": "Kimi Game Jam Vancouver",
+"start": "2026-11-21T09:00:00-07:00",
+"end": "2026-11-21T19:00:00-07:00",
+"city": "Burnaby",
+"region": "van",
+"url": "https://luma.com/flfqzib0",
+"source": "Luma",
+"id": "010"
+},
+{
+"title": "Richmond Tech Community Coffee Meetup",
+"start": "2026-11-21T10:00:00-07:00",
+"end": "2026-11-21T11:30:00-07:00",
+"city": "Richmond",
+"region": "van",
+"url": "https://luma.com/RichmondTechCoffee2026Nov21",
+"host": "Careerin Tech Society",
+"source": "Luma",
+"id": "011"
+},
+{
+"title": "DevDay Exchange Community: Vancouver",
+"start": "2026-11-21T10:00:00-07:00",
+"end": "2026-11-21T16:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/v9di294l",
+"host": "Codex Community",
+"source": "Luma",
+"id": "012"
+},
+{
+"title": "DevFest Surrey 2026",
+"start": "2026-11-21T10:00:00-07:00",
+"end": "2026-11-21T17:30:00-07:00",
+"city": "Burnaby (BCIT)",
+"region": "van",
+"url": "https://luma.com/4e5klvry",
+"host": "Google Developer Groups Surrey",
+"source": "Luma",
+"id": "013"
+},
+{
+"title": "Vancouver AI Hangout November Meetup",
+"start": "2026-11-21T10:00:00-07:00",
+"end": "2026-11-21T11:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/gthzhipj",
+"source": "Luma",
+"id": "014"
+},
+{
+"title": "Free Career Clarity Class for Professionals in Canada",
+"start": "2026-11-21T12:00:00-05:00",
+"end": "2026-11-21T14:00:00-05:00",
+"city": "Toronto",
+"region": "online",
+"online": true,
+"url": "https://www.eventbrite.ca/e/free-career-clarity-class-for-professionals-in-canada-tickets-1982039649948",
+"source": "Eventbrite",
+"id": "015"
+},
+{
+"title": "밴쿠버 AI Meetup — AI Agent Build With Me",
+"start": "2026-11-21T10:30:00-07:00",
+"end": "2026-11-21T12:30:00-07:00",
+"city": "Burnaby",
+"region": "van",
+"url": "https://luma.com/eetei199",
+"source": "Luma",
+"id": "016"
+},
+{
+"title": "TechWalk | Vancouver",
+"start": "2026-11-21T12:00:00-07:00",
+"end": "2026-11-21T13:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/techwalk-jt9k",
+"host": "TechWalk",
+"source": "Luma",
+"id": "017"
+},
+{
+"title": "Linux Talks: Own Your Cloud",
+"start": "2026-11-21T14:00:00-07:00",
+"end": "2026-11-21T16:00:00-07:00",
+"city": "Burnaby",
+"region": "van",
+"url": "https://luma.com/18g6zpnu",
+"host": "Vancouver Linux Users Group",
+"source": "Luma",
+"id": "018"
+},
+{
+"title": "Future Commerce Challenge",
+"start": "2026-11-22T13:00:00+09:00",
+"end": "2026-11-22T21:00:00+09:00",
+"city": "Seoul",
+"region": "seoul",
+"url": "https://luma.com/tle6unnl",
+"host": "INF",
+"source": "Luma",
+"id": "019"
+},
+{
+"title": "meet(Kotlin.DevRel): 퇴근길 Kotlin 소소밋업",
+"url": "https://ticketa.co/event/sjlia1ex",
+"tags": [
+"무료",
+"모임",
+"기술일반"
+],
+"source": "Dev-Event",
+"host": "Kotlin User Groups Seoul",
+"city": "Seoul (서초구)",
+"start": "2026-11-22T23:59:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "020"
+},
+{
+"title": "[GDGoC Konkuk] Open Session 11/24",
+"url": "https://ticketa.co/event/dtx8yph8",
+"tags": [
+"무료",
+"세미나",
+"기술일반"
+],
+"source": "Dev-Event",
+"host": "GDGoC Konkuk (건국대학교 GDG on Campus)",
+"city": "Seoul (광진구)",
+"start": "2026-11-22T23:59:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "021"
+},
+{
+"title": "Developer Meetup - Coding and Networking day",
+"start": "2026-11-22T10:30:00-07:00",
+"end": "2026-11-22T12:30:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/x4431nsp",
+"host": "Vancouver Developers",
+"source": "Luma",
+"id": "022"
+},
+{
+"title": "한국오픈소스보안커뮤니티 출범 세미나 2026",
+"start": "2026-11-23T14:00:00+09:00",
+"end": "2026-11-23T16:00:00+09:00",
+"city": "Seoul (Gangnam, MARU 180)",
+"region": "seoul",
+"url": "https://www.meetup.com/seoul-openssf-meetup-group/events/316823970/",
+"host": "Seoul OpenSSF Meetup Group",
+"source": "Meetup",
+"id": "023"
+},
+{
+"title": "[GenAI Lab 핸즈온] 안전하고 경제적인 AI 운영 — LLM Gateway 직접 설치해보기",
+"url": "https://home.nxavis.com/promotion/field/genailab26",
+"tags": [
+"무료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "AWS · NDS",
+"city": "Seoul (강남구)",
+"start": "2026-11-23T14:00:00+09:00",
+"end": "2026-11-23T17:00:00+09:00",
+"region": "seoul",
+"id": "024"
+},
+{
+"title": "OpenAI Student Collective Workshop: Build Your Own Custom Website and Skill Set",
+"start": "2026-11-23T17:00:00+09:00",
+"end": "2026-11-23T18:00:00+09:00",
+"city": "Seoul (Hanyang University)",
+"region": "seoul",
+"url": "https://luma.com/zxr2lxpz",
+"host": "OpenAI Student Collective at Hanyang",
+"source": "Luma",
+"id": "025"
+},
+{
+"title": "FOSS for All Conference 2026",
+"url": "https://2026.fossforall.org/",
+"tags": [
+"유료",
+"세미나",
+"기술일반"
+],
+"source": "Dev-Event",
+"host": "FOSS for All",
+"city": "Seoul (강남구)",
+"start": "2026-11-23T23:59:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "026"
+},
+{
+"title": "3rd vLLM Korea Meetup",
+"url": "https://event-us.kr/vllmkr/event/137780",
+"tags": [
+"무료",
+"모임",
+"AI"
+],
+"source": "Dev-Event",
+"host": "vLLM Korea · 리벨리온 · 스퀴즈비츠",
+"city": "Seoul (서초구)",
+"start": "2026-11-23T23:59:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "027"
+},
+{
+"title": "2026 AI 정보보호 세미나 | AI 시대, 사이버 위협과 보안 이야기",
+"url": "https://event-us.kr/day1ax/event/139802",
+"tags": [
+"무료",
+"세미나",
+"기술일반"
+],
+"source": "Dev-Event",
+"host": "온앤安",
+"city": "Gyeonggi (수원)",
+"online": true,
+"start": "2026-11-23T23:59:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "028"
+},
+{
+"title": "Get Hired Faster Workshop",
+"start": "2026-11-23T12:30:00-05:00",
+"end": "2026-11-23T13:30:00-05:00",
+"city": "Toronto",
+"region": "online",
+"online": true,
+"url": "https://www.eventbrite.ca/e/nov-23rd-get-hired-faster-workshop-tickets-2004907302713",
+"source": "Eventbrite",
+"id": "029"
+},
+{
+"title": "Vancouver Job Fair - Vancouver Career Fair",
+"start": "2026-11-23T11:00:00-07:00",
+"end": "2026-11-23T15:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://www.eventbrite.ca/e/vancouver-job-fair-vancouver-career-fair-registration-tickets-2003834048581",
+"source": "Eventbrite",
+"id": "030"
+},
+{
+"title": "Gregor Riegler - Who Needs Craft Now?",
+"start": "2026-11-23T12:00:00-06:00",
+"end": "2026-11-23T14:00:00-06:00",
+"city": "Calgary",
+"region": "online",
+"online": true,
+"url": "https://www.meetup.com/calgary-software-crafters/events/317489547/",
+"host": "Calgary Software Crafters",
+"source": "Meetup",
+"id": "031"
+},
+{
+"title": "OpenAI Student Collective at UBC - Studio Session 08",
+"start": "2026-11-23T13:00:00-07:00",
+"end": "2026-11-23T14:00:00-07:00",
+"city": "Vancouver (UBC)",
+"region": "van",
+"url": "https://luma.com/9gahqw6f",
+"host": "OpenAI Student Collective at UBC",
+"source": "Luma",
+"id": "032"
+},
+{
+"title": "Build Your Own AI Meal Planner | Google ADK & Antigravity CLI Workshop",
+"start": "2026-11-23T15:30:00-07:00",
+"end": "2026-11-23T16:30:00-07:00",
+"city": "Burnaby",
+"region": "van",
+"url": "https://luma.com/lhiccdx8",
+"source": "Luma",
+"id": "033"
+},
+{
+"title": "AI Skills Workshop: Agentic AI and the Future of Work",
+"start": "2026-11-23T17:30:00-07:00",
+"end": "2026-11-23T20:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://www.eventbrite.ca/e/ai-skills-workshop-agentic-ai-and-the-future-of-work-tickets-2003783362979",
+"source": "Eventbrite",
+"id": "034"
+},
+{
+"title": "AI in class, AI at work (Dev Korea #20)",
+"start": "2026-11-24T18:30:00+09:00",
+"end": "2026-11-24T22:00:00+09:00",
+"city": "Seoul (Yongsan)",
+"region": "seoul",
+"url": "https://luma.com/uriitxce",
+"host": "Dev Korea",
+"source": "Luma",
+"tags": [
+"무료",
+"모임",
+"AI"
+],
+"id": "035"
+},
+{
+"title": "AI Tinkerers Seoul: November Demo Night",
+"start": "2026-11-24T18:30:00+09:00",
+"end": "2026-11-24T21:00:00+09:00",
+"city": "Seoul (Gangnam, AWS)",
+"region": "seoul",
+"url": "https://luma.com/58sui27h",
+"host": "AI Tinkerers Seoul",
+"source": "Luma",
+"id": "036"
+},
+{
+"title": "AWSKRUG #Security 소모임",
+"start": "2026-11-24T19:00:00+09:00",
+"end": "2026-11-24T21:00:00+09:00",
+"city": "Seoul (Gangnam, Centerfield)",
+"region": "seoul",
+"url": "https://www.meetup.com/awskrug/events/317392910/",
+"host": "AWSKRUG",
+"source": "Meetup",
+"tags": [
+"유료",
+"모임",
+"클라우드"
+],
+"id": "037"
+},
+{
+"title": "AWSKRUG #container: K8s Service Account 기반 SSO 인증 및 GPU 컨테이너 활용 사례",
+"start": "2026-11-24T19:00:00+09:00",
+"end": "2026-11-24T21:00:00+09:00",
+"city": "Seoul (Gangnam, Centerfield)",
+"region": "seoul",
+"url": "https://www.meetup.com/awskrug/events/317143207/",
+"host": "AWSKRUG",
+"source": "Meetup",
+"tags": [
+"유료",
+"모임",
+"클라우드"
+],
+"id": "038"
+},
+{
+"title": "스크래퍼 개발자 모임 (6회)",
+"start": "2026-11-24T19:00:00+09:00",
+"end": "2026-11-24T20:00:00+09:00",
+"city": "Seoul (Gangnam)",
+"region": "seoul",
+"url": "https://luma.com/8kh29b54",
+"host": "Scraper Developer Meetup",
+"source": "Luma",
+"tags": [
+"유료",
+"모임",
+"기술일반"
+],
+"id": "039"
+},
+{
+"title": "AI 시안으로 개발자와 협업하기",
+"url": "https://event-us.kr/proofer/event/140027",
+"tags": [
+"무료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "프루퍼(proofer)",
+"online": true,
+"start": "2026-11-24T19:00:00+09:00",
+"deadline": true,
+"region": "online",
+"audience": "kr",
+"id": "040"
+},
+{
+"title": "ASBG EC2 (External Campus Connect) Night",
+"start": "2026-11-24T19:30:00+09:00",
+"end": "2026-11-24T22:00:00+09:00",
+"city": "Seoul (University of Seoul)",
+"region": "seoul",
+"url": "https://www.meetup.com/aws-sbg-at-university-of-seoul/events/317234803/",
+"host": "AWS Student Builder Group at University of Seoul",
+"source": "Meetup",
+"id": "041"
+},
+{
+"title": "잡코리아 프로덕트 컨퍼런스 | 흩어진 경계, 흔들리는 기준",
+"url": "https://www.jobkorea.co.kr/goodjob/Tip/View?News_No=22687",
+"tags": [
+"무료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "잡코리아(웍스피어)",
+"online": true,
+"start": "2026-11-25T00:00:00+09:00",
+"deadline": true,
+"allDay": true,
+"region": "online",
+"audience": "kr",
+"id": "042"
+},
+{
+"title": "Weekly Dev Chat",
+"start": "2026-11-24T12:00:00-06:00",
+"end": "2026-11-24T13:00:00-06:00",
+"city": "Edmonton",
+"region": "online",
+"online": true,
+"url": "https://www.meetup.com/edmontonunlimited/events/317288214/",
+"host": "Edmonton Unlimited",
+"source": "Meetup",
+"id": "043"
+},
+{
+"title": "VanJS November Talks",
+"start": "2026-11-24T17:00:00-07:00",
+"end": "2026-11-24T20:00:00-07:00",
+"city": "Vancouver (Northeastern University)",
+"region": "van",
+"url": "https://luma.com/ztxxsa5o",
+"host": "VanJS",
+"source": "Luma",
+"id": "044"
+},
+{
+"title": "Falltime Social Vol.3",
+"start": "2026-11-24T17:30:00-07:00",
+"end": "2026-11-24T19:30:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/ziy04tjn",
+"host": "Vancouver Design Community",
+"source": "Luma",
+"id": "045"
+},
+{
+"title": "Workshop: GitHub Copilot SDK",
+"start": "2026-11-24T18:00:00-07:00",
+"end": "2026-11-24T19:30:00-07:00",
+"city": "Vancouver (BCIT Downtown)",
+"region": "van",
+"url": "https://www.meetup.com/net-user-group-of-bc/events/317386278/",
+"host": ".NET User Group of BC",
+"source": "Meetup",
+"id": "046"
+},
+{
+"title": "Together Vancouver",
+"start": "2026-11-24T18:00:00-07:00",
+"end": "2026-11-24T21:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/together-vancouver-nov-24-2026",
+"host": "TechTO",
+"source": "Luma",
+"id": "047"
+},
+{
+"title": "VAM! AI Reading Group: Sparks of Weight-Space Programming",
+"start": "2026-11-24T18:00:00-07:00",
+"end": "2026-11-24T20:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/hjl856k9",
+"host": "Vancouver AI Meetup (VAM!)",
+"source": "Luma",
+"id": "048"
+},
+{
+"title": "Vancouver Systems #6",
+"start": "2026-11-24T19:00:00-07:00",
+"end": "2026-11-24T22:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/8c0j6lfa",
+"host": "Vancouver Systems",
+"source": "Luma",
+"id": "049"
+},
+{
+"title": "Coding Club: LeetCode practice",
+"start": "2026-11-24T18:00:00-08:00",
+"end": "2026-11-24T19:00:00-08:00",
+"region": "online",
+"online": true,
+"url": "https://www.meetup.com/westside-coding-club/events/317294097/",
+"host": "Westside Coding Club",
+"source": "Meetup",
+"id": "050"
+},
+{
+"title": "AWS Tech Talk with Anahat Nagra (Amazon SDE)",
+"start": "2026-11-24T19:00:00-07:00",
+"end": "2026-11-24T20:00:00-07:00",
+"city": "Victoria",
+"region": "online",
+"online": true,
+"url": "https://www.meetup.com/aws-sbg-at-university-of-victoria/events/317378228/",
+"host": "AWS Student Builder Group at UVic",
+"source": "Meetup",
+"id": "051"
+},
+{
+"title": "ClickHouse x OliveYoung x NxtCloud 서울 밋업",
+"start": "2026-11-25T18:30:00+09:00",
+"end": "2026-11-25T21:30:00+09:00",
+"city": "Seoul (Gangnam, DreamPlus)",
+"region": "seoul",
+"url": "https://luma.com/clickh-gb3i",
+"host": "ClickHouse",
+"source": "Luma",
+"tags": [
+"무료",
+"모임",
+"기술일반",
+"AI"
+],
+"id": "052"
+},
+{
+"title": "Cracking The Coding Interview Study (English)",
+"start": "2026-11-25T19:00:00+09:00",
+"end": "2026-11-25T21:00:00+09:00",
+"city": "Seoul",
+"region": "seoul",
+"url": "https://www.meetup.com/seoul-coding-test-interview-prep-meetup/events/317496404/",
+"host": "Seoul Coding Test/Interview Prep Meetup",
+"source": "Meetup",
+"id": "053"
+},
+{
+"title": ".NET Conf 2026 @Seoul",
+"url": "https://ticketa.co/event/zry4rrhh",
+"tags": [
+"무료",
+"세미나",
+"기술일반"
+],
+"source": "Dev-Event",
+"host": "Dot4",
+"city": "Seoul (종로구)",
+"start": "2026-11-25T23:00:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "054"
+},
+{
+"title": "제5회 코드포코리아 시빅테크 컨퍼런스 '다시' 시빅해킹",
+"url": "https://ticketa.co/event/73aey7ic",
+"tags": [
+"무료",
+"세미나",
+"기술일반"
+],
+"source": "Dev-Event",
+"host": "코드포코리아 · 하자센터 · 빠띠 · 전국미디어센터협의회",
+"city": "Seoul (영등포구)",
+"start": "2026-11-25T23:30:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "055"
+},
+{
+"title": "2027 ChatGPT 도입 전략 세미나",
+"url": "https://event.imaginationgroup.co.kr/seminar/12/",
+"tags": [
+"무료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "한국AI기술협회 · 상상력집단",
+"city": "Seoul (서초구)",
+"start": "2026-11-25T23:59:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "056"
+},
+{
+"title": "Coffee with Vancouver Tech Leaders",
+"start": "2026-11-25T09:00:00-07:00",
+"end": "2026-11-25T10:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/north-5na1",
+"host": "North House",
+"source": "Luma",
+"id": "057"
+},
+{
+"title": "Converge 2026 by NorthX",
+"start": "2026-11-25T09:00:00-07:00",
+"end": "2026-11-25T18:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/19g3xz8m",
+"host": "NorthX Climate Tech",
+"source": "Luma",
+"id": "058"
+},
+{
+"title": "Fireside Chat with Co-Founders of Critical Path Games",
+"start": "2026-11-25T13:00:00-07:00",
+"end": "2026-11-25T14:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/north-tdvv",
+"host": "North House",
+"source": "Luma",
+"id": "059"
+},
+{
+"title": "Cloud Native Vancouver: November",
+"start": "2026-11-25T17:00:00-07:00",
+"end": "2026-11-25T20:10:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/5e55u1u9",
+"host": "Cloud Native Vancouver",
+"source": "Luma",
+"id": "060"
+},
+{
+"title": "Tech Leaders Holiday Mixer | Vancouver",
+"start": "2026-11-25T17:00:00-07:00",
+"end": "2026-11-25T20:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/mnyeu53s",
+"source": "Luma",
+"id": "061"
+},
+{
+"title": "Vancouver Java User Group Meeting",
+"start": "2026-11-25T17:00:00-07:00",
+"end": "2026-11-25T19:30:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/35ldedy0",
+"host": "Vancouver Java User Group",
+"source": "Luma",
+"id": "062"
+},
+{
+"title": "Netca Series #6 - /Hardware Prompting",
+"start": "2026-11-25T17:30:00-07:00",
+"end": "2026-11-25T20:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/20n3h4t7",
+"host": "Netca Series",
+"source": "Luma",
+"id": "063"
+},
+{
+"title": "Machine Learning Reading Group: Tulu 3",
+"start": "2026-11-25T18:00:00-07:00",
+"end": "2026-11-25T20:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/k79p39w7",
+"host": "Learn Data Science",
+"source": "Luma",
+"id": "064"
+},
+{
+"title": "Vancouver AI Meetup: Where Humans Go, Where AI Goes",
+"start": "2026-11-25T18:00:00-07:00",
+"end": "2026-11-25T22:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/nov-vanai",
+"host": "BC + AI",
+"source": "Luma",
+"id": "065"
+},
+{
+"title": "Land Your Next Job: A Hands-On Vancouver Job Search Workshop",
+"start": "2026-11-25T18:30:00-07:00",
+"end": "2026-11-25T20:30:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://www.eventbrite.ca/e/land-your-next-job-a-hands-on-vancouver-job-search-workshop-tickets-2004264252332",
+"source": "Eventbrite",
+"id": "066"
+},
+{
+"title": "[Venture Park] Beyond AI, 기술이 현실을 바꾸는 순간",
+"start": "2026-11-26T17:00:00+09:00",
+"end": "2026-11-26T20:00:00+09:00",
+"city": "Seoul (Mapo)",
+"region": "seoul",
+"url": "https://luma.com/sxstvvoh",
+"host": "SVC Seoul Venture Park",
+"source": "Luma",
+"id": "067"
+},
+{
+"title": "GUG workshop - Ontology as Guardrail with Neptune",
+"start": "2026-11-26T18:30:00+09:00",
+"end": "2026-11-26T22:00:00+09:00",
+"city": "Seoul",
+"region": "seoul",
+"url": "https://luma.com/g3vp4fo6",
+"host": "Graph User Group",
+"source": "Luma",
+"id": "068"
+},
+{
+"title": "AWSKRUG #Data x AIEngineering: 비전 파운데이션 모델 ZERO 개발 과정 공유",
+"start": "2026-11-26T19:00:00+09:00",
+"end": "2026-11-26T21:00:00+09:00",
+"city": "Seoul (Gangnam, Centerfield)",
+"region": "seoul",
+"url": "https://www.meetup.com/awskrug/events/317406828/",
+"host": "AWSKRUG",
+"source": "Meetup",
+"tags": [
+"유료",
+"모임",
+"AI"
+],
+"id": "069"
+},
+{
+"title": "AWSKRUG Connect: 유럽 소버린 AI 및 AI 에이전트 기반 K8s 플랫폼 엔지니어링",
+"start": "2026-11-26T19:00:00+09:00",
+"end": "2026-11-26T21:10:00+09:00",
+"city": "Seoul (Gangnam)",
+"region": "seoul",
+"url": "https://www.meetup.com/awskrug/events/317199460/",
+"host": "AWSKRUG",
+"source": "Meetup",
+"tags": [
+"유료",
+"모임",
+"클라우드"
+],
+"id": "070"
+},
+{
+"title": "AWS Student Builder Group Konkuk — Project Demo Day",
+"start": "2026-11-26T19:00:00+09:00",
+"end": "2026-11-26T21:00:00+09:00",
+"city": "Seoul (Konkuk University)",
+"region": "seoul",
+"url": "https://www.meetup.com/aws-sbg-at-konkuk-university-seoul-campus/events/317393510/",
+"host": "AWS Student Builder Group at Konkuk",
+"source": "Meetup",
+"id": "071"
+},
+{
+"title": "AI프렌즈 AI4Science 심포지엄",
+"start": "2026-11-26T19:00:00+09:00",
+"end": "2026-11-26T21:30:00+09:00",
+"city": "Seoul",
+"region": "seoul",
+"url": "https://luma.com/tv1m4rqy",
+"host": "AI프렌즈",
+"source": "Luma",
+"id": "072"
+},
+{
+"title": "오픈인프라 한국 사용자 모임 11월 세미나",
+"start": "2026-11-26T19:30:00+09:00",
+"end": "2026-11-26T21:30:00+09:00",
+"city": "Seoul (Seocho, OpenUp)",
+"region": "seoul",
+"url": "https://www.meetup.com/openstack-and-open-infrastructure-korea/events/317425669/",
+"host": "OpenStack Korea",
+"source": "Meetup",
+"id": "073"
+},
+{
+"title": "AWSKRUG 인천 지역 #incheon 소모임 - 11월 26일 (목)",
+"url": "https://www.meetup.com/awskrug/events/317378266/",
+"tags": [
+"무료",
+"모임",
+"클라우드"
+],
+"source": "Dev-Event",
+"host": "AWSKRUG",
+"city": "Incheon",
+"start": "2026-11-26T19:30:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "074"
+},
+{
+"title": "서울인디즈 11월 모임 / Seoul Indies November",
+"start": "2026-11-26T20:00:00+09:00",
+"end": "2026-11-26T23:00:00+09:00",
+"city": "Seoul",
+"region": "seoul",
+"url": "https://www.meetup.com/seoul-indies/events/317465011/",
+"host": "Seoul Indies",
+"source": "Meetup",
+"id": "075"
+},
+{
+"title": "Social Pair Coding",
+"start": "2026-11-26T12:00:00-07:00",
+"end": "2026-11-26T14:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://www.meetup.com/code-together-vancouver/events/317318091/",
+"host": "Code Together Vancouver",
+"source": "Meetup",
+"id": "076"
+},
+{
+"title": "A Holiday Evening on AI: What Worked in 2026, and What's Next",
+"start": "2026-11-26T16:00:00-07:00",
+"end": "2026-11-26T19:30:00-07:00",
+"city": "Burnaby",
+"region": "van",
+"url": "https://luma.com/2j7r2iyv",
+"host": "Celestial's AI Open House",
+"source": "Luma",
+"id": "077"
+},
+{
+"title": "Humans in the Loop - UX + Gen AI Conversations",
+"start": "2026-11-26T17:00:00-06:00",
+"end": "2026-11-26T18:00:00-06:00",
+"city": "Calgary",
+"region": "online",
+"online": true,
+"url": "https://www.meetup.com/calgaryux/events/317314240/",
+"host": "Calgary UX",
+"source": "Meetup",
+"id": "078"
+},
+{
+"title": "Enterprise Infrastructure CoP Session 1: Modern Infrastructure & Identity",
+"start": "2026-11-26T16:30:00-07:00",
+"end": "2026-11-26T20:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/z359cnb4",
+"host": "VanTUG | Vancouver Technology User Group",
+"source": "Luma",
+"id": "079"
+},
+{
+"title": "Vancouver Low Key Data Happy Hour",
+"start": "2026-11-26T17:30:00-07:00",
+"end": "2026-11-26T20:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/o5n1mvc3",
+"source": "Luma",
+"id": "080"
+},
+{
+"title": "Build Your First AI Agent: A Hands-on Workshop with Strands",
+"start": "2026-11-26T17:30:00-07:00",
+"end": "2026-11-26T19:30:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/kyhi1njt",
+"host": "ZILIUDI",
+"source": "Luma",
+"id": "081"
+},
+{
+"title": "Hack The Halls - 4th Annual",
+"start": "2026-11-26T18:00:00-07:00",
+"end": "2026-11-26T23:45:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/2026HackTheHalls",
+"host": "ISACA Vancouver",
+"source": "Luma",
+"id": "082"
+},
+{
+"title": "Claude.ai Meetup — Vancouver",
+"start": "2026-11-26T18:00:00-07:00",
+"end": "2026-11-26T19:30:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/w0hwdpi1",
+"source": "Luma",
+"id": "083"
+},
+{
+"title": "Althra x YG Build Club Pitch Night",
+"start": "2026-11-26T19:00:00-07:00",
+"end": "2026-11-26T21:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/p347lj5r",
+"host": "Althra",
+"source": "Luma",
+"id": "084"
+},
+{
+"title": "2026 FDE Field Forum: FDE가 전달하는 현장의 이야기",
+"url": "https://fastcampus.co.kr/data_thecamp_fdeforum",
+"tags": [
+"유료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "패스트캠퍼스",
+"city": "Seoul (영등포구)",
+"start": "2026-11-27T17:00:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "085"
+},
+{
+"title": "GitHub Copilot 활용한 레거시 애플리케이션 현대화 핸즈온 워크샵",
+"url": "https://ticketa.co/event/3wv8qz2b",
+"tags": [
+"무료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "COMMIT/CO (커밋코 커뮤니티)",
+"city": "Seoul (종로구)",
+"start": "2026-11-27T18:00:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "086"
+},
+{
+"title": "2026 Devfest: AFK - Away From Keyboard",
+"url": "https://event-us.kr/gdgcampuskorea/event/138371",
+"tags": [
+"유료",
+"대회",
+"AI"
+],
+"source": "Dev-Event",
+"host": "GDG Campus Korea",
+"city": "Seoul (마포구)",
+"start": "2026-11-27T18:00:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "087"
+},
+{
+"title": "비주얼 코딩 | AI로 만드는 시대, 설계는 누가 하는가?",
+"url": "https://event-us.kr/pulse9/event/140379",
+"tags": [
+"유료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "AI 에이전트 길드",
+"city": "Seoul (강남구)",
+"start": "2026-11-27T18:00:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "088"
+},
+{
+"title": "The AI Collective 서울 챕터 11월 모임 (LottieFiles: Code Meets Animation)",
+"start": "2026-11-27T18:30:00+09:00",
+"end": "2026-11-27T21:00:00+09:00",
+"city": "Seoul",
+"region": "seoul",
+"url": "https://luma.com/uuxozc7r",
+"host": "The AI Collective Seoul",
+"source": "Luma",
+"id": "089"
+},
+{
+"title": "(강북3기/AI핵심) 풀스택 AI 실무 프로젝트 과정",
+"url": "https://sesac.seoul.kr/sesac/course/offline/courseDetail.do?crsSn=1479",
+"tags": [
+"무료",
+"교육",
+"AI"
+],
+"source": "Dev-Event",
+"host": "서울경제진흥원(SBA) · 청년취업사관학교 새싹(SeSAC) 강북캠퍼스",
+"city": "Seoul (강북구)",
+"start": "2026-11-28T00:00:00+09:00",
+"deadline": true,
+"allDay": true,
+"region": "seoul",
+"id": "090"
+},
+{
+"title": "AI DevFest Vancouver 2026",
+"start": "2026-11-27T09:00:00-07:00",
+"end": "2026-11-27T14:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/lee79l0e",
+"host": "Google Developer Community Vancouver",
+"source": "Luma",
+"id": "091"
+},
+{
+"title": "Lunch, Learn & Launch: From AI Prototype to Real Product",
+"start": "2026-11-27T12:00:00-07:00",
+"end": "2026-11-27T13:30:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/5sfoewku",
+"source": "Luma",
+"id": "092"
+},
+{
+"title": "Youth Employment Summit - Burnaby",
+"start": "2026-11-27T13:00:00-07:00",
+"end": "2026-11-27T17:00:00-07:00",
+"city": "Burnaby",
+"region": "van",
+"url": "https://www.eventbrite.ca/e/youth-employment-summit-burnaby-tickets-1998796233340",
+"source": "Eventbrite",
+"id": "093"
+},
+{
+"title": "OWASP Korea Day 2026",
+"start": "2026-11-28T10:00:00+09:00",
+"end": "2026-11-28T18:00:00+09:00",
+"city": "Seoul (Samseong)",
+"region": "seoul",
+"url": "https://www.meetup.com/owasp-seoul/events/317380597/",
+"host": "OWASP Seoul Chapter",
+"source": "Meetup",
+"tags": [
+"유료",
+"세미나",
+"기술일반"
+],
+"id": "094"
+},
+{
+"title": "8th APE Physical AI Playground",
+"start": "2026-11-28T10:00:00+09:00",
+"end": "2026-11-28T18:00:00+09:00",
+"city": "Seoul",
+"region": "seoul",
+"url": "https://luma.com/rw5k2mt7",
+"host": "PI Playground",
+"source": "Luma",
+"id": "095"
+},
+{
+"title": "DevFest Cloud x Pangyo 2026",
+"url": "https://event-us.kr/gdgcloudkr/event/140493",
+"tags": [
+"유료",
+"대회",
+"AI",
+"클라우드"
+],
+"source": "Dev-Event",
+"host": "GDG Cloud Korea · GDG Pangyo",
+"city": "Gyeonggi (성남)",
+"start": "2026-11-28T13:00:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "096"
+},
+{
+"title": "RL과 VLA로 만나는 Physical AI 교육 (1~4회차)",
+"url": "https://modulabs.co.kr/community/momos/620",
+"tags": [
+"무료",
+"교육",
+"AI"
+],
+"source": "Dev-Event",
+"host": "모두의연구소 · 한국공학대학교 로봇직업교육센터",
+"city": "Gyeonggi (안산)",
+"start": "2026-11-29T00:00:00+09:00",
+"deadline": true,
+"allDay": true,
+"region": "seoul",
+"id": "097"
+},
+{
+"title": "Vancouver Tech Community Coffee Meetup",
+"start": "2026-11-28T09:00:00-07:00",
+"end": "2026-11-28T10:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/VanTechCoffee2026Nov28",
+"host": "Careerin Tech Society",
+"source": "Luma",
+"id": "098"
+},
+{
+"title": "DMZ604 Monthly Meetup",
+"start": "2026-11-28T12:30:00-07:00",
+"end": "2026-11-28T14:00:00-07:00",
+"city": "Burnaby",
+"region": "van",
+"url": "https://luma.com/8do9d6tj",
+"host": "DMZ604",
+"source": "Luma",
+"id": "099"
+},
+{
+"title": "PyLadies Asia Conference 2026",
+"start": "2026-11-29T10:30:00+09:00",
+"end": "2026-11-29T17:30:00+09:00",
+"city": "Seoul (Gangnam, Centerfield)",
+"region": "seoul",
+"url": "https://www.meetup.com/seoul-pyladies-meetup/events/317021466/",
+"host": "PyLadies Seoul",
+"source": "Meetup",
+"id": "100"
+},
+{
+"title": "AI Freaks x Builders Meetup",
+"start": "2026-11-29T14:00:00+09:00",
+"end": "2026-11-29T17:00:00+09:00",
+"city": "Seoul",
+"region": "seoul",
+"url": "https://luma.com/jsyolttk",
+"source": "Luma",
+"id": "101"
+},
+{
+"title": "VIMRC 2026 : CLI 특집",
+"url": "https://event-us.kr/vimkr/event/140254",
+"tags": [
+"유료",
+"모임",
+"기술일반"
+],
+"source": "Dev-Event",
+"host": "Vim 한국 사용자 모임",
+"city": "Seoul (강남구)",
+"start": "2026-11-29T23:30:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "102"
+},
+{
+"title": "2026 서울관광 프롬프톤 (Seoul Tourism Prompt-thon)",
+"url": "https://prompt2026.sto.or.kr/",
+"tags": [
+"무료",
+"대회",
+"AI"
+],
+"source": "Dev-Event",
+"host": "서울관광재단",
+"city": "Seoul (종로구)",
+"start": "2026-11-29T23:59:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "103"
+},
+{
+"title": "2026 SVC Seoul AI 해커톤 | 현대건설과 함께하는 주거생활 AI 아이디어",
+"url": "https://onoffmix.com/event/353176",
+"tags": [
+"무료",
+"대회",
+"AI"
+],
+"source": "Dev-Event",
+"host": "창업진흥원 · 현대건설 · SVC Seoul",
+"city": "Seoul (마포구)",
+"start": "2026-11-29T23:59:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "104"
+},
+{
+"title": "Bites & Brilliance in Richmond | Brunch for Women in Tech",
+"start": "2026-11-29T10:30:00-07:00",
+"end": "2026-11-29T12:30:00-07:00",
+"city": "Richmond",
+"region": "van",
+"url": "https://luma.com/esp4q8ok",
+"host": "The Thread | Women+Tech Vancouver",
+"source": "Luma",
+"id": "105"
+},
+{
+"title": "Developer Meetup - Coding and Networking day",
+"start": "2026-11-29T10:30:00-07:00",
+"end": "2026-11-29T12:30:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/yxyzuhfv",
+"host": "Vancouver Developers",
+"source": "Luma",
+"id": "106"
+},
+{
+"title": "[토스페이먼츠] 2026 GEO 그로스 살롱 웨비나: 글로벌 진출 초기 챙겨야 할 GEO 전략",
+"url": "https://tosspayments.recatch.cc/workflows/ykowxqffrm",
+"tags": [
+"무료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "토스페이먼츠",
+"online": true,
+"start": "2026-11-30T11:00:00+09:00",
+"region": "online",
+"audience": "kr",
+"id": "107"
+},
+{
+"title": "2026 오픈소스 페스티벌",
+"url": "https://event-us.kr/SWTECH/event/140603",
+"tags": [
+"무료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "과학기술정보통신부 · 정보통신산업진흥원(NIPA)",
+"city": "Seoul (강남구)",
+"start": "2026-11-30T18:00:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "108"
+},
+{
+"title": "OpenAI Student Collective @SNU: Studio Session 4",
+"start": "2026-11-30T19:00:00+09:00",
+"end": "2026-11-30T20:00:00+09:00",
+"city": "Seoul (SNU)",
+"region": "seoul",
+"url": "https://luma.com/ut32vjc9",
+"host": "OpenAI Student Collective at SNU",
+"source": "Luma",
+"id": "109"
+},
+{
+"title": "루프플레이 | 개발자를 위한 실전 스터디 & 네트워킹",
+"url": "https://event-us.kr/loopers/event/138756",
+"tags": [
+"무료",
+"동아리",
+"기술일반"
+],
+"source": "Dev-Event",
+"host": "루퍼스",
+"online": true,
+"start": "2026-11-30T23:59:00+09:00",
+"deadline": true,
+"region": "online",
+"audience": "kr",
+"id": "110"
+},
+{
+"title": "Devin Meetup Seoul",
+"start": "2026-12-01T18:30:00+09:00",
+"end": "2026-12-01T21:00:00+09:00",
+"city": "Seoul (Seongdong)",
+"region": "seoul",
+"url": "https://luma.com/qg5xt98w",
+"host": "Cognition",
+"source": "Luma",
+"tags": [
+"무료",
+"모임",
+"AI"
+],
+"id": "111"
+},
+{
+"title": "Innovation UBC's 2026 Venture Showcase",
+"start": "2026-12-01T16:00:00-07:00",
+"end": "2026-12-01T19:30:00-07:00",
+"city": "Vancouver (UBC)",
+"region": "van",
+"url": "https://luma.com/tyuglydg",
+"host": "Innovation UBC",
+"source": "Luma",
+"id": "112"
+},
+{
+"title": "Vancouver Shipped | Demo your traction",
+"start": "2026-12-01T17:00:00-07:00",
+"end": "2026-12-01T20:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/nxpnsmn5",
+"source": "Luma",
+"id": "113"
+},
+{
+"title": "Full Indie Game Dev December Meet Up (at LaSalle)",
+"start": "2026-12-01T18:00:00-07:00",
+"end": "2026-12-01T21:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/hr1knqbx",
+"host": "Full Indie",
+"source": "Luma",
+"id": "114"
+},
+{
+"title": "[kt cloud 웨비나] 클라우드 운영, 보이는 만큼 달라지다",
+"url": "https://event-us.kr/ktcloud/event/139954",
+"tags": [
+"무료",
+"세미나",
+"클라우드"
+],
+"source": "Dev-Event",
+"host": "kt cloud",
+"online": true,
+"start": "2026-12-02T13:00:00+09:00",
+"deadline": true,
+"region": "online",
+"audience": "kr",
+"id": "115"
+},
+{
+"title": "AI 서비스 성공을 위한 A to Z AI큐브잇으로 시작하는 MLOps 자동화",
+"url": "https://event-us.kr/itsman/event/139438",
+"tags": [
+"무료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "잇츠맨 / 이노그리드",
+"online": true,
+"start": "2026-12-02T14:00:00+09:00",
+"deadline": true,
+"region": "online",
+"audience": "kr",
+"id": "116"
+},
+{
+"title": "2026 전자문서x전자서명 컨퍼런스",
+"url": "https://event-us.kr/2026edocesign/event/135685",
+"tags": [
+"무료",
+"세미나",
+"기술일반"
+],
+"source": "Dev-Event",
+"host": "과학기술정보통신부 (주관 한국인터넷진흥원 · 한국디지털문서플랫폼협회 · 한국전자서명포럼)",
+"city": "Seoul (용산구)",
+"start": "2026-12-02T18:00:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "117"
+},
+{
+"title": "사이드테이블 네트워킹",
+"url": "https://event-us.kr/mdocieyn/event/140156",
+"tags": [
+"무료",
+"모임",
+"기술일반"
+],
+"source": "Dev-Event",
+"host": "사이드 테이블",
+"city": "Seoul (마포구)",
+"start": "2026-12-02T23:59:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "118"
+},
+{
+"title": "eat.pl 잇플 수익화 챌린지 (K-SKILL × EAT.PL)",
+"url": "https://edu.bccard.ai/contest",
+"tags": [
+"무료",
+"대회",
+"AI"
+],
+"source": "Dev-Event",
+"host": "BC카드",
+"online": true,
+"start": "2026-12-03T00:00:00+09:00",
+"deadline": true,
+"allDay": true,
+"region": "online",
+"audience": "kr",
+"id": "119"
+},
+{
+"title": "Fireside Chat with Co-Founder of Spare",
+"start": "2026-12-02T13:00:00-07:00",
+"end": "2026-12-02T14:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/north-7j6n",
+"host": "North House",
+"source": "Luma",
+"id": "120"
+},
+{
+"title": "TechConnect: Global Virtual Job & Networking Event for Data, AI, and Tech Pros",
+"start": "2026-12-02T16:00:00-08:00",
+"end": "2026-12-02T18:00:00-08:00",
+"region": "online",
+"online": true,
+"url": "https://www.meetup.com/ac-pdx/events/317404369/",
+"host": "Analytics.Club",
+"source": "Meetup",
+"id": "121"
+},
+{
+"title": "Become a self-driving company + workshop",
+"start": "2026-12-03T18:30:00+09:00",
+"end": "2026-12-03T21:00:00+09:00",
+"city": "Seoul (Gangnam)",
+"region": "seoul",
+"url": "https://luma.com/aume0sxi",
+"host": "Dev Korea · Replit",
+"source": "Luma",
+"tags": [
+"무료",
+"모임",
+"AI"
+],
+"id": "122"
+},
+{
+"title": "DDD Seoul 2026",
+"url": "https://ticketa.co/event/o65cl11x",
+"tags": [
+"유료",
+"세미나",
+"기술일반"
+],
+"source": "Dev-Event",
+"host": "DDD Seoul",
+"city": "Seoul (종로구)",
+"start": "2026-12-04T00:00:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "123"
+},
+{
+"title": "Recruiter Truths: Why Great Candidates Never Get Called",
+"start": "2026-12-03T11:00:00-07:00",
+"end": "2026-12-03T12:30:00-07:00",
+"region": "online",
+"online": true,
+"url": "https://www.meetup.com/bouldernet-meetup/events/317099934/",
+"host": "BoulderNet",
+"source": "Meetup",
+"id": "124"
+},
+{
+"title": "BCIT D3 × Tri-Cities Chamber Student Design & Technology Innovation Showcase",
+"start": "2026-12-03T15:30:00-07:00",
+"end": "2026-12-03T18:30:00-07:00",
+"city": "Burnaby (BCIT)",
+"region": "van",
+"url": "https://www.eventbrite.co.uk/e/bcit-d3-tri-cities-chamber-of-commerce-student-design-technology-innova-tickets-2004487444907",
+"host": "BCIT D3",
+"source": "Eventbrite",
+"id": "125"
+},
+{
+"title": "Leadership Workshop",
+"start": "2026-12-03T17:00:00-07:00",
+"end": "2026-12-03T20:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/witcanada-phz0",
+"host": "Women in Tech Canada",
+"source": "Luma",
+"id": "126"
+},
+{
+"title": "Beyond the Application: Inside the Recruiter's Playbook",
+"start": "2026-12-03T18:00:00-07:00",
+"end": "2026-12-03T20:00:00-07:00",
+"city": "Burnaby",
+"region": "online",
+"online": true,
+"url": "https://www.meetup.com/google-developer-groups-burnaby/events/317102774/",
+"host": "Google Developer Groups Burnaby",
+"source": "Meetup",
+"id": "127"
+},
+{
+"title": "2027 MOBIS Robotics Challenge",
+"url": "https://mobis-robotics-challenge.com/",
+"tags": [
+"무료",
+"대회",
+"기술일반"
+],
+"source": "Dev-Event",
+"host": "현대모비스",
+"city": "Seoul (관악구)",
+"start": "2026-12-04T17:00:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "128"
+},
+{
+"title": "Nucoders 2nd Demoday: 누코더스 데모데이",
+"start": "2026-12-04T19:00:00+09:00",
+"end": "2026-12-04T21:00:00+09:00",
+"city": "Seoul (Gangnam)",
+"region": "seoul",
+"url": "https://luma.com/reuf8z4u",
+"host": "Nucode",
+"source": "Luma",
+"tags": [
+"무료",
+"모임",
+"AI"
+],
+"id": "129"
+},
+{
+"title": "DevFest Android in Korea 2026 - AI 디톡스",
+"url": "https://ticketa.co/event/034124ot",
+"tags": [
+"유료",
+"세미나",
+"기술일반"
+],
+"source": "Dev-Event",
+"host": "GDG Korea Android",
+"city": "Seoul (강남구)",
+"start": "2026-12-04T23:59:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "130"
+},
+{
+"title": "AgentOps - 에이전트 최적화 핸즈온 워크샵",
+"url": "https://ticketa.co/event/275yzszz",
+"tags": [
+"무료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "Microsoft 커뮤니티 이벤트 (한국마이크로소프트 DevRel)",
+"city": "Seoul (종로구)",
+"start": "2026-12-04T23:59:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "131"
+},
+{
+"title": "Beyond The Future of Workforce | ExpoPlaza 2026",
+"start": "2026-12-04T09:00:00-07:00",
+"end": "2026-12-04T20:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://www.eventbrite.ca/e/general-entry-beyond-the-future-of-workforce-expoplaza-2026-tickets-1993250920159",
+"host": "ExpoPlaza",
+"source": "Eventbrite",
+"id": "132"
+},
+{
+"title": "FirstFridayFair Monthly Job Fair – Connect with Recruiters",
+"start": "2026-12-04T11:00:00-08:00",
+"end": "2026-12-04T14:00:00-08:00",
+"region": "online",
+"online": true,
+"url": "https://www.meetup.com/sea_careerclub/events/317431488/",
+"host": "Seattle Career Club",
+"source": "Meetup",
+"id": "133"
+},
+{
+"title": "Your WAF Can't Read: Prompt Injection and the Limits of Pattern-Matching Security",
+"start": "2026-12-04T14:00:00-07:00",
+"end": "2026-12-04T16:30:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/dewf0me9",
+"source": "Luma",
+"id": "134"
+},
+{
+"title": "Vancouver Game Dev Series - December (BUS Game Devs and VFS)",
+"start": "2026-12-04T17:30:00-07:00",
+"end": "2026-12-04T21:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://www.eventbrite.ca/e/vancouver-game-dev-series-december-by-bus-game-devs-and-vfs-tickets-2004988179618",
+"host": "BUS Game Devs",
+"source": "Eventbrite",
+"id": "135"
+},
+{
+"title": "Hack the Audience 2026: Creator-to-CEO Hackathon",
+"url": "https://extriver.com/event1",
+"tags": [
+"무료",
+"대회",
+"기술일반"
+],
+"source": "Dev-Event",
+"host": "Extriver Partners",
+"online": true,
+"start": "2026-12-05T23:59:00+09:00",
+"deadline": true,
+"region": "online",
+"audience": "kr",
+"id": "136"
+},
+{
+"title": "Burnaby Tech Community Coffee Meetup",
+"start": "2026-12-05T09:00:00-07:00",
+"end": "2026-12-05T11:00:00-07:00",
+"city": "Burnaby",
+"region": "van",
+"url": "https://luma.com/BurnabyTechCoffee2026Dec5",
+"host": "Careerin Tech Society",
+"source": "Luma",
+"id": "137"
+},
+{
+"title": "Northstar Hackathon",
+"start": "2026-12-05T09:00:00-07:00",
+"end": "2026-12-05T20:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/nxmjocdc",
+"source": "Luma",
+"id": "138"
+},
+{
+"title": "Agent Building Competition",
+"start": "2026-12-05T09:00:00-07:00",
+"end": "2026-12-05T19:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/vanspace-bkv7",
+"host": "BIOS SPHERE",
+"source": "Luma",
+"id": "139"
+},
+{
+"title": "Richmond Tech Community Coffee Meetup",
+"start": "2026-12-05T10:00:00-07:00",
+"end": "2026-12-05T11:30:00-07:00",
+"city": "Richmond",
+"region": "van",
+"url": "https://luma.com/RichmondTechCoffee2026Dec5",
+"host": "Careerin Tech Society",
+"source": "Luma",
+"id": "140"
+},
+{
+"title": "Microsoft Ignite 2026 Recap :: 전문가와 함께 최신 기술 짚어보기",
+"url": "https://event-us.kr/msmvp/event/139823",
+"tags": [
+"무료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "Microsoft MVP 커뮤니티",
+"city": "Seoul (종로구)",
+"start": "2026-12-06T10:00:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "141"
+},
+{
+"title": "AI와 함께 앱 출시부터 운영·수익화까지! 6주 만에 팀으로 완성하는 프로젝트 [스위프 앱 8기]",
+"url": "https://event-us.kr/swypim/event/140684",
+"tags": [
+"유료",
+"모임",
+"AI"
+],
+"source": "Dev-Event",
+"host": "스위프 (SWYP)",
+"online": true,
+"start": "2026-12-06T23:30:00+09:00",
+"deadline": true,
+"region": "online",
+"audience": "kr",
+"id": "142"
+},
+{
+"title": "Grit & Glitter | Thread Women in Tech Celebration",
+"start": "2026-12-06T17:30:00-07:00",
+"end": "2026-12-06T20:30:00-07:00",
+"city": "Richmond",
+"region": "van",
+"url": "https://luma.com/flzj3ltl",
+"host": "The Thread | Women+Tech Vancouver",
+"source": "Luma",
+"id": "143"
+},
+{
+"title": "모두콘 2026: Deeper in AI",
+"url": "https://service.modulabs.co.kr/r/moducon-github",
+"tags": [
+"무료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "모두의연구소",
+"city": "Seoul (서대문구)",
+"start": "2026-12-07T12:00:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "144"
+},
+{
+"title": "우리 회사 AI 에이전트, 도입 전에 직접 만들어보세요 | Agent in a Day",
+"url": "https://event-us.kr/hso/event/138582",
+"tags": [
+"무료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "HSO",
+"online": true,
+"start": "2026-12-07T23:30:00+09:00",
+"deadline": true,
+"region": "online",
+"audience": "kr",
+"id": "145"
+},
+{
+"title": "GMI AI Night Seoul - with NVIDIA & SIT",
+"start": "2026-12-08T18:30:00+09:00",
+"end": "2026-12-08T21:00:00+09:00",
+"city": "Seoul",
+"region": "seoul",
+"url": "https://luma.com/gmikr20261208",
+"host": "GMI Cloud",
+"source": "Luma",
+"id": "146"
+},
+{
+"title": "LeetCode Lounge: Practice, Prep, and Problem-Solve",
+"start": "2026-12-08T12:00:00-07:00",
+"end": "2026-12-08T14:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://www.meetup.com/code-together-vancouver/events/317486903/",
+"host": "Code Together Vancouver",
+"source": "Meetup",
+"id": "147"
+},
+{
+"title": "#VTJTalks: Grading Vancouver's Innovation Economy in 2026",
+"start": "2026-12-08T16:00:00-07:00",
+"end": "2026-12-08T18:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/7wiz6rcz",
+"host": "Vancouver Tech Journal",
+"source": "Luma",
+"id": "148"
+},
+{
+"title": "IT & Cybersecurity Professionals Coffee Meetup - Surrey",
+"start": "2026-12-08T18:00:00-07:00",
+"end": "2026-12-08T19:00:00-07:00",
+"city": "Surrey",
+"region": "van",
+"url": "https://luma.com/memmjx8a",
+"source": "Luma",
+"id": "149"
+},
+{
+"title": "Seoul dbt Meetup #11",
+"start": "2026-12-09T19:00:00+09:00",
+"end": "2026-12-09T21:00:00+09:00",
+"city": "Seoul",
+"region": "seoul",
+"url": "https://www.meetup.com/seoul-dbt-meetup/events/317312400/",
+"host": "Seoul dbt Meetup",
+"source": "Meetup",
+"id": "150"
+},
+{
+"title": "제25회 산기협 AX혁신포럼 | AI 대전환 시대: Agentic AI에서 Physical AI까지",
+"url": "https://event-us.kr/koita3460/event/139852",
+"tags": [
+"무료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "한국산업기술진흥협회(KOITA)",
+"online": true,
+"start": "2026-12-09T23:30:00+09:00",
+"deadline": true,
+"region": "online",
+"audience": "kr",
+"id": "151"
+},
+{
+"title": "Vancouver Career Fair and Training Expo Canada",
+"start": "2026-12-09T10:00:00-07:00",
+"end": "2026-12-09T14:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://www.eventbrite.ca/e/vancouver-career-fair-and-training-expo-canada-december-9-2026-tickets-1979397747948",
+"host": "Career Fair Canada",
+"source": "Eventbrite",
+"id": "152"
+},
+{
+"title": "Hire Canada Virtual Job Fair & Training Expo",
+"start": "2026-12-09T11:00:00-08:00",
+"end": "2026-12-09T15:00:00-08:00",
+"region": "online",
+"online": true,
+"url": "https://www.eventbrite.ca/e/hire-canada-virtual-job-fair-training-expo-tickets-2003930645505",
+"host": "Hire Canada",
+"source": "Eventbrite",
+"id": "153"
+},
+{
+"title": "Designing Alongside AI",
+"start": "2026-12-09T17:00:00-07:00",
+"end": "2026-12-09T19:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://www.meetup.com/vancouverue/events/317392796/",
+"host": "VanUE",
+"source": "Meetup",
+"id": "154"
+},
+{
+"title": "Vancouver Tech's Annual Year-End Celebration",
+"start": "2026-12-09T18:00:00-07:00",
+"end": "2026-12-09T21:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/techvancouver",
+"host": "AWS, Azure and Ruby user groups",
+"source": "Luma",
+"id": "155"
+},
+{
+"title": "Beyond Testing: How Quality Engineering Shapes Architecture | 7th Vancouver Meetup",
+"start": "2026-12-09T18:00:00-07:00",
+"end": "2026-12-09T20:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/ttt-7th-vancouver",
+"host": "The Test Tribe",
+"source": "Luma",
+"id": "156"
+},
+{
+"title": "Machine Learning Reading Group",
+"start": "2026-12-09T18:00:00-07:00",
+"end": "2026-12-09T20:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/ycm90k0p",
+"host": "Learn Data Science",
+"source": "Luma",
+"id": "157"
+},
+{
+"title": "Vancouver HR, Recruiting & Hiring Networking Night",
+"start": "2026-12-09T19:00:00-07:00",
+"end": "2026-12-09T21:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://www.eventbrite.ca/e/vancouver-hr-recruiting-hiring-networking-night-tickets-2005050211156",
+"source": "Eventbrite",
+"id": "158"
+},
+{
+"title": "THE PIONEERS | 팀스파르타 제품조직 AX 세미나",
+"url": "https://event-us.kr/teamspartaproduct/event/140423",
+"tags": [
+"무료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "팀스파르타",
+"city": "Seoul (강남구)",
+"start": "2026-12-10T23:59:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "159"
+},
+{
+"title": "Inside the 2027 Tech Job Market: Skills, Salaries & Hiring Trends",
+"start": "2026-12-10T12:00:00-06:00",
+"end": "2026-12-10T13:00:00-06:00",
+"region": "online",
+"online": true,
+"url": "https://www.eventbrite.ca/e/inside-the-2027-tech-job-market-skills-salaries-hiring-trends-tickets-2005162718669",
+"source": "Eventbrite",
+"id": "160"
+},
+{
+"title": "Northeastern University in Vancouver – Student Research Showcase",
+"start": "2026-12-10T16:00:00-07:00",
+"end": "2026-12-10T18:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/ku4l1zs7",
+"host": "Northeastern Vancouver",
+"source": "Luma",
+"id": "161"
+},
+{
+"title": "The Golden Hour: An Oracle Data & AI Evening",
+"start": "2026-12-10T17:00:00-07:00",
+"end": "2026-12-10T20:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://www.eventbrite.ca/e/the-golden-hour-an-oracle-data-ai-evening-tickets-2004869480586",
+"host": "Oracle",
+"source": "Eventbrite",
+"id": "162"
+},
+{
+"title": "How to Land a Software Engineering Job in 2027",
+"start": "2026-12-10T17:00:00-07:00",
+"end": "2026-12-10T18:00:00-07:00",
+"city": "Vancouver",
+"region": "online",
+"online": true,
+"url": "https://www.meetup.com/vancouver-idea-to-ipo/events/317494546/",
+"host": "Vancouver Startup: Idea to IPO",
+"source": "Meetup",
+"id": "163"
+},
+{
+"title": "Vancouver Tech Community: Connect with Tech Companies",
+"start": "2026-12-10T17:30:00-07:00",
+"end": "2026-12-10T20:30:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/VancouverTech2026Dec10",
+"host": "Careerin Tech Society",
+"source": "Luma",
+"id": "164"
+},
+{
+"title": "GitHub Copilot 샌드박싱 워크샵",
+"url": "https://ticketa.co/event/fh7781za",
+"tags": [
+"무료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "Microsoft 커뮤니티 이벤트 (한국마이크로소프트 DevRel)",
+"city": "Seoul (종로구)",
+"start": "2026-12-11T12:00:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "165"
+},
+{
+"title": "Capture, Explain, Defend — AI Cybersecurity Hackathon",
+"start": "2026-12-11T13:30:00+09:00",
+"end": "2026-12-11T18:30:00+09:00",
+"city": "Seoul",
+"region": "seoul",
+"url": "https://luma.com/aisecurityseoul",
+"host": "AI Builders · GMI Cloud · F5 · NVIDIA",
+"source": "Luma",
+"tags": [
+"무료",
+"대회",
+"AI"
+],
+"id": "166"
+},
+{
+"title": "DEVFEST INCHEON 2026",
+"url": "https://ticketa.co/event/8dedugs6",
+"tags": [
+"유료",
+"세미나",
+"AI"
+],
+"source": "Dev-Event",
+"host": "GDG Incheon",
+"city": "Incheon",
+"start": "2026-12-12T02:10:00+09:00",
+"deadline": true,
+"region": "seoul",
+"id": "167"
+},
+{
+"title": "HiredX #12 - Tech Speed Networking (Candidates)",
+"start": "2026-12-11T16:00:00-07:00",
+"end": "2026-12-11T19:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/zsp1e26u",
+"host": "BCJobs",
+"source": "Luma",
+"id": "168"
+},
+{
+"title": "Vibe Coders Jam Session: feat. Base44",
+"start": "2026-12-12T14:00:00+09:00",
+"end": "2026-12-12T17:00:00+09:00",
+"city": "Seoul",
+"region": "seoul",
+"url": "https://luma.com/Base44seoul1211",
+"host": "AI Builders · Global Startup Center",
+"source": "Luma",
+"tags": [
+"무료",
+"모임",
+"AI"
+],
+"id": "169"
+},
+{
+"title": "Vancouver Tech Community Coffee Meetup",
+"start": "2026-12-12T09:00:00-07:00",
+"end": "2026-12-12T10:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/VanTechCoffee2026Dec12",
+"host": "Careerin Tech Society",
+"source": "Luma",
+"id": "170"
+},
+{
+"title": "Zig Day: Vancouver #1",
+"start": "2026-12-12T09:30:00-07:00",
+"end": "2026-12-12T16:30:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/6xq9ui9d",
+"source": "Luma",
+"id": "171"
+},
+{
+"title": "Coding meetup in Gangnam - study, Q&A, feedback, and networking",
+"start": "2026-12-13T12:00:00+09:00",
+"end": "2026-12-13T17:00:00+09:00",
+"city": "Seoul (Gangnam)",
+"region": "seoul",
+"url": "https://www.meetup.com/fccseoul/events/317289795/",
+"host": "freeCodeCamp Seoul",
+"source": "Meetup",
+"id": "172"
+},
+{
+"title": "아이펠 AI 리서처 20기 (AI 논문 연구 심화 부트캠프)",
+"url": "https://aiffel.io/airesearcher",
+"tags": [
+"유료",
+"교육",
+"AI"
+],
+"source": "Dev-Event",
+"host": "모두의연구소 (아이펠)",
+"online": true,
+"start": "2026-12-13T23:30:00+09:00",
+"deadline": true,
+"region": "online",
+"audience": "kr",
+"id": "173"
+},
+{
+"title": "AutoRAG Agent 오픈소스 컨퍼런스 2026",
+"start": "2026-12-14T12:30:00+09:00",
+"end": "2026-12-14T17:40:00+09:00",
+"city": "Seoul",
+"region": "seoul",
+"url": "https://luma.com/1j9tw0oj",
+"source": "Luma",
+"id": "174"
+},
+{
+"title": "HackerX - Vancouver (AI)",
+"start": "2026-12-14T18:00:00-07:00",
+"end": "2026-12-14T21:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://www.eventbrite.ca/e/hackerx-vancouver-ai-employer-ticket-1214-tickets-1980426337487",
+"host": "HackerX",
+"source": "Eventbrite",
+"id": "175"
+},
+{
+"title": "MUG Seoul DEC 2026 - MongoDB 2026 Highlights",
+"start": "2026-12-15T19:00:00+09:00",
+"end": "2026-12-15T21:30:00+09:00",
+"city": "Seoul",
+"region": "seoul",
+"url": "https://luma.com/ftkf0lxh",
+"host": "MongoDB User Group Seoul",
+"source": "Luma",
+"id": "176"
+},
+{
+"title": "Go for Gold: How to Get the Interview and Win the Offer",
+"start": "2026-12-15T12:00:00-08:00",
+"end": "2026-12-15T13:00:00-08:00",
+"region": "online",
+"online": true,
+"url": "https://www.meetup.com/innovate-qa-seattle-meetup-group/events/317397380/",
+"host": "Innovate QA",
+"source": "Meetup",
+"id": "177"
+},
+{
+"title": "VAM! AI Reading Group: JEV-as-a-Judge",
+"start": "2026-12-15T18:00:00-07:00",
+"end": "2026-12-15T20:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/97plwhy4",
+"host": "Vancouver AI Meetup (VAM!)",
+"source": "Luma",
+"id": "178"
+},
+{
+"title": "Vancouver AI, Tech & International Holiday Networking",
+"start": "2026-12-16T19:00:00-07:00",
+"end": "2026-12-16T21:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://www.eventbrite.ca/e/vancouver-ai-tech-international-holiday-networking-tickets-2005050262309",
+"source": "Eventbrite",
+"id": "179"
+},
+{
+"title": "KAIST AI Workshop 2026",
+"start": "2026-12-17T13:00:00+09:00",
+"end": "2026-12-17T18:00:00+09:00",
+"city": "Seoul",
+"region": "seoul",
+"url": "https://luma.com/imh3xjy1",
+"host": "KAIST",
+"source": "Luma",
+"id": "180"
+},
+{
+"title": ".NET Conf 2026 Recap",
+"start": "2026-12-17T18:00:00-07:00",
+"end": "2026-12-17T20:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://www.meetup.com/net-user-group-of-bc/events/317514947/",
+"host": ".NET User Group of BC",
+"source": "Meetup",
+"id": "181"
+},
+{
+"title": "AI Happy Hour at FriendsQuarters #8: What Actually Shipped",
+"start": "2026-12-18T16:00:00-07:00",
+"end": "2026-12-18T19:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://luma.com/vancouver-shipped",
+"host": "BC + AI",
+"source": "Luma",
+"id": "182"
+},
+{
+"title": "2026 HAI(하이)! - Hecto AI x Wallet Service Challenge",
+"url": "https://daker.ai/public/hackathons/2026-hai-hecto-ai-challenge",
+"tags": [
+"무료",
+"대회",
+"AI",
+"블록체인"
+],
+"source": "Dev-Event",
+"host": "헥토(Hecto)",
+"online": true,
+"start": "2026-12-21T10:00:00+09:00",
+"deadline": true,
+"region": "online",
+"audience": "kr",
+"id": "183"
+},
+{
+"title": "Tech Networking Event In Vancouver",
+"start": "2027-01-06T19:00:00-07:00",
+"end": "2027-01-06T21:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://www.eventbrite.ca/e/tech-networking-event-in-vancouver-tickets-2004729087667",
+"source": "Eventbrite",
+"id": "184"
+},
+{
+"title": "AI & Tech Networking Event in Vancouver by Ascent Valley",
+"start": "2027-01-07T19:00:00-07:00",
+"end": "2027-01-07T22:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://www.eventbrite.ca/e/ai-tech-networking-event-in-vancouver-by-ascent-valley-tickets-2004828926287",
+"host": "Ascent Valley",
+"source": "Eventbrite",
+"id": "185"
+},
+{
+"title": "SFU Systems Fair 2027",
+"start": "2027-01-13T10:00:00-07:00",
+"end": "2027-01-13T16:00:00-07:00",
+"city": "Surrey (SFU)",
+"region": "van",
+"url": "https://www.eventbrite.ca/e/sfu-systems-fair-2027-registration-tickets-2001271119792",
+"host": "SFU",
+"source": "Eventbrite",
+"id": "186"
+},
+{
+"title": "Indigenous Tech Conference 2027",
+"start": "2027-01-26T09:00:00-07:00",
+"end": "2027-01-26T16:30:00-07:00",
+"city": "Richmond",
+"region": "van",
+"url": "https://luma.com/IITC",
+"host": "Tech Circle",
+"source": "Luma",
+"id": "187"
+},
+{
+"title": "2027 Vancouver Global Game Jam",
+"start": "2027-01-29T18:00:00-07:00",
+"end": "2027-01-29T22:00:00-07:00",
+"city": "New Westminster",
+"region": "van",
+"url": "https://www.eventbrite.ca/e/2027-vancouver-global-game-jam-tickets-2003490177052",
+"source": "Eventbrite",
+"id": "188"
+},
+{
+"title": "Unite Vancouver",
+"start": "2027-02-04T09:00:00-07:00",
+"end": "2027-02-04T18:30:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://www.eventbrite.ca/e/unite-vancouver-tickets-2003528512715",
+"source": "Eventbrite",
+"id": "189"
+},
+{
+"title": "Agentic AI Summit 2027",
+"start": "2027-02-17T10:00:00-07:00",
+"end": "2027-02-17T19:00:00-07:00",
+"city": "Vancouver",
+"region": "van",
+"url": "https://www.eventbrite.ca/e/agentic-ai-summit-2027-tickets-2002316636962",
+"source": "Eventbrite",
+"id": "190"
+},
+{
+"title": "Douglas College Winter 2027 Career Fair",
+"start": "2027-02-24T10:30:00-07:00",
+"end": "2027-02-24T14:30:00-07:00",
+"city": "New Westminster",
+"region": "van",
+"url": "https://www.eventbrite.ca/e/douglas-college-winter-2027-career-fair-tickets-2004596083849",
+"host": "Douglas College",
+"source": "Eventbrite",
+"id": "191"
+},
+{
+"title": "Notion x YouCode 2027",
+"start": "2027-03-06T10:00:00-07:00",
+"end": "2027-03-06T16:00:00-07:00",
+"city": "Vancouver (UBC)",
+"region": "van",
+"url": "https://luma.com/d7we7fv5",
+"host": "YouCode",
+"source": "Luma",
+"id": "192"
+}
+]
+}
